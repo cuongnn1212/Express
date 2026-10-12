@@ -1,0 +1,46 @@
+[
+  {
+    "id": "shp_cuong",
+    "type": "SHIPPER",
+    "contactName": "MR CUONG",
+    "companyName": "PANDALEX EXPRESS HUB 1",
+    "phone": "0976843168",
+    "email": "cuong@pandalex.vn",
+    "taxId": "036084005796",
+    "address1": "PHUC YEN, PHAN HUY ICH, P15, TAN BINH",
+    "city": "HO CHI MINH",
+    "postalCode": "700000",
+    "countryCode": "VN",
+    "countryName": "VIETNAM",
+    "isDefault": true
+  },
+  {
+    "id": "rec_tammy",
+    "type": "RECIPIENT",
+    "contactName": "TAMMY NGUYEN",
+    "companyName": "TAMMY BEAUTY STUDIO",
+    "phone": "774-810-5199",
+    "address1": "1219 MAIN ST",
+    "city": "WORCESTER",
+    "state": "MA",
+    "postalCode": "01603",
+    "countryCode": "US",
+    "countryName": "UNITED STATES",
+    "residential": true
+  },
+  {
+    "id": "rec_michael",
+    "type": "RECIPIENT",
+    "contactName": "MICHAEL JOHNSON",
+    "companyName": "BLUE OCEAN TRADING LLC",
+    "phone": "415-555-0199",
+    "address1": "450 MISSION ST",
+    "address2": "STE 700",
+    "city": "SAN FRANCISCO",
+    "state": "CA",
+    "postalCode": "94105",
+    "countryCode": "US",
+    "countryName": "UNITED STATES",
+    "residential": false
+  }
+]

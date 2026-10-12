@@ -1,0 +1,44 @@
+[
+  {
+    "bookingId": "AIR_BKG_2026_001",
+    "airline": "Vietnam Airlines",
+    "airlinePrefix": "738",
+    "mawbNumber": "738-92814022",
+    "flightNumber": "VN98",
+    "flightDate": "2026-10-10",
+    "airportDeparture": "SGN",
+    "airportDestination": "SFO",
+    "status": "BOOKED",
+    "allocatedGrossWeightKg": 1500,
+    "allocatedVolumeCbm": 9.5,
+    "chargeableWeightKg": 1586.5,
+    "ratePerKgVnd": 105000,
+    "sellRatePerKgVnd": 135000,
+    "manifestNotes": "Lô hàng may mặc xuất khẩu đi San Francisco, bay thẳng SGN-SFO",
+    "hawbList": [
+      {
+        "hawbNumber": "PLX-SFO-8811",
+        "customerName": "Công ty TNHH Dệt May Sài Gòn (VIP-105)",
+        "piecesCount": 45,
+        "grossWeightKg": 850,
+        "volumeCbm": 5.2,
+        "chargeableWeightKg": 868.4,
+        "commodityDesc": "Garments & Cotton Shirts (Áo sơ mi xuất khẩu)",
+        "shipperName": "SAI GON TEXTILE CO., LTD",
+        "consigneeName": "PACIFIC APPAREL INC (SAN FRANCISCO, USA)"
+      },
+      {
+        "hawbNumber": "PLX-SFO-8812",
+        "customerName": "An Nam Logistics (AG-002)",
+        "piecesCount": 30,
+        "grossWeightKg": 650,
+        "volumeCbm": 4.3,
+        "chargeableWeightKg": 718.1,
+        "commodityDesc": "Footwear & Fashion Accessories (Giày dép & phụ kiện)",
+        "shipperName": "AN NAM FORWARDING VN",
+        "consigneeName": "BAY AREA DISTRIBUTORS LLC (OAKLAND, CA)"
+      }
+    ],
+    "createdAt": "2026-10-08T18:22:40.128Z"
+  }
+]

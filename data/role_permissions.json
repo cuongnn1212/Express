@@ -1,0 +1,938 @@
+{
+  "SUPER_ADMIN": {
+    "rates": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "customers": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "hubs": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "geography": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "surcharges": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "audit": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "shipments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "warehouse": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "awbManagement": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "codeVsSell": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "markupConfig": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "agents": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "carrierPartners": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "finance": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "walletTopup": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "reconciliation": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "contracts": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "approval": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "commitments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "customerApi": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "airCargo": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "seaFreight": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    }
+  },
+  "DIRECTOR": {
+    "rates": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "customers": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "hubs": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "geography": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "surcharges": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "audit": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "shipments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "warehouse": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "awbManagement": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "codeVsSell": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "markupConfig": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "agents": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "carrierPartners": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "finance": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "walletTopup": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "reconciliation": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "contracts": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "approval": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "commitments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "customerApi": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "airCargo": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "seaFreight": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    }
+  },
+  "ACCOUNTANT": {
+    "rates": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "customers": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "hubs": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "geography": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "surcharges": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "audit": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "shipments": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "warehouse": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "awbManagement": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "codeVsSell": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "markupConfig": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "agents": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "carrierPartners": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "finance": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "walletTopup": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "reconciliation": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "contracts": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "approval": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "commitments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "airCargo": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "seaFreight": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    }
+  },
+  "WAREHOUSE": {
+    "rates": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "customers": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "hubs": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "geography": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "surcharges": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "audit": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "shipments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "warehouse": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "awbManagement": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "codeVsSell": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "markupConfig": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "agents": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "carrierPartners": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "finance": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "walletTopup": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "reconciliation": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "contracts": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "approval": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "commitments": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "airCargo": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "seaFreight": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    }
+  },
+  "AGENT": {
+    "rates": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "customers": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "hubs": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "geography": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "surcharges": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "audit": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "shipments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "warehouse": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "awbManagement": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "codeVsSell": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "markupConfig": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "agents": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "carrierPartners": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "finance": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "walletTopup": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "reconciliation": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "contracts": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "approval": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "commitments": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "airCargo": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "seaFreight": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    }
+  },
+  "CUSTOMER": {
+    "rates": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "customers": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "hubs": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "geography": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "surcharges": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "audit": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "shipments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "warehouse": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "awbManagement": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "codeVsSell": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "markupConfig": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "agents": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "carrierPartners": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "finance": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "walletTopup": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "reconciliation": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "contracts": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "approval": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "commitments": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "airCargo": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "seaFreight": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    }
+  }
+}

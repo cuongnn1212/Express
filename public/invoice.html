@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PandaLex - Tạo Commercial Invoice (Theo Mẫu Định Sẵn)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+    .fld label { display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 2px; }
+    .fld label .req { color: #dc2626; }
+    .fld input, .fld select, .fld textarea {
+      width: 100%; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 9px;
+      font-size: 12px; font-weight: 600; color: #0f172a;
+    }
+    .fld input:focus, .fld select:focus, .fld textarea:focus {
+      outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.15);
+    }
+    .fld .hint { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+
+    /* A4 Preview Container */
+    .sheet-preview {
+      background: #fff;
+      width: 100%;
+      min-height: 297mm;
+      padding: 12mm 15mm;
+      box-sizing: border-box;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8.5pt;
+      color: #000;
+    }
+    .preview-box { border: 1.5px solid #000; margin-bottom: 8px; width: 100%; border-collapse: collapse; }
+    .preview-box td, .preview-box th { border: 1px solid #000; padding: 4px 6px; font-size: 8pt; vertical-align: top; }
+    .preview-th { background: #f2f2f2; font-weight: bold; text-transform: uppercase; font-size: 7.5pt; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body class="text-slate-900 pb-16">
+
+  <!-- ================= HEADER NAVIGATION ================= -->
+  <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-black text-white text-lg shadow">P</div>
+          <div>
+            <div class="font-extrabold text-sm tracking-wider uppercase text-white flex items-center space-x-1.5">
+              <span>PandaLex Express</span>
+              <span class="px-1.5 py-0.5 bg-blue-500/30 text-blue-300 text-[10px] rounded font-mono">2.0</span>
+            </div>
+            <div class="text-[10px] text-slate-400">Trình Tạo Commercial Invoice Chuẩn Mẫu Hải Quan</div>
+          </div>
+        </a>
+      </div>
+
+      <nav class="flex items-center space-x-1.5 text-xs font-bold">
+        <a href="/index.html" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fa-solid fa-calculator mr-1"></i> Báo Giá
+        </a>
+        <a href="/ship.html" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fa-solid fa-truck-fast mr-1"></i> Tạo Vận Đơn AWB
+        </a>
+        <a href="/invoice.html" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow transition">
+          <i class="fa-solid fa-file-invoice mr-1"></i> Tạo Commercial Invoice
+        </a>
+        <a href="/track.html" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fa-solid fa-satellite-dish mr-1"></i> Tracking
+        </a>
+        <a href="/admin.html" class="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-500 text-slate-950 font-black transition ml-2 shadow">
+          <i class="fa-solid fa-sliders mr-1"></i> Admin Portal
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= BANNER & QUICK BAR ================= -->
+  <main class="max-w-7xl mx-auto px-4 mt-6">
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold mb-2">
+          <i class="fa-solid fa-certificate text-amber-400"></i>
+          <span>Chuẩn Form Mẫu Dự Án (UPS Worldwide Saver & FedEx Spot)</span>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight">Tạo & Xuất Hóa Đơn Thương Mại (Commercial Invoice)</h1>
+        <p class="text-xs text-slate-300 max-w-2xl mt-1">
+          Hệ thống tự động điền chính xác vào phôi Excel định sẵn trong dự án. Hỗ trợ đầy đủ lô 1 kiện và nhiều kiện (Multi-Piece Shipment MPS) có đầy đủ danh mục hàng hóa, HS Code, đơn giá, số kiện, cân nặng và quy cách.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="openSmartParserModal()" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white flex items-center space-x-1.5 backdrop-blur-sm transition">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+          <span>Dán Đoạn Tin Nhắn Địa Chỉ</span>
+        </button>
+        <button type="button" onclick="openAwbScanModal()" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white flex items-center space-x-1.5 backdrop-blur-sm transition">
+          <i class="fa-solid fa-camera text-cyan-400"></i>
+          <span>Quét Tem AWB Đã Chụp</span>
+        </button>
+        <button type="button" onclick="resetInvoiceForm()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition">
+          <i class="fa-solid fa-rotate-left mr-1"></i> Làm Mới Form
+        </button>
+      </div>
+    </div>
+
+    <!-- QUICK LOADER TỪ ĐƠN HÀNG CÓ SẴN -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 flex-1 min-w-[280px]">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
+          <i class="fa-solid fa-box-open"></i>
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs font-extrabold text-slate-800 mb-1">
+            ⚡ Nạp Tự Động Từ Đơn Hàng Đã Tạo Trong Hệ Thống:
+          </label>
+          <select id="selectSavedShipment" onchange="loadFromSelectedShipment(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="">-- Chọn vận đơn AWB để nạp thông tin tự động --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div>
+          <label class="block text-xs font-extrabold text-slate-800 mb-1">
+            📄 Chọn Phôi Mẫu Định Sẵn:
+          </label>
+          <select id="templateType" onchange="updatePreview()" class="bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="UPS">Mẫu Chuẩn UPS SAVER (INV UPS SAVER...xlsx)</option>
+            <option value="FEDEX">Mẫu Chuẩn FEDEX SPOT (INV FEDEX SPOT. MAU.xlsx)</option>
+            <option value="STANDARD">Mẫu Chuẩn Chung Dự Án (MAU_COMMERCIAL_INVOICE_CHUAN.xlsx)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MAIN WORKSPACE (2 CỘT) ================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- ================= CỘT TRÁI: FORM NHẬP LIỆU (7 CỘT) ================= -->
+      <div class="lg:col-span-7 space-y-5">
+
+        <!-- THẺ 1: THÔNG TIN HÓA ĐƠN & VẬN ĐƠN -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center space-x-2 border-b border-slate-100 pb-2">
+            <i class="fa-solid fa-file-lines text-blue-600"></i>
+            <span>1. Thông Tin Hóa Đơn & Air Waybill (AWB)</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="fld">
+              <label>Số Hóa Đơn (Invoice No) <span class="req">*</span></label>
+              <input type="text" id="inv_number" class="uppercase font-mono" placeholder="INV-202610-001" oninput="updatePreview()">
+            </div>
+            <div class="fld">
+              <label>Ngày Lập Hóa Đơn <span class="req">*</span></label>
+              <input type="date" id="inv_date" onchange="handleDateChange()" oninput="updatePreview()">
+            </div>
+            <div class="fld">
+              <label>Hãng Vận Chuyển <span class="req">*</span></label>
+              <select id="inv_carrier" onchange="handleCarrierChange()" class="font-bold">
+                <option value="UPS">UPS Express</option>
+                <option value="FEDEX">FedEx Express</option>
+                <option value="DHL">DHL Express</option>
+                <option value="OTHER">Hãng Khác</option>
+              </select>
+            </div>
+            <div class="fld sm:col-span-2">
+              <label>Mã Vận Đơn Air Waybill (Hỗ trợ 1 hoặc nhiều AWB cho lô MPS) <span class="req">*</span></label>
+              <input type="text" id="inv_awb" class="font-mono text-blue-700 font-bold" placeholder="1Z861R320493609873 / 1Z861R320491786882" oninput="updatePreview()">
+              <div class="hint">Đối với lô nhiều kiện, nhập cả Master & Child cách nhau bằng dấu " / "</div>
+            </div>
+            <div class="fld">
+              <label>Dịch Vụ Vận Chuyển (Services) <span class="req">*</span></label>
+              <input type="text" id="inv_service" placeholder="UPS Worldwide Saver" oninput="updatePreview()">
+            </div>
+            <div class="fld">
+              <label>Điều Kiện Giao Hàng (Incoterm)</label>
+              <select id="inv_incoterm" onchange="updatePreview()">
+                <option value="DAP" selected>DAP (Delivered at Place - Mặc định)</option>
+                <option value="DDP">DDP (Delivered Duty Paid)</option>
+                <option value="FOB">FOB (Free On Board)</option>
+                <option value="CIF">CIF (Cost, Insurance & Freight)</option>
+                <option value="EXW">EXW (Ex Works)</option>
+              </select>
+            </div>
+            <div class="fld sm:col-span-2">
+              <label>Lý Do Xuất Khẩu (Reason for Export) <span class="req">*</span></label>
+              <input type="text" id="inv_reason" value="Commercial Sale / Merchandise" placeholder="Sample / Commercial Sale / Gift" oninput="updatePreview()">
+            </div>
+          </div>
+        </div>
+
+        <!-- THẺ 2: NGƯỜI GỬI & NGƯỜI NHẬN -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center space-x-2 border-b border-slate-100 pb-2">
+            <i class="fa-solid fa-users text-indigo-600"></i>
+            <span>2. Thông Tin Người Gửi (Shipper) & Người Nhận (Consignee)</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- SHIPPER -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+              <div class="text-xs font-black text-slate-800 uppercase flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span class="flex items-center space-x-1.5">
+                  <i class="fa-solid fa-paper-plane text-blue-600"></i>
+                  <span>SHIPPER (Người Gửi)</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">VIETNAM</span>
+              </div>
+              <div class="fld">
+                <label>Tên Công Ty / Cá Nhân <span class="req">*</span></label>
+                <input type="text" id="shp_company" placeholder="CONG TY TNHH XUAT NHAP KHAU..." oninput="updatePreview()">
+              </div>
+              <div class="fld">
+                <label>Người Liên Hệ (Contact Name)</label>
+                <input type="text" id="shp_contact" placeholder="MR. TRONG" oninput="updatePreview()">
+              </div>
+              <div class="fld">
+                <label>Địa Chỉ Chi Tiết <span class="req">*</span></label>
+                <textarea id="shp_address" rows="2" placeholder="So 883 Ngo Gia Tu, Phuong Duc Giang, Long Bien..." oninput="updatePreview()"></textarea>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="fld">
+                  <label>Mã Vùng/Zip</label>
+                  <input type="text" id="shp_postal" value="100000" oninput="updatePreview()">
+                </div>
+                <div class="fld">
+                  <label>Quốc Gia</label>
+                  <input type="text" id="shp_country" value="VIET NAM" oninput="updatePreview()">
+                </div>
+              </div>
+              <div class="fld">
+                <label>Số Điện Thoại / Fax <span class="req">*</span></label>
+                <input type="text" id="shp_phone" placeholder="0988 123 456" oninput="updatePreview()">
+              </div>
+            </div>
+
+            <!-- CONSIGNEE -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+              <div class="text-xs font-black text-slate-800 uppercase flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span class="flex items-center space-x-1.5">
+                  <i class="fa-solid fa-location-dot text-rose-600"></i>
+                  <span>CONSIGNEE (Người Nhận)</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">DESTINATION</span>
+              </div>
+              <div class="fld">
+                <label>Tên Công Ty / Cá Nhân <span class="req">*</span></label>
+                <input type="text" id="cns_company" placeholder="AMAZON FULFILLMENT CENTER..." oninput="updatePreview()">
+              </div>
+              <div class="fld">
+                <label>Người Liên Hệ (Contact Name)</label>
+                <input type="text" id="cns_contact" placeholder="Receiving Dept / Tammy Nguyen" oninput="updatePreview()">
+              </div>
+              <div class="fld">
+                <label>Địa Chỉ Chi Tiết <span class="req">*</span></label>
+                <textarea id="cns_address" rows="2" placeholder="250 Emerald Dr, Joliet, IL..." oninput="updatePreview()"></textarea>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="fld">
+                  <label>Postal/Zip Code</label>
+                  <input type="text" id="cns_postal" placeholder="60433" oninput="updatePreview()">
+                </div>
+                <div class="fld">
+                  <label>Bang / Quốc Gia <span class="req">*</span></label>
+                  <input type="text" id="cns_country" value="IL, USA" oninput="updatePreview()">
+                </div>
+              </div>
+              <div class="fld">
+                <label>Số Điện Thoại <span class="req">*</span></label>
+                <input type="text" id="cns_phone" placeholder="+1 774-810-5199" oninput="updatePreview()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THẺ 3: QUY CÁCH KIỆN & CÂN NẶNG -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center space-x-2 border-b border-slate-100 pb-2">
+            <i class="fa-solid fa-weight-hanging text-amber-600"></i>
+            <span>3. Số Kiện, Trọng Lượng & Kích Thước (Packages & Weight)</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div class="fld">
+              <label>Số Kiện (No. of pkgs) <span class="req">*</span></label>
+              <input type="number" id="pkg_count" value="1" min="1" oninput="updatePreview()">
+            </div>
+            <div class="fld">
+              <label>Trọng Lượng Thực (Actual WT) <span class="req">*</span></label>
+              <div class="relative">
+                <input type="number" step="0.1" id="pkg_actual_wt" value="5.0" class="pr-8" oninput="updatePreview()">
+                <span class="absolute right-2.5 top-2 text-[10px] font-bold text-slate-400">KG</span>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Trọng Lượng Khối (Dim WT)</label>
+              <div class="relative">
+                <input type="number" step="0.1" id="pkg_dim_wt" value="5.0" class="pr-8" oninput="updatePreview()">
+                <span class="absolute right-2.5 top-2 text-[10px] font-bold text-slate-400">KG</span>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Đơn Vị Tiền Tệ</label>
+              <select id="inv_currency" onchange="updatePreview()">
+                <option value="USD" selected>USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="VND">VND (đ)</option>
+              </select>
+            </div>
+            <div class="fld sm:col-span-4">
+              <label>Kích Thước Chi Tiết (Dimensions - D x R x C cm)</label>
+              <input type="text" id="pkg_dimensions" placeholder="Ví dụ: 50x32x25; 50x34x25 cm" oninput="updatePreview()">
+              <div class="hint">Nếu lô nhiều kiện, liệt kê kích thước từng kiện phân tách bởi dấu chấm phẩy ;</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THẺ 4: BẢNG CHI TIẾT HÀNG HÓA -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-4">
+            <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+              <i class="fa-solid fa-list-check text-emerald-600"></i>
+              <span>4. Danh Mục Hàng Hóa Khai Báo Hải Quan (Commodities)</span>
+            </h2>
+            <button type="button" onclick="addNewItemRow()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center space-x-1 shadow-sm transition">
+              <i class="fa-solid fa-plus"></i>
+              <span>Thêm Dòng Hàng</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
+              <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[10px]">
+                <tr>
+                  <th class="p-2 border-b">Mô Tả Hàng Tiếng Anh (Description)</th>
+                  <th class="p-2 border-b w-24">HS Code</th>
+                  <th class="p-2 border-b w-16">Xuất Xứ</th>
+                  <th class="p-2 border-b w-16">Số Lượng</th>
+                  <th class="p-2 border-b w-16">ĐVT</th>
+                  <th class="p-2 border-b w-20 text-right">Đơn Giá ($)</th>
+                  <th class="p-2 border-b w-24 text-right">Thành Tiền ($)</th>
+                  <th class="p-2 border-b w-10 text-center"></th>
+                </tr>
+              </thead>
+              <tbody id="itemsTableBody" class="divide-y divide-slate-100 font-medium">
+                <!-- Sẽ render động -->
+              </tbody>
+              <tfoot class="bg-slate-50 border-t border-slate-200 text-xs font-bold">
+                <tr>
+                  <td colspan="6" class="p-2 text-right">Subtotal (Tổng trị giá hàng):</td>
+                  <td id="footSubtotal" class="p-2 text-right font-mono font-black text-slate-900">$0.00</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colspan="6" class="p-2 text-right">Shipping Charge (Cước nếu có):</td>
+                  <td class="p-2 text-right">
+                    <input type="number" id="inp_shipping_charge" value="0" step="0.1" class="w-20 text-right font-mono p-1 border rounded text-xs" oninput="updatePreview()">
+                  </td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colspan="6" class="p-2 text-right">Insurance (Bảo hiểm nếu có):</td>
+                  <td class="p-2 text-right">
+                    <input type="number" id="inp_insurance_charge" value="0" step="0.1" class="w-20 text-right font-mono p-1 border rounded text-xs" oninput="updatePreview()">
+                  </td>
+                  <td></td>
+                </tr>
+                <tr class="bg-blue-50 text-blue-900 text-sm">
+                  <td colspan="6" class="p-2.5 text-right font-extrabold uppercase">Total Value of shipment ($):</td>
+                  <td id="footTotalValue" class="p-2.5 text-right font-mono font-black text-blue-700 text-base">$0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- THẺ 5: NGƯỜI KHAI & KÝ TÊN -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center space-x-2 border-b border-slate-100 pb-2">
+            <i class="fa-solid fa-signature text-purple-600"></i>
+            <span>5. Người Khai & Cam Kết Hải Quan (Signatory)</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="fld">
+              <label>Họ Tên Người Khai (Authorised Signatory)</label>
+              <input type="text" id="sig_name" placeholder="MR. TRONG" oninput="updatePreview()">
+            </div>
+            <div class="fld">
+              <label>Chức Danh (Title)</label>
+              <input type="text" id="sig_title" value="Export Manager / Shipper" oninput="updatePreview()">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= CỘT PHẢI: LIVE PREVIEW & NÚT THAO TÁC (5 CỘT) ================= -->
+      <div class="lg:col-span-5 space-y-4">
+
+        <!-- THANH CÔNG CỤ NỔI BẬT: EXPORT & PRINT -->
+        <div class="sticky top-20 z-30 space-y-3">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-lg space-y-2.5">
+            <div class="text-xs font-black text-slate-800 uppercase flex items-center justify-between pb-2 border-b border-slate-100">
+              <span class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-bolt text-amber-500"></i>
+                <span>Thao Tác Xuất Commercial Invoice</span>
+              </span>
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Mẫu Sẵn Sàng</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button type="button" onclick="exportExcelDirectly()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs shadow-md flex items-center justify-center space-x-2 transition">
+                <i class="fa-solid fa-file-excel text-base"></i>
+                <span>XUẤT EXCEL MẪU CHUẨN</span>
+              </button>
+
+              <button type="button" onclick="printInvoiceDirectly()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-extrabold text-xs shadow-md flex items-center justify-center space-x-2 transition">
+                <i class="fa-solid fa-print text-base"></i>
+                <span>IN KHỔ A4 (CTRL+P)</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="saveInvoiceToSystem()" class="w-full py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Lưu Vào Hệ Thống</span>
+              </button>
+
+              <button type="button" onclick="openA4PreviewWindow()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>Mở Tab Xem Trọn A4</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KHUNG BẢN XEM TRƯỚC TRỰC QUAN A4 (LIVE PREVIEW) -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+              <h3 class="text-xs font-black text-slate-900 uppercase flex items-center space-x-1.5">
+                <i class="fa-solid fa-eye text-blue-600"></i>
+                <span>Bản Xem Trước Hóa Đơn (Live Sheet Preview)</span>
+              </h3>
+              <span class="text-[10px] text-slate-400 font-mono">Tỉ lệ chuẩn phôi A4</span>
+            </div>
+
+            <!-- SHEET CONTAINER -->
+            <div class="overflow-auto max-h-[750px] p-2 bg-slate-100 rounded-xl border border-slate-200">
+              <div id="printableArea" class="sheet-preview" style="font-family: Arial, sans-serif; font-size: 8.5pt;">
+                
+                <table class="excel-table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                  <colgroup>
+                    <col style="width: 17%;">
+                    <col style="width: 27%;">
+                    <col style="width: 10%;">
+                    <col style="width: 11%;">
+                    <col style="width: 13%;">
+                    <col style="width: 11%;">
+                    <col style="width: 11%;">
+                  </colgroup>
+
+                  <!-- ROW 1: HEADER INVOICE -->
+                  <tr>
+                    <td colspan="7" style="border-top: 1.5px solid #000; border-left: 1.5px solid #000; border-right: 1.5px solid #000; text-align: center; font-size: 16pt; font-weight: bold; padding: 6px 0; letter-spacing: 1px;">
+                      INVOICE
+                    </td>
+                  </tr>
+
+                  <!-- ROW 2: DATE -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000;"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td style="text-align: right; font-weight: bold; font-size: 8pt; padding-right: 4px;">Date:</td>
+                    <td id="pv_date" style="border-bottom: 1px solid #000; border-right: 1.5px solid #000; font-weight: bold; font-size: 8pt; text-align: center;">-</td>
+                  </tr>
+
+                  <!-- ROW 3: SHIPPER & AIR WAYBILL NO -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-weight: bold; font-family: 'Arial Narrow', Arial; font-size: 11pt; padding: 2px 4px;">SHIPPER</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td style="text-align: right; font-weight: bold; font-size: 8pt; padding-right: 4px;">Air waybill No.</td>
+                    <td id="pv_awb" style="border-bottom: 1px solid #000; border-right: 1.5px solid #000; font-size: 8pt; font-weight: bold; text-align: center; color: #1e3a8a;">-</td>
+                  </tr>
+
+                  <!-- ROW 4: SHIPPER COMPANY -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Company Name</td>
+                    <td colspan="4" id="pv_shp_company" style="border-bottom: 1px solid #000; font-weight: bold; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 5: SHIPPER ADDRESS -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Address</td>
+                    <td colspan="4" id="pv_shp_address" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 6: TOWN / AREA CODE & NO. OF PKGS -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Town/ Area Code</td>
+                    <td colspan="4" id="pv_shp_postal" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">100000</td>
+                    <td style="text-align: right; font-weight: bold; font-size: 8pt; padding-right: 4px;">No. of pkgs </td>
+                    <td id="pv_pkgs" style="border-bottom: 1px solid #000; border-right: 1.5px solid #000; text-align: center; font-weight: bold; font-size: 8pt;">1</td>
+                  </tr>
+
+                  <!-- ROW 7: STATE / COUNTRY -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">State/ Country</td>
+                    <td colspan="4" id="pv_shp_country" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">VIET NAM</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 8: CONTACT NAME & WEIGHT -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Contact Name</td>
+                    <td colspan="4" id="pv_shp_contact" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td style="text-align: right; font-weight: bold; font-size: 8pt; padding-right: 4px;">Weight </td>
+                    <td id="pv_weight" style="border-bottom: 1px solid #000; border-right: 1.5px solid #000; text-align: center; font-weight: bold; font-size: 8pt;">0 KG</td>
+                  </tr>
+
+                  <!-- ROW 9: PHONE/FAX NO -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Phone/Fax No. </td>
+                    <td colspan="4" id="pv_shp_phone" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 10: DIMENSIONS -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000;"></td>
+                    <td colspan="4"></td>
+                    <td style="text-align: right; font-weight: bold; font-size: 8pt; padding-right: 4px;">Dimensions </td>
+                    <td id="pv_dims" style="border: 1px solid #000; border-right: 1.5px solid #000; font-size: 7.5pt; text-align: center; padding: 2px 4px;">Standard</td>
+                  </tr>
+
+                  <!-- KHOẢNG CÁCH DÒNG -->
+                  <tr style="height: 6px;">
+                    <td style="border-left: 1.5px solid #000;"></td>
+                    <td colspan="5"></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 14: CONSIGNEE -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-weight: bold; font-family: 'Arial Narrow', Arial; font-size: 11pt; padding: 2px 4px;">CONSIGNEE</td>
+                    <td colspan="5"></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 15: COMPANY NAME -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Company Name</td>
+                    <td colspan="4" id="pv_cns_company" style="border-bottom: 1px solid #000; font-weight: bold; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 16: ADDRESS & SERVICES -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px; vertical-align: top;">Address</td>
+                    <td colspan="4" rowspan="2" id="pv_cns_address" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px; vertical-align: top;">-</td>
+                    <td style="text-align: right; font-weight: bold; font-size: 8pt; padding-right: 4px;">Services</td>
+                    <td id="pv_service" style="border: 1px solid #000; border-right: 1.5px solid #000; text-align: center; font-weight: bold; font-size: 8pt; color: #1e3a8a;">-</td>
+                  </tr>
+                  <tr>
+                    <td style="border-left: 1.5px solid #000;"></td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 18: POSTAL CODE -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Postal code</td>
+                    <td colspan="4" id="pv_cns_postal" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 19: STATE / COUNTRY -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">State/ Country </td>
+                    <td colspan="4" id="pv_cns_country" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 20: CONTACT NAME -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Contact Name</td>
+                    <td colspan="4" id="pv_cns_contact" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 21: PHONE/FAX NO -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Phone/Fax No. </td>
+                    <td colspan="4" id="pv_cns_phone" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;">-</td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 22: GMAIL -->
+                  <tr>
+                    <td style="border-left: 1.5px solid #000; font-size: 8pt; padding: 2px 4px;">Gmail:</td>
+                    <td colspan="4" id="pv_cns_email" style="border-bottom: 1px solid #000; font-size: 8pt; padding: 2px 4px;"></td>
+                    <td></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- KHOẢNG CÁCH DÒNG -->
+                  <tr style="height: 4px;">
+                    <td style="border-left: 1.5px solid #000;"></td>
+                    <td colspan="5"></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 23: TABLE HEADER HÀNG HÓA -->
+                  <tr style="text-align: center; font-size: 7.5pt; background: #fff;">
+                    <td colspan="2" style="border: 1px solid #000; border-left: 1.5px solid #000; padding: 4px; line-height: 1.25;">
+                      Description of goods (Mô tả hàng)<br>
+                      Harmonized System tariff Number <br>
+                      ( If known)
+                    </td>
+                    <td style="border: 1px solid #000; padding: 4px; line-height: 1.25;">
+                      No<br>Units<br>(Số lượng)
+                    </td>
+                    <td style="border: 1px solid #000; padding: 4px;">
+                      Unit (pcs/sets/box)
+                    </td>
+                    <td style="border: 1px solid #000; padding: 4px; line-height: 1.25;">
+                      Country<br>of Origin<br>(Xuất xứ)
+                    </td>
+                    <td style="border: 1px solid #000; padding: 4px; line-height: 1.25;">
+                      Unit Value<br>(Giá trị của 1 đơn vị hàng)
+                    </td>
+                    <td style="border: 1px solid #000; border-right: 1.5px solid #000; padding: 4px; line-height: 1.25;">
+                      Total<br>Value<br>(Tổng giá trị)
+                    </td>
+                  </tr>
+
+                  <!-- COMMODITY ROWS -->
+                  <tbody id="pv_items_body">
+                    <!-- Dòng hàng preview -->
+                  </tbody>
+
+                  <!-- ROW 25: REASON FOR EXPORT & SUBTOTAL -->
+                  <tr>
+                    <td colspan="5" id="pv_reason" style="border: 1px solid #000; border-left: 1.5px solid #000; padding: 4px 6px; font-size: 8.5pt;">
+                      REASON FOR EXPORT : Sample
+                    </td>
+                    <td style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 8pt;">Subtotal</td>
+                    <td id="pv_subtotal" style="border: 1px solid #000; border-right: 1.5px solid #000; text-align: right; font-weight: bold; font-size: 8pt; padding-right: 6px;">
+                      0
+                    </td>
+                  </tr>
+
+                  <!-- ROW 26: BLANK -->
+                  <tr style="height: 4px;">
+                    <td style="border-left: 1.5px solid #000;"></td>
+                    <td colspan="5"></td>
+                    <td style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 27: TERMS OF SALE -->
+                  <tr>
+                    <td colspan="5" id="pv_incoterm" style="border: 1px solid #000; border-left: 1.5px solid #000; padding: 2px 6px; font-size: 8.5pt;">
+                      Terms of Sale (Incoterm) : DAP
+                    </td>
+                    <td colspan="2" style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 28: NO. OF PACKAGES -->
+                  <tr>
+                    <td colspan="5" id="pv_bot_pkgs" style="border: 1px solid #000; border-left: 1.5px solid #000; padding: 2px 6px; font-size: 8.5pt;">
+                      No.of packages (Số kiện)             :      1
+                    </td>
+                    <td colspan="2" style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 29: TOTAL ACTUAL WEIGHT & SHIPPING CHARGE -->
+                  <tr>
+                    <td colspan="4" id="pv_bot_actual_wt" style="border: 1px solid #000; border-left: 1.5px solid #000; padding: 2px 6px; font-size: 8.5pt;">
+                      Total Actual weight (Trọng lượng thực)          :     0 KG
+                    </td>
+                    <td style="border: 1px solid #000; text-align: right; font-size: 8pt; padding-right: 4px;">Shipping charge</td>
+                    <td colspan="2" id="pv_shipping_charge" style="border: 1px solid #000; border-right: 1.5px solid #000; text-align: right; font-size: 8pt; padding-right: 6px;">
+                    </td>
+                  </tr>
+
+                  <!-- ROW 30: TOTAL DIMENSIONAL WEIGHT & INSUARANCE -->
+                  <tr>
+                    <td colspan="4" id="pv_bot_dim_wt" style="border: 1px solid #000; border-left: 1.5px solid #000; padding: 2px 6px; font-size: 8.5pt;">
+                      Total Dimensional weight (Trọng lượng khối) :  0 KG
+                    </td>
+                    <td style="border: 1px solid #000; text-align: right; font-size: 8pt; padding-right: 4px;">Insuarance</td>
+                    <td colspan="2" id="pv_insurance_charge" style="border: 1px solid #000; border-right: 1.5px solid #000; text-align: right; font-size: 8pt; padding-right: 6px;">
+                    </td>
+                  </tr>
+
+                  <!-- ROW 31: TOTAL VALUE OF SHIPMENT -->
+                  <tr>
+                    <td colspan="4" style="border-left: 1.5px solid #000;"></td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; font-size: 8pt; padding-right: 4px;">
+                      Total Value of shipment (Tổng giá trị)
+                    </td>
+                    <td colspan="2" id="pv_total_value" style="border: 1.5px solid #000; border-right: 1.5px solid #000; text-align: right; font-weight: bold; font-size: 9pt; padding-right: 6px;">
+                      0
+                    </td>
+                  </tr>
+
+                  <!-- ROW 32: CLEARANCE DECLARATION -->
+                  <tr>
+                    <td colspan="4" style="border-left: 1.5px solid #000; padding: 2px 6px; font-size: 8pt;">
+                      clearance for export out of Vietnam.
+                    </td>
+                    <td colspan="3" style="border-right: 1.5px solid #000;"></td>
+                  </tr>
+
+                  <!-- ROW 33: SIGNATORY -->
+                  <tr>
+                    <td colspan="4" style="border-left: 1.5px solid #000;"></td>
+                    <td colspan="3" style="border-right: 1.5px solid #000; text-align: center; font-size: 8pt; padding-top: 10px;">
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Designation of Authorised Signatory
+                    </td>
+                  </tr>
+
+                  <!-- ROW 34: SIGNATURE / STAMP -->
+                  <tr>
+                    <td colspan="4" style="border-left: 1.5px solid #000; border-bottom: 1.5px solid #000;"></td>
+                    <td colspan="3" style="border-right: 1.5px solid #000; border-bottom: 1.5px solid #000; text-align: center; padding-bottom: 35px; font-size: 8pt; color: #333;">
+                      Người khai (Ký tên/ đóng dấu)<br><br>
+                      <div id="pv_sig_name" style="font-weight: bold; margin-top: 20px;">-</div>
+                    </td>
+                  </tr>
+                </table>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= BẢNG QUẢN LÝ CÁC COMMERCIAL INVOICE ĐÃ TẠO ================= -->
+    <div class="mt-10 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between pb-3 border-b border-slate-100 mb-4 gap-3">
+        <div>
+          <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+            <i class="fa-solid fa-folder-open text-blue-600"></i>
+            <span>Danh Sách Commercial Invoice Đã Tạo & Lưu Trữ</span>
+          </h2>
+          <p class="text-xs text-slate-500">Quản lý toàn bộ hóa đơn thương mại đã tạo, in lại hoặc tải file Excel mẫu</p>
+        </div>
+        <button type="button" onclick="loadSavedInvoicesList()" class="text-xs font-bold text-blue-600 hover:underline flex items-center space-x-1">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>Làm mới danh sách</span>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+            <tr>
+              <th class="py-2.5 px-3">Thời Gian</th>
+              <th class="py-2.5 px-3">Số Invoice</th>
+              <th class="py-2.5 px-3">Air Waybill (AWB)</th>
+              <th class="py-2.5 px-3">Hãng / Phôi</th>
+              <th class="py-2.5 px-3">Người Nhận (Consignee)</th>
+              <th class="py-2.5 px-3">Quy Cách</th>
+              <th class="py-2.5 px-3 text-right">Tổng Tiền</th>
+              <th class="py-2.5 px-3 text-right">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="savedInvoicesTableBody" class="divide-y divide-slate-100 font-medium">
+            <tr><td colspan="8" class="text-center py-6 text-slate-400">Đang tải danh sách hóa đơn...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= MODAL: SMART ADDRESS PARSER ================= -->
+  <div id="modalSmartParser" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-1.5">
+          <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i>
+          <span>Dán Đoạn Tin Nhắn Địa Chỉ (Smart Address Parser)</span>
+        </h3>
+        <button type="button" onclick="closeSmartParserModal()" class="w-7 h-7 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <p class="text-slate-500 text-[11px]">
+          Dán đoạn chat từ khách hàng (Zalo, Facebook, SMS...). Hệ thống sẽ tự động bóc tách Tên, SĐT, Địa chỉ, Bang, Zipcode và điền vào ô Consignee:
+        </p>
+        <textarea id="rawAddressInput" rows="5" placeholder="Ví dụ:&#10;Gửi Tammy Nguyen, 774-810-5199, 1219 Main St, Worcester, MA 01603, USA" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"></textarea>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeSmartParserModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="button" onclick="executeSmartParse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow flex items-center space-x-1.5">
+            <i class="fa-solid fa-bolt"></i>
+            <span>BÓC TÁCH & ĐIỀN FORM</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SCAN TEM AWB ================= -->
+  <div id="modalAwbScan" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-1.5">
+          <i class="fa-solid fa-camera text-cyan-600"></i>
+          <span>Quét / Chọn Ảnh Tem AWB Để Tự Điền Form</span>
+        </h3>
+        <button type="button" onclick="closeAwbScanModal()" class="w-7 h-7 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition cursor-pointer" onclick="document.getElementById('scanFileInput').click()">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
+          <p class="font-bold text-slate-700">Bấm để chọn ảnh tem AWB (PNG, JPG)</p>
+          <p class="text-[10px] text-slate-400 mt-1">Hoặc kéo thả file ảnh tem vào đây</p>
+          <input type="file" id="scanFileInput" accept="image/*" class="hidden" onchange="handleScanFileSelected(this.files)">
+        </div>
+
+        <div class="border-t border-slate-100 pt-3">
+          <p class="font-bold text-slate-600 mb-2 text-[11px]">Hoặc chạy nhanh dữ liệu mẫu có sẵn:</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="runSampleScan('UPS')" class="p-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl font-bold text-amber-900 text-xs">
+              ⚡ Nạp Tem Mẫu UPS
+            </button>
+            <button type="button" onclick="runSampleScan('FEDEX')" class="p-2.5 bg-purple-50 hover:bg-purple-100 border border-purple-300 rounded-xl font-bold text-purple-900 text-xs">
+              ⚡ Nạp Tem Mẫu FedEx
+            </button>
+          </div>
+        </div>
+
+        <div id="scanStatus" class="hidden text-center py-2 text-blue-600 font-bold animate-pulse">
+          <i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang OCR bóc tách thông tin tem AWB...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LOGIC JAVASCRIPT ================= -->
+  <script>
+    const $ = id => document.getElementById(id);
+
+    // Danh sách items hiện tại
+    let invoiceItems = [
+      {
+        description: "MEN'S TROUSERS (QUẦN DÀI NAM)",
+        material: "100% Cotton",
+        hsCode: "6204.62",
+        midCode: "VNPLAHOA123",
+        manufacturer: "CONG TY TNHH MAY MAC PANDALEX",
+        factoryAddress: "SO 883 NGO GIA TU, LONG BIEN, HA NOI",
+        originCountry: "VN",
+        quantity: 5,
+        unit: "PCS",
+        unitValue: 20,
+        lineTotal: 100
+      }
+    ];
+
+    let currentEditingId = null;
+    let savedShipments = [];
+
+    // ==========================================
+    // KHỞI TẠO MẶC ĐỊNH
+    // ==========================================
+    function initDefaultValues() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      $('inv_date').value = `${yyyy}-${mm}-${dd}`;
+
+      const randNum = Date.now().toString().slice(-6);
+      $('inv_number').value = `INV-${randNum}`;
+      $('inv_carrier').value = 'UPS';
+      $('inv_service').value = 'UPS Worldwide Saver';
+      $('inv_incoterm').value = 'DAP';
+      $('inv_reason').value = 'Commercial Sale / Merchandise';
+
+      // Shipper mặc định
+      $('shp_company').value = 'CONG TY TNHH NHAP KHAU VA THUONG MAI PANDALEX';
+      $('shp_contact').value = 'MR. TRONG';
+      $('shp_address').value = 'SO 883 NGO GIA TU, PHUONG DUC GIANG, QUAN LONG BIEN, HA NOI';
+      $('shp_postal').value = '100000';
+      $('shp_country').value = 'VIET NAM';
+      $('shp_phone').value = '0988 123 456';
+
+      // Consignee mặc định
+      $('cns_company').value = 'AMAZON FULFILLMENT CENTER';
+      $('cns_contact').value = 'Receiving Department';
+      $('cns_address').value = '250 EMERALD DR, JOLIET, IL';
+      $('cns_postal').value = '60433';
+      $('cns_country').value = 'IL, USA';
+      $('cns_phone').value = '+1 774-810-5199';
+
+      $('pkg_count').value = 1;
+      $('pkg_actual_wt').value = 5.0;
+      $('pkg_dim_wt').value = 5.0;
+      $('pkg_dimensions').value = '50x32x25 cm';
+      $('sig_name').value = 'MR. TRONG';
+      $('sig_title').value = 'Export Manager';
+
+      renderItemsTable();
+      updatePreview();
+    }
+
+    // ==========================================
+    // QUẢN LÝ ITEMS HÀNG HÓA
+    // ==========================================
+    function renderItemsTable() {
+      const tbody = $('itemsTableBody');
+      tbody.innerHTML = invoiceItems.map((it, idx) => {
+        const lineTotal = (Number(it.quantity) || 1) * (Number(it.unitValue) || 0);
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-200">
+            <td class="p-2 space-y-1.5 min-w-[260px]">
+              <input type="text" value="${it.description || ''}" oninput="updateItemField(${idx}, 'description', this.value)" class="w-full p-1.5 border border-slate-300 rounded text-xs font-bold text-slate-800 focus:ring-1 focus:ring-blue-500" placeholder="Tên hàng (VD: QUẦN DÀI NAM / MEN'S TROUSERS)">
+              <div class="grid grid-cols-2 gap-1 text-[11px]">
+                <input type="text" value="${it.material || ''}" oninput="updateItemField(${idx}, 'material', this.value)" class="p-1 border border-slate-200 rounded text-[11px] bg-slate-50 focus:bg-white" placeholder="Chất liệu: 100% Cotton / Plastic">
+                <input type="text" value="${it.midCode || ''}" oninput="updateItemField(${idx}, 'midCode', this.value)" class="p-1 border border-slate-200 rounded text-[11px] bg-slate-50 focus:bg-white uppercase font-mono" placeholder="MID Code: VNPLAHOA123">
+              </div>
+              <div class="grid grid-cols-2 gap-1 text-[11px]">
+                <input type="text" value="${it.manufacturer || ''}" oninput="updateItemField(${idx}, 'manufacturer', this.value)" class="p-1 border border-slate-200 rounded text-[11px] bg-slate-50 focus:bg-white" placeholder="Mnf: CTY MAY MAC ABC">
+                <input type="text" value="${it.factoryAddress || ''}" oninput="updateItemField(${idx}, 'factoryAddress', this.value)" class="p-1 border border-slate-200 rounded text-[11px] bg-slate-50 focus:bg-white" placeholder="Add: KCN PHO NOI, HUNG YEN">
+              </div>
+            </td>
+            <td class="p-2 align-top">
+              <input type="text" value="${it.hsCode || ''}" oninput="updateItemField(${idx}, 'hsCode', this.value)" class="w-full p-1 border border-slate-300 rounded text-xs font-mono text-center font-bold" placeholder="6204.62">
+            </td>
+            <td class="p-2 align-top">
+              <input type="text" value="${it.originCountry || 'VN'}" oninput="updateItemField(${idx}, 'originCountry', this.value)" class="w-full p-1 border border-slate-300 rounded text-xs text-center font-bold" placeholder="VN">
+            </td>
+            <td class="p-2 align-top">
+              <input type="number" min="1" value="${it.quantity || 1}" oninput="updateItemField(${idx}, 'quantity', this.value)" class="w-full p-1 border border-slate-300 rounded text-xs text-center font-bold">
+            </td>
+            <td class="p-2 align-top">
+              <input type="text" value="${it.unit || 'PCS'}" oninput="updateItemField(${idx}, 'unit', this.value)" class="w-full p-1 border border-slate-300 rounded text-xs text-center uppercase font-bold" placeholder="PCS">
+            </td>
+            <td class="p-2 align-top">
+              <input type="number" step="0.1" value="${it.unitValue || 0}" oninput="updateItemField(${idx}, 'unitValue', this.value)" class="w-full p-1 border border-slate-300 rounded text-xs text-right font-mono font-bold">
+            </td>
+            <td class="p-2 text-right font-mono font-bold text-slate-800 align-top pt-2.5">
+              $${lineTotal.toFixed(2)}
+            </td>
+            <td class="p-2 text-center align-top pt-2">
+              ${invoiceItems.length > 1 ? `
+                <button type="button" onclick="removeItemRow(${idx})" class="text-rose-500 hover:text-rose-700 p-1">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      calculateTotals();
+    }
+
+    function addNewItemRow() {
+      invoiceItems.push({
+        description: 'MERCHANDISE SAMPLE',
+        hsCode: '8504.40',
+        originCountry: 'VN',
+        quantity: 1,
+        unit: 'PCS',
+        unitValue: 20,
+        lineTotal: 20
+      });
+      renderItemsTable();
+      updatePreview();
+    }
+
+    function removeItemRow(idx) {
+      if (invoiceItems.length <= 1) return;
+      invoiceItems.splice(idx, 1);
+      renderItemsTable();
+      updatePreview();
+    }
+
+    function updateItemField(idx, field, val) {
+      if (field === 'quantity' || field === 'unitValue') {
+        invoiceItems[idx][field] = Number(val) || 0;
+        invoiceItems[idx].lineTotal = (Number(invoiceItems[idx].quantity) || 1) * (Number(invoiceItems[idx].unitValue) || 0);
+      } else {
+        invoiceItems[idx][field] = val;
+      }
+      calculateTotals();
+      updatePreview();
+    }
+
+    function calculateTotals() {
+      let subtotal = 0;
+      invoiceItems.forEach(it => {
+        const line = (Number(it.quantity) || 1) * (Number(it.unitValue) || 0);
+        subtotal += line;
+      });
+      const shipping = Number($('inp_shipping_charge').value) || 0;
+      const insurance = Number($('inp_insurance_charge').value) || 0;
+      const total = subtotal + shipping + insurance;
+
+      $('footSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+      $('footTotalValue').textContent = `$${total.toFixed(2)}`;
+      return { subtotal, shipping, insurance, total };
+    }
+
+    function handleCarrierChange() {
+      const c = $('inv_carrier').value;
+      if (c === 'UPS') {
+        $('templateType').value = 'UPS';
+        $('inv_service').value = 'UPS Worldwide Saver';
+      } else if (c === 'FEDEX') {
+        $('templateType').value = 'FEDEX';
+        $('inv_service').value = 'FedEx Spot International Priority';
+      } else if (c === 'DHL') {
+        $('inv_service').value = 'DHL Express Worldwide';
+      }
+      updatePreview();
+    }
+
+    function handleDateChange() {
+      updatePreview();
+    }
+
+    function formatDateDisplay(yyyyMmDd) {
+      if (!yyyyMmDd) return new Date().toLocaleDateString('en-GB');
+      try {
+        const d = new Date(yyyyMmDd);
+        const day = d.getDate();
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      } catch (e) {
+        return yyyyMmDd;
+      }
+    }
+
+    // ==========================================
+    // CẬP NHẬT LIVE PREVIEW
+    // ==========================================
+    function updatePreview() {
+      const totals = calculateTotals();
+      const dateVal = $('inv_date').value;
+      const dateFmt = formatDateDisplay(dateVal);
+
+      $('pv_date').textContent = dateFmt;
+      $('pv_awb').textContent = $('inv_awb').value || '-';
+      $('pv_shp_company').textContent = $('shp_company').value || '-';
+      $('pv_shp_address').textContent = $('shp_address').value || '-';
+      $('pv_shp_postal').textContent = $('shp_postal').value || '-';
+      $('pv_shp_country').textContent = $('shp_country').value || '-';
+      $('pv_shp_contact').textContent = $('shp_contact').value || '-';
+      $('pv_shp_phone').textContent = $('shp_phone').value || '-';
+
+      $('pv_pkgs').textContent = $('pkg_count').value || '1';
+      $('pv_weight').textContent = `${$('pkg_actual_wt').value || '0'} KG`;
+      $('pv_dims').textContent = $('pkg_dimensions').value || 'Standard';
+      $('pv_service').textContent = `${$('inv_carrier').value} ${$('inv_service').value}`;
+
+      $('pv_cns_company').textContent = $('cns_company').value || '-';
+      $('pv_cns_address').textContent = $('cns_address').value || '-';
+      $('pv_cns_postal').textContent = $('cns_postal').value || '-';
+      $('pv_cns_country').textContent = $('cns_country').value || '-';
+      $('pv_cns_contact').textContent = $('cns_contact').value || '-';
+      $('pv_cns_phone').textContent = $('cns_phone').value || '-';
+      if ($('pv_cns_email')) $('pv_cns_email').textContent = $('cns_email')?.value || '';
+
+      $('pv_reason').textContent = `REASON FOR EXPORT : ${$('inv_reason').value || 'Sample'}`;
+      $('pv_incoterm').textContent = `Terms of Sale (Incoterm) : ${$('inv_incoterm').value || 'DAP'}`;
+      $('pv_bot_pkgs').textContent = `No.of packages (Số kiện)             :      ${$('pkg_count').value || '1'}`;
+      $('pv_bot_actual_wt').textContent = `Total Actual weight (Trọng lượng thực)          :     ${$('pkg_actual_wt').value || '0'} KG`;
+      $('pv_bot_dim_wt').textContent = `Total Dimensional weight (Trọng lượng khối) :  ${$('pkg_dim_wt').value || '0'} KG`;
+
+      $('pv_shipping_charge').textContent = totals.shipping ? totals.shipping.toFixed(2) : '';
+      $('pv_insurance_charge').textContent = totals.insurance ? totals.insurance.toFixed(2) : '';
+      $('pv_subtotal').textContent = totals.subtotal.toFixed(2);
+      $('pv_total_value').textContent = totals.total.toFixed(2);
+
+      $('pv_sig_name').textContent = $('sig_name').value || $('shp_contact').value || '-';
+
+      // Render danh sách hàng trong preview
+      const pvBody = $('pv_items_body');
+      pvBody.innerHTML = invoiceItems.map(it => {
+        const q = Number(it.quantity) || 1;
+        const u = Number(it.unitValue) || 0;
+        const line = q * u;
+        const descLines = [];
+        if (it.description) descLines.push(`<b>${it.description}</b>`);
+        if (it.material && !it.description.includes(it.material)) descLines.push(`<span>${it.material}</span>`);
+        if (it.hsCode && !it.description.includes(it.hsCode)) descLines.push(`<span style="font-size: 7.5pt; color: #1e293b;">HTS code: <b>${it.hsCode}</b></span>`);
+        if (it.midCode && !it.description.includes(it.midCode)) descLines.push(`<span style="font-size: 7.5pt; color: #1e293b;">MID code: <b>${it.midCode}</b></span>`);
+        if (it.manufacturer && !it.description.includes(it.manufacturer)) descLines.push(`<span style="font-size: 7.5pt; color: #334155;">Mnf: ${it.manufacturer}</span>`);
+        if (it.factoryAddress && !it.description.includes(it.factoryAddress)) descLines.push(`<span style="font-size: 7.5pt; color: #334155;">Add: ${it.factoryAddress}</span>`);
+        const fullHtml = descLines.length > 0 ? descLines.join('<br>') : (it.description || 'Goods');
+
+        return `
+          <tr>
+            <td colspan="2" style="border: 1px solid #000; border-left: 1.5px solid #000; padding: 4px 6px; font-size: 8pt; vertical-align: top; line-height: 1.35;">
+              ${fullHtml}
+            </td>
+            <td style="border: 1px solid #000; text-align: center; font-size: 8pt; font-weight: bold; vertical-align: middle;">${q}</td>
+            <td style="border: 1px solid #000; text-align: center; font-size: 8pt; vertical-align: middle;">${it.unit || 'pcs'}</td>
+            <td style="border: 1px solid #000; text-align: center; font-size: 8pt; vertical-align: middle;">${it.originCountry || 'Vietnam'}</td>
+            <td style="border: 1px solid #000; text-align: right; font-size: 8pt; font-family: Arial, monospace; vertical-align: middle; padding-right: 4px;">${u}</td>
+            <td style="border: 1px solid #000; border-right: 1.5px solid #000; text-align: right; font-size: 8pt; font-weight: bold; font-family: Arial, monospace; vertical-align: middle; padding-right: 6px;">${line}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // LẤY DỮ LIỆU TỪ FORM
+    // ==========================================
+    function getFormData() {
+      const totals = calculateTotals();
+      const dateVal = $('inv_date').value;
+      const dateFmt = formatDateDisplay(dateVal);
+
+      return {
+        id: currentEditingId || `CI_${Date.now()}`,
+        invoiceNumber: $('inv_number').value || `INV-${Date.now().toString().slice(-6)}`,
+        invoiceDate: dateVal,
+        dateFormatted: dateFmt,
+        templateType: $('templateType').value,
+        airWaybillNo: $('inv_awb').value,
+        masterTrackingNumber: $('inv_awb').value.split('/')[0].trim(),
+        carrier: $('inv_carrier').value,
+        serviceName: `${$('inv_carrier').value} ${$('inv_service').value}`,
+
+        shipperCompanyName: $('shp_company').value,
+        shipperAddress: $('shp_address').value,
+        shipperTownArea: $('shp_postal').value,
+        shipperStateCountry: $('shp_country').value,
+        shipperContactName: $('shp_contact').value,
+        shipperPhone: $('shp_phone').value,
+
+        consigneeCompanyName: $('cns_company').value,
+        consigneeAddress: $('cns_address').value,
+        consigneePostalCode: $('cns_postal').value,
+        consigneeStateCountry: $('cns_country').value,
+        consigneeContactName: $('cns_contact').value,
+        consigneePhone: $('cns_phone').value,
+
+        totalPackages: Number($('pkg_count').value) || 1,
+        totalActualWeightKg: Number($('pkg_actual_wt').value) || 0,
+        totalDimensionalWeightKg: Number($('pkg_dim_wt').value) || 0,
+        dimensionsSummary: $('pkg_dimensions').value,
+
+        reasonForExport: $('inv_reason').value,
+        termsOfSale: $('inv_incoterm').value,
+        currency: $('inv_currency').value,
+        shippingCharge: totals.shipping,
+        insuranceCharge: totals.insurance,
+        subtotal: totals.subtotal,
+        totalValue: totals.total,
+
+        items: invoiceItems,
+        signatoryName: $('sig_name').value || $('shp_contact').value,
+        signatoryTitle: $('sig_title').value
+      };
+    }
+
+    // ==========================================
+    // XUẤT EXCEL THEO MẪU CHUẨN ĐỊNH SẴN
+    // ==========================================
+    async function exportExcelDirectly() {
+      const data = getFormData();
+      try {
+        const res = await fetch('/api/invoices/export-excel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || 'Lỗi từ máy chủ');
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Commercial_Invoice_${data.invoiceNumber || data.airWaybillNo || 'Export'}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('❌ Không thể tải file Excel: ' + err.message);
+      }
+    }
+
+    // ==========================================
+    // IN HÓA ĐƠN A4 (CTRL + P)
+    // ==========================================
+    function printInvoiceDirectly() {
+      window.print();
+    }
+
+    // Mở Tab Xem Trọn Khổ A4
+    async function openA4PreviewWindow() {
+      const data = getFormData();
+      try {
+        const res = await fetch('/api/invoices/preview-html', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const html = await res.text();
+        const w = window.open('', '_blank');
+        if (w) {
+          w.document.open();
+          w.document.write(html);
+          w.document.close();
+        }
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    }
+
+    // ==========================================
+    // LƯU HÓA ĐƠN VÀO HỆ THỐNG
+    // ==========================================
+    async function saveInvoiceToSystem() {
+      const data = getFormData();
+      try {
+        const res = await fetch('/api/invoices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (json.success) {
+          currentEditingId = json.data.id;
+          alert('✅ ' + json.message + ` [Mã: ${json.data.invoiceNumber}]`);
+          loadSavedInvoicesList();
+        } else {
+          alert('❌ ' + json.message);
+        }
+      } catch (err) {
+        alert('Lỗi kết nối: ' + err.message);
+      }
+    }
+
+    // ==========================================
+    // NẠP TỪ VẬN ĐƠN ĐÃ CÓ TRONG HỆ THỐNG
+    // ==========================================
+    async function loadSavedShipmentsDropdown() {
+      const sel = $('selectSavedShipment');
+      try {
+        const res = await fetch('/api/shipments');
+        const json = await res.json();
+        if (json.success && json.data) {
+          savedShipments = json.data;
+          sel.innerHTML = '<option value="">-- Chọn vận đơn AWB để nạp thông tin tự động --</option>' +
+            savedShipments.map(s => {
+              const trk = s.masterTrackingNumber || s.shipmentId;
+              const c = s.carrier;
+              const name = s.shipTo?.contactName || 'Khách';
+              const pCount = s.totalPieces || s.pieces?.length || 1;
+              return `<option value="${s.shipmentId}">[${c}] AWB: ${trk} (${pCount} kiện, ${s.totalWeightKg}kg) -> ${name}</option>`;
+            }).join('');
+        }
+      } catch (e) {
+        console.error('Lỗi tải danh sách vận đơn:', e);
+      }
+    }
+
+    function loadFromSelectedShipment(shpId) {
+      if (!shpId) return;
+      const s = savedShipments.find(x => x.shipmentId === shpId);
+      if (!s) return;
+
+      const isMps = s.pieces && s.pieces.length > 1;
+      const allTrk = isMps
+        ? s.pieces.map(p => p.trackingNumber).filter(Boolean).join(' / ')
+        : (s.masterTrackingNumber || '');
+
+      $('inv_carrier').value = s.carrier === 'FEDEX' ? 'FEDEX' : 'UPS';
+      $('templateType').value = s.carrier === 'FEDEX' ? 'FEDEX' : 'UPS';
+      $('inv_service').value = s.serviceName || (s.carrier === 'FEDEX' ? 'FedEx Spot International Priority' : 'UPS Worldwide Saver');
+      $('inv_awb').value = allTrk;
+      $('inv_number').value = s.reference1 || s.invoiceNumber || `INV-${(s.masterTrackingNumber || '').slice(-8) || Date.now().toString().slice(-6)}`;
+
+      if (s.shipFrom) {
+        $('shp_company').value = s.shipFrom.companyName || s.shipFrom.contactName || '';
+        $('shp_contact').value = s.shipFrom.contactName || '';
+        $('shp_address').value = s.shipFrom.address1 + (s.shipFrom.address2 ? ', ' + s.shipFrom.address2 : '');
+        $('shp_postal').value = s.shipFrom.postalCode || '100000';
+        $('shp_country').value = s.shipFrom.countryName || 'VIET NAM';
+        $('shp_phone').value = s.shipFrom.phone || '';
+      }
+
+      if (s.shipTo) {
+        $('cns_company').value = s.shipTo.companyName || s.shipTo.contactName || '';
+        $('cns_contact').value = s.shipTo.contactName || '';
+        $('cns_address').value = s.shipTo.address1 + (s.shipTo.address2 ? ', ' + s.shipTo.address2 : '') + (s.shipTo.city ? `, ${s.shipTo.city}` : '');
+        $('cns_postal').value = s.shipTo.postalCode || '';
+        $('cns_country').value = `${s.shipTo.state ? s.shipTo.state + ', ' : ''}${s.shipTo.countryName || 'USA'}`;
+        $('cns_phone').value = s.shipTo.phone || '';
+      }
+
+      $('pkg_count').value = s.totalPieces || s.pieces?.length || 1;
+      $('pkg_actual_wt').value = s.totalWeightKg || 1;
+      $('pkg_dim_wt').value = s.volumetricWeightKg || s.totalWeightKg || 1;
+
+      if (s.pieces && s.pieces.length > 0) {
+        $('pkg_dimensions').value = s.pieces.map(p => p.dimsText || `${p.lengthCm}x${p.widthCm}x${p.heightCm} cm`).join('; ');
+      }
+
+      if (s.items && s.items.length > 0) {
+        invoiceItems = s.items.map(it => ({
+          description: it.description || 'Commodities',
+          hsCode: it.hsCode || '4202.92.10',
+          originCountry: it.originCountry || 'VN',
+          quantity: Number(it.quantity) || 1,
+          unit: it.unit || 'PCS',
+          unitValue: Number(it.unitValue) || 30,
+          lineTotal: Number(it.lineTotal) || ((Number(it.quantity) || 1) * (Number(it.unitValue) || 30))
+        }));
+      }
+
+      renderItemsTable();
+      updatePreview();
+      alert(`✅ Đã nạp thành công dữ liệu từ vận đơn ${s.masterTrackingNumber}!`);
+    }
+
+    // ==========================================
+    // DANH SÁCH INVOICE ĐÃ LƯU
+    // ==========================================
+    async function loadSavedInvoicesList() {
+      const tbody = $('savedInvoicesTableBody');
+      try {
+        const res = await fetch('/api/invoices');
+        const json = await res.json();
+        if (json.success && json.data) {
+          if (json.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Chưa có Commercial Invoice nào được lưu.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = json.data.map(inv => {
+            const d = new Date(inv.createdAt);
+            const timeFmt = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            return `
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-2.5 px-3 text-[11px] text-slate-500">${timeFmt}</td>
+                <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${inv.invoiceNumber}</td>
+                <td class="py-2.5 px-3 font-mono font-bold text-blue-700">${inv.airWaybillNo || '-'}</td>
+                <td class="py-2.5 px-3">
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${inv.templateType === 'FEDEX' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-900'}">
+                    ${inv.templateType || 'UPS'}
+                  </span>
+                </td>
+                <td class="py-2.5 px-3">
+                  <strong class="block text-slate-800">${inv.consigneeCompanyName || inv.consigneeContactName}</strong>
+                  <span class="text-[10px] text-slate-400">${inv.consigneeStateCountry || ''}</span>
+                </td>
+                <td class="py-2.5 px-3 font-mono">${inv.totalPackages} kiện (${inv.totalActualWeightKg}kg)</td>
+                <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">$${(inv.totalValue || 0).toFixed(2)}</td>
+                <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+                  <button onclick="loadSavedInvoiceToForm('${inv.id}')" class="px-2 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded font-bold text-xs" title="Nạp lại vào form chỉnh sửa">
+                    <i class="fa-solid fa-pen-to-square"></i> Sửa
+                  </button>
+                  <a href="/api/invoices/${inv.id}/html" target="_blank" class="px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded font-bold text-xs inline-block" title="Xem/In A4">
+                    <i class="fa-solid fa-print"></i> A4
+                  </a>
+                  <a href="/api/invoices/${inv.id}/excel" download class="px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded font-bold text-xs inline-block" title="Tải Excel">
+                    <i class="fa-solid fa-file-excel"></i> Excel
+                  </a>
+                  <button onclick="deleteSavedInvoice('${inv.id}')" class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded font-bold text-xs" title="Xóa">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-rose-500">Lỗi tải danh sách: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function loadSavedInvoiceToForm(id) {
+      try {
+        const res = await fetch(`/api/invoices/${id}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          const inv = json.data;
+          currentEditingId = inv.id;
+          $('inv_number').value = inv.invoiceNumber;
+          $('inv_date').value = inv.invoiceDate;
+          $('templateType').value = inv.templateType || 'UPS';
+          $('inv_carrier').value = inv.carrier || 'UPS';
+          $('inv_service').value = inv.serviceName ? inv.serviceName.replace(/^(UPS|FEDEX|DHL)\s*/i, '') : 'Worldwide Saver';
+          $('inv_awb').value = inv.airWaybillNo || inv.masterTrackingNumber || '';
+          $('inv_incoterm').value = inv.termsOfSale || 'DAP';
+          $('inv_reason').value = inv.reasonForExport || 'Commercial Sale';
+
+          $('shp_company').value = inv.shipperCompanyName || '';
+          $('shp_contact').value = inv.shipperContactName || '';
+          $('shp_address').value = inv.shipperAddress || '';
+          $('shp_postal').value = inv.shipperTownArea || '100000';
+          $('shp_country').value = inv.shipperStateCountry || 'VIET NAM';
+          $('shp_phone').value = inv.shipperPhone || '';
+
+          $('cns_company').value = inv.consigneeCompanyName || '';
+          $('cns_contact').value = inv.consigneeContactName || '';
+          $('cns_address').value = inv.consigneeAddress || '';
+          $('cns_postal').value = inv.consigneePostalCode || '';
+          $('cns_country').value = inv.consigneeStateCountry || 'USA';
+          $('cns_phone').value = inv.consigneePhone || '';
+
+          $('pkg_count').value = inv.totalPackages || 1;
+          $('pkg_actual_wt').value = inv.totalActualWeightKg || 0;
+          $('pkg_dim_wt').value = inv.totalDimensionalWeightKg || 0;
+          $('pkg_dimensions').value = inv.dimensionsSummary || 'Standard';
+
+          $('inp_shipping_charge').value = inv.shippingCharge || 0;
+          $('inp_insurance_charge').value = inv.insuranceCharge || 0;
+
+          if (inv.items && inv.items.length > 0) {
+            invoiceItems = inv.items;
+          }
+
+          $('sig_name').value = inv.signatoryName || '';
+          $('sig_title').value = inv.signatoryTitle || 'Export Manager';
+
+          renderItemsTable();
+          updatePreview();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          alert(`✅ Đã nạp hóa đơn ${inv.invoiceNumber} vào form!`);
+        }
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    }
+
+    async function deleteSavedInvoice(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa Commercial Invoice này?')) return;
+      try {
+        const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          loadSavedInvoicesList();
+        } else {
+          alert('❌ ' + json.message);
+        }
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    }
+
+    function resetInvoiceForm() {
+      currentEditingId = null;
+      initDefaultValues();
+    }
+
+    // ==========================================
+    // MODAL SMART ADDRESS PARSER
+    // ==========================================
+    function openSmartParserModal() { $('modalSmartParser').classList.remove('hidden'); }
+    function closeSmartParserModal() { $('modalSmartParser').classList.add('hidden'); }
+
+    async function executeSmartParse() {
+      const text = $('rawAddressInput').value.trim();
+      if (!text) { alert('Vui lòng dán tin nhắn địa chỉ!'); return; }
+      try {
+        const res = await fetch('/api/parse-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rawText: text })
+        });
+        const d = await res.json();
+        if (d.success && d.data) {
+          const a = d.data;
+          $('cns_contact').value = a.name || $('cns_contact').value;
+          $('cns_phone').value = a.phone || $('cns_phone').value;
+          $('cns_address').value = a.address1 || $('cns_address').value;
+          $('cns_postal').value = a.postalCode || $('cns_postal').value;
+          if (a.state || a.country) {
+            $('cns_country').value = `${a.state ? a.state + ', ' : ''}${a.country || 'USA'}`;
+          }
+          if (a.company) $('cns_company').value = a.company;
+          closeSmartParserModal();
+          updatePreview();
+          alert('✅ Bóc tách địa chỉ thành công!');
+        } else {
+          alert('❌ ' + (d.message || 'Không thể bóc tách địa chỉ'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối: ' + err.message);
+      }
+    }
+
+    // ==========================================
+    // MODAL SCAN AWB
+    // ==========================================
+    function openAwbScanModal() {
+      $('modalAwbScan').classList.remove('hidden');
+      $('scanStatus').classList.add('hidden');
+    }
+    function closeAwbScanModal() { $('modalAwbScan').classList.add('hidden'); }
+
+    async function runSampleScan(carrier) {
+      $('scanStatus').classList.remove('hidden');
+      try {
+        const res = await fetch('/api/shipments/scan-awb', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sample: carrier, autoSave: false })
+        });
+        const d = await res.json();
+        $('scanStatus').classList.add('hidden');
+        if (d.success && d.data) {
+          applyAwbDataToInvoice(d.data);
+          closeAwbScanModal();
+        } else {
+          alert('❌ ' + d.message);
+        }
+      } catch (err) {
+        $('scanStatus').classList.add('hidden');
+        alert('Lỗi: ' + err.message);
+      }
+    }
+
+    function handleScanFileSelected(files) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const reader = new FileReader();
+      $('scanStatus').classList.remove('hidden');
+
+      reader.onload = async e => {
+        try {
+          const base64 = e.target.result;
+          const res = await fetch('/api/shipments/scan-awb', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64: base64, autoSave: false })
+          });
+          const d = await res.json();
+          $('scanStatus').classList.add('hidden');
+          if (d.success && d.data) {
+            applyAwbDataToInvoice(d.data);
+            closeAwbScanModal();
+          } else {
+            alert('❌ ' + d.message);
+          }
+        } catch (err) {
+          $('scanStatus').classList.add('hidden');
+          alert('Lỗi: ' + err.message);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyAwbDataToInvoice(awb) {
+      if (awb.carrier) {
+        $('inv_carrier').value = awb.carrier;
+        $('templateType').value = awb.carrier === 'FEDEX' ? 'FEDEX' : 'UPS';
+      }
+      if (awb.trackingNumber) {
+        $('inv_awb').value = awb.trackingNumber;
+        $('inv_number').value = `INV-${awb.trackingNumber.slice(-8)}`;
+      }
+      if (awb.serviceName) $('inv_service').value = awb.serviceName;
+
+      if (awb.shipTo) {
+        $('cns_company').value = awb.shipTo.contactName || awb.shipTo.address1 || '';
+        $('cns_contact').value = awb.shipTo.contactName || '';
+        $('cns_address').value = awb.shipTo.address1 + (awb.shipTo.city ? `, ${awb.shipTo.city}` : '');
+        $('cns_postal').value = awb.shipTo.postalCode || '';
+        $('cns_country').value = `${awb.shipTo.state ? awb.shipTo.state + ', ' : ''}${awb.shipTo.countryCode || 'USA'}`;
+        $('cns_phone').value = awb.shipTo.phone || '';
+      }
+
+      if (awb.weightKg) {
+        $('pkg_actual_wt').value = awb.weightKg;
+        $('pkg_dim_wt').value = awb.weightKg;
+      }
+      if (awb.totalPieces) $('pkg_count').value = awb.totalPieces;
+
+      updatePreview();
+      alert(`📸 Đã nạp thành công thông tin từ tem AWB ${awb.carrier}: ${awb.trackingNumber}!`);
+    }
+
+    // ==========================================
+    // TỰ ĐỘNG KIỂM TRA QUERY PARAMS (?shipmentId=...)
+    // ==========================================
+    function checkQueryParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const shpId = urlParams.get('shipmentId');
+      if (shpId) {
+        // Đợi nạp dropdown xong rồi chọn
+        setTimeout(() => {
+          $('selectSavedShipment').value = shpId;
+          loadFromSelectedShipment(shpId);
+        }, 500);
+      }
+    }
+
+    // KHỞI ĐỘNG
+    initDefaultValues();
+    loadSavedShipmentsDropdown();
+    loadSavedInvoicesList();
+    checkQueryParams();
+  </script>
+</body>
+</html>

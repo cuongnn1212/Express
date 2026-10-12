@@ -1,0 +1,101 @@
+[
+  {
+    "id": "usr_admin",
+    "username": "admin",
+    "fullName": "Quản Trị Viên Hệ Thống (Root Admin)",
+    "email": "ceo@pandalex.vn",
+    "role": "SUPER_ADMIN",
+    "hub": "SGN",
+    "walletBalance": 0,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-08T18:17:14.720Z"
+  },
+  {
+    "id": "usr_bgd",
+    "username": "bgd",
+    "fullName": "Ban Giám Đốc (Board of Directors / CEO)",
+    "email": "bgd@pandalex.vn",
+    "role": "DIRECTOR",
+    "hub": "SGN",
+    "walletBalance": 0,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-12T01:35:47.934Z"
+  },
+  {
+    "id": "usr_accountant",
+    "username": "ketoan",
+    "fullName": "Nguyễn Thị Thu Hà (Kế Toán Trưởng)",
+    "email": "finance@pandalex.vn",
+    "role": "ACCOUNTANT",
+    "hub": "SGN",
+    "walletBalance": 0,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-08T18:17:14.721Z"
+  },
+  {
+    "id": "usr_warehouse_sgn",
+    "username": "khosgn",
+    "fullName": "Lê Văn Tuấn (Điều phối Kho Tân Bình)",
+    "email": "kho.sgn@pandalex.vn",
+    "role": "WAREHOUSE",
+    "hub": "SGN",
+    "walletBalance": 0,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-08T18:17:14.721Z"
+  },
+  {
+    "id": "usr_warehouse_han",
+    "username": "khohan",
+    "fullName": "Trần Văn Hoàng (Thủ kho Nội Bài)",
+    "email": "kho.han@pandalex.vn",
+    "role": "WAREHOUSE",
+    "hub": "HAN",
+    "walletBalance": 0,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-08T18:17:14.721Z"
+  },
+  {
+    "id": "usr_agent_annam",
+    "username": "daily_annam",
+    "fullName": "Đại Lý Cấp 2 - An Nam Logistics",
+    "email": "annam@daily.vn",
+    "role": "AGENT",
+    "hub": "SGN",
+    "customerCode": "AG-002",
+    "walletBalance": 15500000,
+    "creditLimit": 50000000,
+    "isActive": true,
+    "createdAt": "2026-10-08T18:17:14.721Z"
+  },
+  {
+    "id": "usr_agent_crossborder",
+    "username": "fba_seller",
+    "fullName": "CrossBorder FBA Express",
+    "email": "seller@fba.vn",
+    "role": "AGENT",
+    "hub": "HAN",
+    "customerCode": "FBA-991",
+    "walletBalance": 3200000,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-08T18:17:14.721Z"
+  },
+  {
+    "id": "usr_1791768332676",
+    "username": "kho_danang_test",
+    "fullName": "Lê Văn Hùng",
+    "email": "kho_danang_test@pandalex.vn",
+    "phone": "",
+    "role": "WAREHOUSE",
+    "hub": "DAD",
+    "walletBalance": 0,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-12T01:25:32.676Z"
+  }
+]

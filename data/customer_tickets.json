@@ -1,0 +1,93 @@
+[
+  {
+    "ticketCode": "TK-20261012-0003",
+    "type": "PICKUP_REQUEST",
+    "title": "Đặt lấy 2 kiện tại Tân Bình",
+    "customerName": "Lê Hoàng Nam",
+    "customerPhone": "0903112233",
+    "hub": "SGN",
+    "priority": "NORMAL",
+    "status": "NEW",
+    "messages": [
+      {
+        "id": "msg_1791771514190",
+        "senderRole": "CUSTOMER",
+        "senderName": "Lê Hoàng Nam",
+        "message": "Cần lấy hàng chiều nay lúc 15h",
+        "timestamp": "2026-10-12T02:18:34.190Z"
+      }
+    ],
+    "createdAt": "2026-10-12T02:18:34.190Z",
+    "updatedAt": "2026-10-12T02:18:34.190Z"
+  },
+  {
+    "ticketCode": "TK-20261012-0001",
+    "type": "PICKUP_REQUEST",
+    "title": "Yêu cầu lấy hàng tận nơi tại Cầu Giấy - 5 kiện đi Mỹ",
+    "customerName": "Nguyễn Văn Minh",
+    "customerPhone": "0988776655",
+    "customerEmail": "minh.nguyen@example.com",
+    "customerCode": "AG-002",
+    "hub": "HAN",
+    "priority": "HIGH",
+    "status": "PROCESSING",
+    "pickupDetails": {
+      "address": "Số 45 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
+      "city": "Hà Nội",
+      "estimatedWeightKg": 45.5,
+      "estimatedPackages": 5,
+      "scheduledTime": "14:00 - 15:30 Hôm nay",
+      "notes": "Hàng quà tặng thủ công mỹ nghệ, cần shipper mang theo cân bàn và băng keo niêm phong."
+    },
+    "messages": [
+      {
+        "id": "msg_1",
+        "senderRole": "CUSTOMER",
+        "senderName": "Nguyễn Văn Minh",
+        "message": "Nhờ PandaLex cho bạn shipper qua lấy trước 16h giúp mình nhé, bên mình kịp đóng gói xong rồi ạ.",
+        "timestamp": "2026-10-12T08:15:00.000Z"
+      },
+      {
+        "id": "msg_2",
+        "senderRole": "SUPPORT_AGENT",
+        "senderName": "CSKH Thùy Linh (HAN Hub)",
+        "message": "Dạ PandaLex đã tiếp nhận yêu cầu của Anh Minh. Bạn điều phối viên HAN Hub đang sắp xếp xe tải lấy hàng lúc 14h30 qua địa chỉ 45 Duy Tân ạ!",
+        "timestamp": "2026-10-12T08:25:00.000Z"
+      }
+    ],
+    "createdAt": "2026-10-12T08:15:00.000Z",
+    "updatedAt": "2026-10-12T08:25:00.000Z",
+    "assignedTo": "thuylinh_cskh"
+  },
+  {
+    "ticketCode": "TK-20261012-0002",
+    "type": "CLAIM_DISPUTE",
+    "title": "Tra soát thời gian giao hàng AWB 1Z861R320493609873 đi Houston, TX",
+    "customerName": "Trần Thị Thu Hà",
+    "customerPhone": "0912348899",
+    "customerEmail": "ha.tran@exportvn.com",
+    "awbNumber": "1Z861R320493609873",
+    "hub": "SGN",
+    "priority": "URGENT",
+    "status": "PROCESSING",
+    "messages": [
+      {
+        "id": "msg_3",
+        "senderRole": "CUSTOMER",
+        "senderName": "Trần Thị Thu Hà",
+        "message": "Chào PandaLex, đơn 1Z861R320493609873 của mình đã thông quan xong chưa ạ? Người nhận tại Texas đang hỏi lịch giao.",
+        "timestamp": "2026-10-12T08:30:00.000Z"
+      },
+      {
+        "id": "msg_4",
+        "senderRole": "SUPPORT_AGENT",
+        "senderName": "Điều Phối Viên Hoàng Quân (SGN Hub)",
+        "message": "Dạ kiện hàng đã hoàn tất thủ tục xuất khẩu từ SGN Hub và đang trên chuyến bay chuyển tiếp qua trung chuyển Louisville của UPS. Dự kiến ngày mai sẽ cập bến Texas phát cho người nhận ạ!",
+        "timestamp": "2026-10-12T08:42:00.000Z"
+      }
+    ],
+    "createdAt": "2026-10-12T08:30:00.000Z",
+    "updatedAt": "2026-10-12T08:42:00.000Z",
+    "assignedTo": "hoangquan_ops"
+  }
+]

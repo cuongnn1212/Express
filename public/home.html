@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PandaLex Express | Chuyển Phát Nhanh Quốc Tế & Cổng Giao Tiếp Khách Hàng</title>
+  <meta name="description" content="PandaLex Express - Đại lý chính thức UPS & FedEx tại Việt Nam. Tra cứu vận đơn AWB thời gian thực, lên lịch bưu tá lấy hàng tận nơi trong 30 phút, tính cước phí & hỗ trợ khiếu nại 24/7.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    
+    :root {
+      /* Bảng màu nhận diện chuẩn UPS Pullman Brown & Amber Gold */
+      --ups-brown: #351c15;
+      --ups-brown-dark: #22120d;
+      --ups-gold: #ffb500;
+      --ups-gold-hover: #e5a300;
+      --ups-slate-bg: #f5f5f7;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #ffffff;
+      color: #1c1917;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Đảm bảo ô input trên mobile không bị iOS zoom tự động */
+    input, select, textarea {
+      font-size: 15px !important;
+    }
+    @media (min-width: 640px) {
+      input, select, textarea {
+        font-size: 13px !important;
+      }
+    }
+
+    /* Hiệu ứng đổ bóng và bo góc cao cấp chuẩn UPS */
+    .ups-shadow {
+      box-shadow: 0 4px 20px -2px rgba(34, 18, 13, 0.08), 0 2px 6px -2px rgba(34, 18, 13, 0.04);
+    }
+    .ups-shadow-lg {
+      box-shadow: 0 12px 30px -4px rgba(34, 18, 13, 0.12), 0 4px 12px -2px rgba(34, 18, 13, 0.06);
+    }
+
+    .ups-hero-gradient {
+      background: linear-gradient(180deg, #2a1610 0%, #351c15 60%, #44241b 100%);
+    }
+
+    /* Thanh cuộn tinh tế */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+
+    @media (max-width: 768px) {
+      .pb-mobile-bottom-nav {
+        padding-bottom: 74px;
+      }
+    }
+  </style>
+</head>
+<body class="selection:bg-amber-400 selection:text-stone-900 pb-mobile-bottom-nav">
+
+  <!-- ======================================================== -->
+  <!-- 1. TOP UTILITY BAR (THANH ĐIỀU HƯỚNG PHỤ CHUẨN UPS)     -->
+  <!-- ======================================================== -->
+  <div class="bg-stone-950 text-stone-300 text-[11px] font-semibold border-b border-stone-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-between">
+      
+      <!-- Bên trái: Quốc gia & Trực ban 24/7 -->
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-1 text-white">
+          <span>🇻🇳</span>
+          <span>Việt Nam - Tiếng Việt</span>
+        </div>
+        <span class="text-stone-700 hidden sm:inline">|</span>
+        <div class="hidden sm:flex items-center space-x-1.5 text-emerald-400 font-bold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Tổng Đài Trực Ban 24/7 Sẵn Sàng</span>
+        </div>
+      </div>
+
+      <!-- Bên phải: Hotline 3 Miền & Đăng Nhập -->
+      <div class="flex items-center space-x-4">
+        <a href="tel:0976843168" class="hover:text-amber-400 transition flex items-center space-x-1">
+          <i class="fa-solid fa-phone text-amber-400 text-[10px]"></i>
+          <span class="hidden md:inline">Hotline HN:</span>
+          <span class="font-mono font-bold text-white">0976 843 168</span>
+        </a>
+        <span class="text-stone-700 hidden md:inline">|</span>
+        <a href="tel:0988123456" class="hover:text-amber-400 transition hidden md:flex items-center space-x-1">
+          <span>HCM:</span>
+          <span class="font-mono font-bold text-white">0988 123 456</span>
+        </a>
+        <span class="text-stone-700">|</span>
+        <a href="/admin.html" class="hover:text-white transition font-bold flex items-center space-x-1 text-amber-400">
+          <i class="fa-solid fa-user-shield text-[10px]"></i>
+          <span>Cổng Quản Trị</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 2. MAIN HEADER & LOGO SHIELD (CHUẨN NHẬN DIỆN UPS)       -->
+  <!-- ======================================================== -->
+  <header class="bg-white sticky top-0 z-40 border-b border-stone-200 shadow-sm transition">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo với Shield Icon chuẩn UPS -->
+      <div class="flex items-center space-x-6 sm:space-x-8">
+        <a href="/home.html" class="flex items-center space-x-3 group">
+          <!-- Logo Shield Vàng Nâu -->
+          <div class="w-10 h-12 sm:w-12 sm:h-14 bg-[#351c15] text-[#ffb500] rounded-b-2xl border-t-2 border-[#ffb500] flex flex-col items-center justify-center shadow-md group-hover:scale-105 transition">
+            <span class="text-[9px] font-black tracking-widest leading-none">PDL</span>
+            <span class="text-xl sm:text-2xl font-black leading-tight">🐼</span>
+          </div>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-lg sm:text-2xl font-black text-[#351c15] tracking-tight">PandaLex</span>
+              <span class="text-lg sm:text-2xl font-black text-amber-500 tracking-tight">EXPRESS</span>
+            </div>
+            <p class="hidden sm:block text-[9px] text-stone-500 font-extrabold uppercase tracking-widest">GLOBAL COURIER &amp; CUSTOMER PORTAL</p>
+          </div>
+        </a>
+
+        <!-- Menu Ngang Cấp Cao Chuẩn UPS (Desktop) -->
+        <nav class="hidden lg:flex items-center space-x-6 text-xs font-bold text-stone-800">
+          <a href="#secMainUtility" onclick="switchUtilityTab('track')" class="hover:text-amber-600 py-6 border-b-2 border-transparent hover:border-amber-500 transition flex items-center space-x-1">
+            <span>Theo Dõi Vận Đơn</span>
+          </a>
+          <a href="#secMainUtility" onclick="switchUtilityTab('pickup')" class="hover:text-amber-600 py-6 border-b-2 border-transparent hover:border-amber-500 transition flex items-center space-x-1">
+            <span>Lên Lịch Lấy Hàng</span>
+          </a>
+          <a href="#secMainUtility" onclick="switchUtilityTab('quote')" class="hover:text-amber-600 py-6 border-b-2 border-transparent hover:border-amber-500 transition flex items-center space-x-1">
+            <span>Tính Cước &amp; Thời Gian</span>
+          </a>
+          <a href="#secSupportCenter" class="hover:text-amber-600 py-6 border-b-2 border-transparent hover:border-amber-500 transition flex items-center space-x-1">
+            <span>Hỗ Trợ &amp; Khiếu Nại</span>
+          </a>
+          <a href="#secServices" class="hover:text-amber-600 py-6 border-b-2 border-transparent hover:border-amber-500 transition flex items-center space-x-1">
+            <span>Dịch Vụ Logistics</span>
+          </a>
+          <a href="#secHubs" class="hover:text-amber-600 py-6 border-b-2 border-transparent hover:border-amber-500 transition flex items-center space-x-1">
+            <span>Mạng Lưới 3 Hubs</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Action Buttons Bên Phải -->
+      <div class="flex items-center space-x-2.5">
+        <button type="button" onclick="switchUtilityTab('pickup'); scrollToUtility();" class="hidden sm:inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs font-black bg-[#ffb500] hover:bg-amber-400 text-stone-950 shadow-sm transition">
+          <i class="fa-solid fa-truck-pickup"></i>
+          <span>Lấy Hàng Tận Nơi</span>
+        </button>
+        <button type="button" onclick="toggleFloatingMessenger()" class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-800 transition">
+          <i class="fa-solid fa-comments text-amber-600"></i>
+          <span class="hidden md:inline">Chat CSKH 24/7</span>
+        </button>
+        <!-- Nút Menu Điện Thoại -->
+        <button type="button" onclick="toggleMobileDrawer()" class="lg:hidden w-10 h-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 flex items-center justify-center transition" aria-label="Mở Menu">
+          <i class="fa-solid fa-bars text-base"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 3. MOBILE SLIDE-OUT DRAWER (MENU ĐIỆN THOẠI CHUẨN UPS)   -->
+  <!-- ======================================================== -->
+  <div id="mobileDrawer" class="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm transition-opacity duration-300 hidden">
+    <div class="fixed top-0 right-0 bottom-0 w-5/6 max-w-sm bg-white shadow-2xl flex flex-col justify-between overflow-y-auto">
+      
+      <!-- Drawer Header -->
+      <div class="p-5 border-b border-stone-800 flex items-center justify-between bg-[#351c15] text-white">
+        <div class="flex items-center space-x-2.5">
+          <span class="text-2xl">🐼</span>
+          <div>
+            <h3 class="font-black text-sm text-[#ffb500]">PandaLex Express</h3>
+            <p class="text-[10px] text-stone-300">Cổng Dịch Vụ Khách Hàng</p>
+          </div>
+        </div>
+        <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Drawer Danh Mục Liên Kết -->
+      <div class="p-5 space-y-4 flex-1 text-xs font-bold text-stone-800">
+        <div class="space-y-1">
+          <span class="text-[10px] font-black uppercase text-stone-400 tracking-wider block mb-1">Dịch Vụ Khách Hàng</span>
+          <a href="#secMainUtility" onclick="switchUtilityTab('track'); toggleMobileDrawer(); scrollToUtility();" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-barcode w-5 text-amber-600 text-sm"></i>
+            <span>Theo Dõi Vận Đơn (Track &amp; Trace)</span>
+          </a>
+          <a href="#secMainUtility" onclick="switchUtilityTab('pickup'); toggleMobileDrawer(); scrollToUtility();" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-truck-pickup w-5 text-emerald-600 text-sm"></i>
+            <span>Lên Lịch Lấy Hàng Tận Nơi</span>
+          </a>
+          <a href="#secMainUtility" onclick="switchUtilityTab('quote'); toggleMobileDrawer(); scrollToUtility();" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-calculator w-5 text-blue-600 text-sm"></i>
+            <span>Tính Cước &amp; Thời Gian Phát Hàng</span>
+          </a>
+          <a href="#secMainUtility" onclick="switchUtilityTab('claims'); toggleMobileDrawer(); scrollToUtility();" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-headset w-5 text-rose-600 text-sm"></i>
+            <span>Gửi Khiếu Nại &amp; Hỗ Trợ Đơn Hàng</span>
+          </a>
+          <a href="#secSupportCenter" onclick="toggleMobileDrawer()" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-clock-rotate-left w-5 text-indigo-600 text-sm"></i>
+            <span>Tra Cứu Tiến Độ Xử Lý Ticket</span>
+          </a>
+        </div>
+
+        <div class="space-y-1 pt-3 border-t border-stone-100">
+          <span class="text-[10px] font-black uppercase text-stone-400 tracking-wider block mb-1">Hệ Thống Doanh Nghiệp</span>
+          <a href="#secServices" onclick="toggleMobileDrawer()" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-plane-departure w-5 text-stone-600 text-sm"></i>
+            <span>Dịch Vụ Vận Chuyển Quốc Tế</span>
+          </a>
+          <a href="#secHubs" onclick="toggleMobileDrawer()" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-location-dot w-5 text-rose-600 text-sm"></i>
+            <span>Mạng Lưới 3 Tổng Kho (Hubs)</span>
+          </a>
+          <a href="/ship.html" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 transition">
+            <i class="fa-solid fa-box w-5 text-teal-600 text-sm"></i>
+            <span>Phát Hành Vận Đơn &amp; In Tem 4x6"</span>
+          </a>
+          <a href="/admin.html" class="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-stone-50 text-amber-700 font-extrabold transition">
+            <i class="fa-solid fa-shield-halved w-5 text-sm"></i>
+            <span>Cổng Quản Trị Hệ Thống Admin</span>
+          </a>
+        </div>
+
+        <!-- Hotline Gọi Trực Tiếp 24/7 -->
+        <div class="pt-4 border-t border-stone-100 space-y-2">
+          <span class="text-[10px] font-black uppercase text-stone-400 tracking-wider block">Hotline Trực Ban Khẩn Cấp</span>
+          <a href="tel:0976843168" class="flex items-center justify-between p-2.5 rounded-xl bg-stone-50 border border-stone-200">
+            <span>Hà Nội Hub:</span>
+            <span class="font-mono font-bold text-amber-700">0976 843 168</span>
+          </a>
+          <a href="tel:0988123456" class="flex items-center justify-between p-2.5 rounded-xl bg-stone-50 border border-stone-200">
+            <span>TP.HCM Hub:</span>
+            <span class="font-mono font-bold text-emerald-700">0988 123 456</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="p-4 bg-stone-50 border-t border-stone-200 text-center">
+        <button type="button" onclick="toggleFloatingMessenger(); toggleMobileDrawer();" class="w-full py-3 bg-[#ffb500] hover:bg-amber-400 text-stone-950 font-black rounded-xl text-xs shadow transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-comments"></i>
+          <span>Mở Khung Chat Với CSKH</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 4. HERO SECTION VỚI KHỐI TIỆN ÍCH TRUNG TÂM (CHUẨN UPS)   -->
+  <!-- ======================================================== -->
+  <section class="ups-hero-gradient text-white pt-8 sm:pt-14 pb-16 sm:pb-24 relative overflow-hidden">
+    <!-- Họa tiết lưới tinh tế -->
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#ffb500_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      
+      <!-- Headline & Lời giới thiệu -->
+      <div class="max-w-3xl mb-8 sm:mb-10 space-y-3">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-black/40 border border-[#ffb500]/40 text-xs text-amber-300 font-bold">
+          <i class="fa-solid fa-shield-halved text-[#ffb500]"></i>
+          <span>Đại Lý Cấp 1 Chính Thức Của UPS &amp; FedEx Tại Việt Nam</span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
+          Chuyển Phát Nhanh Quốc Tế <br>
+          <span class="text-[#ffb500]">Đơn Giản, Chính Xác &amp; Tin Cậy</span>
+        </h1>
+        <p class="text-stone-300 text-xs sm:text-sm leading-relaxed max-w-2xl">
+          Theo dõi hàng triệu bưu gửi tới hơn 220 quốc gia. Đặt lịch bưu tá lấy hàng tận nơi trong 30 phút, kiểm soát cước phí minh bạch và giải quyết khiếu nại tức thì.
+        </p>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- THE SIGNATURE UPS UTILITY CARD (4 TAB TIỆN ÍCH CHUẨN MỰC) -->
+      <!-- ======================================================== -->
+      <div id="secMainUtility" class="bg-white text-stone-900 rounded-3xl ups-shadow-lg border border-stone-200 overflow-hidden">
+        
+        <!-- Header 4 Tab Tiện Ích Chuẩn UPS -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 border-b border-stone-200 bg-stone-50 text-xs font-bold">
+          <button type="button" onclick="switchUtilityTab('track')" id="btnTabTrack" class="py-4 px-3 bg-white text-[#351c15] border-b-2 border-[#ffb500] font-black flex items-center justify-center space-x-2 transition text-center">
+            <i class="fa-solid fa-magnifying-glass text-amber-600 text-sm"></i>
+            <span>1. Theo Dõi (Track)</span>
+          </button>
+          <button type="button" onclick="switchUtilityTab('pickup')" id="btnTabPickup" class="py-4 px-3 text-stone-600 hover:text-stone-900 hover:bg-stone-100 flex items-center justify-center space-x-2 transition text-center">
+            <i class="fa-solid fa-truck-pickup text-emerald-600 text-sm"></i>
+            <span>2. Lên Lịch Lấy Hàng</span>
+          </button>
+          <button type="button" onclick="switchUtilityTab('quote')" id="btnTabQuote" class="py-4 px-3 text-stone-600 hover:text-stone-900 hover:bg-stone-100 flex items-center justify-center space-x-2 transition text-center">
+            <i class="fa-solid fa-calculator text-blue-600 text-sm"></i>
+            <span>3. Tính Cước Phí</span>
+          </button>
+          <button type="button" onclick="switchUtilityTab('claims')" id="btnTabClaims" class="py-4 px-3 text-stone-600 hover:text-stone-900 hover:bg-stone-100 flex items-center justify-center space-x-2 transition text-center">
+            <i class="fa-solid fa-headset text-rose-600 text-sm"></i>
+            <span>4. Khiếu Nại &amp; Hỗ Trợ</span>
+          </button>
+        </div>
+
+        <!-- Nội dung Form bên trong Card -->
+        <div class="p-4 sm:p-7">
+          
+          <!-- ========================================== -->
+          <!-- TAB 1: THEO DÕI VẬN ĐƠN (TRACKING)          -->
+          <!-- ========================================== -->
+          <div id="panelUtilityTrack" class="space-y-4">
+            <form onsubmit="handleTrackingSubmit(event)" class="flex flex-col sm:flex-row gap-2.5">
+              <div class="relative flex-1">
+                <input type="text" id="inpTrackingNumber" placeholder="Nhập mã vận đơn quốc tế (UPS: 1Z..., FedEx: 77...)..." required class="w-full bg-stone-50 border border-stone-300 focus:border-[#351c15] rounded-2xl py-3.5 pl-11 pr-4 text-xs font-mono font-bold text-stone-900 focus:ring-2 focus:ring-amber-200 outline-none transition">
+                <i class="fa-solid fa-barcode absolute left-4 top-4 text-stone-400 text-base"></i>
+              </div>
+              <button type="submit" class="bg-[#ffb500] hover:bg-amber-400 text-stone-950 font-black px-8 py-3.5 rounded-2xl text-xs shadow-sm flex items-center justify-center space-x-2 transition shrink-0">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>THEO DÕI</span>
+              </button>
+            </form>
+
+            <!-- Gợi ý mã AWB mẫu -->
+            <div class="flex flex-wrap items-center gap-2 text-xs text-stone-500">
+              <span class="font-bold">Mã AWB thử nghiệm:</span>
+              <button type="button" onclick="quickFillTrack('1Z861R320493609873')" class="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-mono font-bold transition">
+                1Z861R320493609873 (UPS)
+              </button>
+              <button type="button" onclick="quickFillTrack('771234567890')" class="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-mono font-bold transition">
+                771234567890 (FedEx)
+              </button>
+            </div>
+
+            <!-- Kết Quả Tra Cứu AWB -->
+            <div id="boxTrackingResult" class="hidden p-4 sm:p-6 rounded-2xl bg-stone-900 text-white border border-stone-800 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-stone-800 gap-3">
+                <div class="flex items-center space-x-3">
+                  <span id="trkCarrierBadge" class="px-2.5 py-1 rounded-lg text-xs font-black uppercase bg-[#ffb500] text-stone-950">UPS</span>
+                  <div>
+                    <span class="text-[10px] text-stone-400 block font-bold">MÃ VẬN ĐƠN QUỐC TẾ</span>
+                    <span id="trkTrackingNumber" class="text-base sm:text-lg font-mono font-black text-amber-400">1Z...</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span id="trkStatusBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <i class="fa-solid fa-truck-fast mr-1.5"></i>
+                    <span id="trkStatusText">Đang vận chuyển</span>
+                  </span>
+                  <button type="button" onclick="contactSupportForThisAwb()" class="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-black transition flex items-center space-x-1 shadow">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Hỗ trợ đơn này</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4 Chỉ Số Hành Trình -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-stone-950/70 p-3.5 rounded-xl border border-stone-800">
+                <div>
+                  <span class="text-[10px] text-stone-400 block">Nơi gửi (Origin):</span>
+                  <span id="trkOrigin" class="font-bold text-stone-200">VIỆT NAM (HAN Hub)</span>
+                </div>
+                <div>
+                  <span class="text-[10px] text-stone-400 block">Nơi đến (Dest):</span>
+                  <span id="trkDest" class="font-bold text-stone-200">UNITED STATES (US)</span>
+                </div>
+                <div>
+                  <span class="text-[10px] text-stone-400 block">Trọng lượng:</span>
+                  <span id="trkWeight" class="font-bold text-amber-400">2.5 KG (1 Kiện)</span>
+                </div>
+                <div>
+                  <span class="text-[10px] text-stone-400 block">Dự kiến phát hàng:</span>
+                  <span id="trkEta" class="font-bold text-emerald-400">14 OCT 2026</span>
+                </div>
+              </div>
+
+              <!-- Checkpoints Timeline -->
+              <div id="trkTimelineSteps" class="space-y-2 text-xs pt-1">
+                <!-- Render động -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================== -->
+          <!-- TAB 2: LÊN LỊCH LẤY HÀNG TẬN NƠI (PICK-UP) -->
+          <!-- ========================================== -->
+          <div id="panelUtilityPickup" class="space-y-4 hidden">
+            <div class="border-b border-stone-100 pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="font-black text-sm text-[#351c15] flex items-center space-x-2">
+                  <i class="fa-solid fa-truck-pickup text-emerald-600"></i>
+                  <span>Lên Lịch Bưu Tá PandaLex Lấy Hàng Tận Nơi</span>
+                </h3>
+                <p class="text-xs text-stone-500 mt-0.5">Bưu tá có mặt trong 30 - 45 phút, mang theo cân điện tử và phong bì niêm phong đạt chuẩn.</p>
+              </div>
+              <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full uppercase tracking-wider">
+                Miễn Phí 100%
+              </span>
+            </div>
+
+            <form onsubmit="handlePickupSubmit(event)" class="space-y-3.5 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Họ Tên Quý Khách (*):</label>
+                  <input type="text" id="inpPickupName" placeholder="Nguyễn Văn A" required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 focus:ring-1 focus:ring-amber-500 outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Số Điện Thoại Nhận Bưu Tá (*):</label>
+                  <input type="tel" id="inpPickupPhone" placeholder="09xxxxxxxx" required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 focus:ring-1 focus:ring-amber-500 outline-none">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div class="sm:col-span-2">
+                  <label class="block font-bold text-stone-700 mb-1">Địa Chỉ Chi Tiết Nhận Hàng (*):</label>
+                  <input type="text" id="inpPickupAddress" placeholder="Số nhà, tên ngõ, đường, phường/xã, quận/huyện..." required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 focus:ring-1 focus:ring-amber-500 outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Khu Vực Hub Tiếp Nhận:</label>
+                  <select id="selPickupHub" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-800 outline-none">
+                    <option value="HAN" selected>Hà Nội &amp; Miền Bắc (HAN Hub)</option>
+                    <option value="SGN">TP.HCM &amp; Miền Nam (SGN Hub)</option>
+                    <option value="DAD">Đà Nẵng &amp; Miền Trung (DAD Hub)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Khung Giờ Hẹn Lấy:</label>
+                  <select id="selPickupTime" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-800 outline-none">
+                    <option value="Càng sớm càng tốt">⚡ Càng sớm càng tốt (Trong 30 - 45 phút)</option>
+                    <option value="Sáng nay (09:00 - 11:30)">Sáng nay (09:00 - 11:30)</option>
+                    <option value="Chiều nay (14:00 - 16:30)">Chiều nay (14:00 - 16:30)</option>
+                    <option value="Cuối ngày (17:00 - 19:00)">Cuối ngày (17:00 - 19:00)</option>
+                    <option value="Hẹn ngày mai">Hẹn ngày mai</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Số Lượng Kiện:</label>
+                  <input type="number" id="inpPickupPackages" min="1" value="1" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Tổng Trọng Lượng (kg):</label>
+                  <input type="number" id="inpPickupWeight" step="0.5" min="0.5" value="2.5" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-stone-700 mb-1">Ghi Chú Cho Bưu Tá:</label>
+                <textarea id="inpPickupNotes" rows="2" placeholder="Ví dụ: Hàng quà tặng dễ vỡ, gọi điện trước khi tới 10 phút..." class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-medium text-stone-800 outline-none"></textarea>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-center justify-between pt-2 gap-3">
+                <span class="text-[11px] text-stone-500 flex items-center space-x-1">
+                  <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                  <span>Hệ thống cấp mã Ticket theo dõi ngay sau khi gửi</span>
+                </span>
+                <button type="submit" id="btnSubmitPickup" class="w-full sm:w-auto px-7 py-3 rounded-xl bg-[#ffb500] hover:bg-amber-400 text-stone-950 font-black text-xs shadow-md transition flex items-center justify-center space-x-2">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  <span>LÊN LỊCH LẤY HÀNG NGAY</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Box Đặt Lấy Hàng Thành Công -->
+            <div id="boxPickupSuccess" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-2">
+              <div class="flex items-center space-x-2 font-bold text-sm text-emerald-800">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                <span>Yêu Cầu Lấy Hàng Đã Được Ghi Nhận Thành Công!</span>
+              </div>
+              <p id="txtPickupSuccessContent" class="text-xs leading-relaxed text-emerald-900"></p>
+              <button type="button" onclick="switchSupportTab('myTickets'); scrollToSupport();" class="px-3.5 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition">
+                Kiểm Tra Tiến Độ Xử Lý
+              </button>
+            </div>
+          </div>
+
+          <!-- ========================================== -->
+          <!-- TAB 3: TÍNH CƯỚC & THỜI GIAN (QUOTE)       -->
+          <!-- ========================================== -->
+          <div id="panelUtilityQuote" class="space-y-4 hidden">
+            <div class="border-b border-stone-100 pb-3">
+              <h3 class="font-black text-sm text-[#351c15] flex items-center space-x-2">
+                <i class="fa-solid fa-calculator text-blue-600"></i>
+                <span>Ước Tính Cước Phí &amp; Thời Gian Phát Hàng (UPS &amp; FedEx)</span>
+              </h3>
+              <p class="text-xs text-stone-500 mt-0.5">Giá cước cập nhật theo tỷ lệ phụ phí xăng dầu (FSC) tuần hiện tại.</p>
+            </div>
+
+            <form onsubmit="handleQuoteSubmit(event)" class="space-y-3.5 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Quốc Gia Nước Đến:</label>
+                  <select id="selQuoteDest" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-800 outline-none">
+                    <option value="US" selected>🇺🇸 Hoa Kỳ (United States)</option>
+                    <option value="CA">🇨🇦 Canada</option>
+                    <option value="AU">🇦🇺 Úc (Australia)</option>
+                    <option value="GB">🇬🇧 Vương Quốc Anh (UK)</option>
+                    <option value="DE">🇩🇪 Đức (Germany)</option>
+                    <option value="FR">🇫🇷 Pháp (France)</option>
+                    <option value="JP">🇯🇵 Nhật Bản (Japan)</option>
+                    <option value="KR">🇰🇷 Hàn Quốc (Korea)</option>
+                    <option value="SG">🇸🇬 Singapore</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Cân Nặng Thực Tế (kg):</label>
+                  <input type="number" id="inpQuoteWeight" step="0.5" min="0.5" value="2.5" required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Kích Thước Thùng (D x R x C cm):</label>
+                  <div class="grid grid-cols-3 gap-1">
+                    <input type="number" id="inpDimL" placeholder="D" value="25" class="bg-stone-50 border border-stone-300 rounded-lg p-2 text-center text-xs font-bold">
+                    <input type="number" id="inpDimW" placeholder="R" value="20" class="bg-stone-50 border border-stone-300 rounded-lg p-2 text-center text-xs font-bold">
+                    <input type="number" id="inpDimH" placeholder="C" value="15" class="bg-stone-50 border border-stone-300 rounded-lg p-2 text-center text-xs font-bold">
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-2">
+                <span class="text-[11px] text-stone-500">Hệ số quy đổi thể tích hàng không chuẩn IATA: (D x R x C) / 5000</span>
+                <button type="submit" class="w-full sm:w-auto bg-[#351c15] hover:bg-stone-800 text-white font-extrabold px-7 py-2.5 rounded-xl text-xs shadow-sm flex items-center justify-center space-x-1.5 transition">
+                  <i class="fa-solid fa-calculator text-amber-400"></i>
+                  <span>TÍNH CƯỚC NGAY</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Khung Báo Giá -->
+            <div id="boxQuoteResult" class="hidden p-4 rounded-2xl bg-stone-900 text-white border border-stone-800 space-y-3">
+              <div class="flex items-center justify-between border-b border-stone-800 pb-2 text-xs">
+                <span class="font-extrabold text-[#ffb500]">BẢNG BÁO GIÁ CƯỚC TỐI ƯU</span>
+                <span id="txtQuoteWeightSummary" class="text-stone-400 font-mono">Tính cước: 2.5 KG</span>
+              </div>
+              <div id="containerQuoteRates" class="space-y-2">
+                <!-- Render kết quả -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================== -->
+          <!-- TAB 4: KHIẾU NẠI & HỖ TRỢ (CLAIMS)         -->
+          <!-- ========================================== -->
+          <div id="panelUtilityClaims" class="space-y-4 hidden">
+            <div class="border-b border-stone-100 pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="font-black text-sm text-[#351c15] flex items-center space-x-2">
+                  <i class="fa-solid fa-headset text-rose-600"></i>
+                  <span>Gửi Khiếu Nại, Tra Soát Bưu Gửi &amp; Hỗ Trợ Hải Quan</span>
+                </h3>
+                <p class="text-xs text-stone-500 mt-0.5">Tiếp nhận khiếu nại chậm phát, hư hỏng hoặc yêu cầu tư vấn giấy phép xuất khẩu.</p>
+              </div>
+              <span class="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-black rounded-full uppercase tracking-wider">
+                Cam Kết 60 Phút
+              </span>
+            </div>
+
+            <form onsubmit="handleClaimSubmit(event)" class="space-y-3.5 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Loại Yêu Cầu (*):</label>
+                  <select id="selClaimType" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-800 outline-none">
+                    <option value="CLAIM_DISPUTE" selected>⚠️ Khiếu nại giao trễ / Thất lạc / Hư hỏng</option>
+                    <option value="BILLING_INQUIRY">💰 Thắc mắc cước phí / Hóa đơn / Cân nặng</option>
+                    <option value="CUSTOMS_SUPPORT">📑 Hỗ trợ thủ tục Hải quan / Giấy phép</option>
+                    <option value="QUOTE_REQUEST">📦 Báo giá hàng lô lớn / Hợp đồng đại lý</option>
+                    <option value="GENERAL_SUPPORT">❓ Hỗ trợ chung &amp; Tư vấn dịch vụ</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Mã Vận Đơn AWB (Nếu có):</label>
+                  <input type="text" id="inpClaimAwb" placeholder="Ví dụ: 1Z861R320493609873" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-mono font-bold text-stone-900 uppercase outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Mức Độ Ưu Tiên:</label>
+                  <select id="selClaimPriority" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-800 outline-none">
+                    <option value="NORMAL">Bình thường (Trong ngày)</option>
+                    <option value="HIGH">Ưu tiên cao (Cần xử lý gấp)</option>
+                    <option value="URGENT">Khẩn cấp (Hàng đang kẹt chuyến)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Họ Tên Quý Khách (*):</label>
+                  <input type="text" id="inpClaimName" placeholder="Tên khách hàng hoặc doanh nghiệp" required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Số Điện Thoại Liên Hệ (*):</label>
+                  <input type="tel" id="inpClaimPhone" placeholder="09xxxxxxxx" required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Hub Tiếp Nhận:</label>
+                  <select id="selClaimHub" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-800 outline-none">
+                    <option value="HAN">Hà Nội (HAN Hub)</option>
+                    <option value="SGN" selected>TP.HCM (SGN Hub)</option>
+                    <option value="DAD">Đà Nẵng (DAD Hub)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-stone-700 mb-1">Tiêu Đề Yêu Cầu (*):</label>
+                <input type="text" id="inpClaimTitle" placeholder="Tóm tắt vấn đề cần giải quyết..." required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-900 outline-none">
+              </div>
+
+              <div>
+                <label class="block font-bold text-stone-700 mb-1">Nội Dung Chi Tiết (*):</label>
+                <textarea id="inpClaimContent" rows="3" placeholder="Mô tả cụ thể sự việc, tình trạng kiện hàng, thắc mắc cần hỗ trợ..." required class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-medium text-stone-800 outline-none"></textarea>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-center justify-between pt-2 gap-3">
+                <span class="text-[11px] text-stone-500">Mã Ticket điện tử sẽ được cấp để tra cứu tiến độ xử lý</span>
+                <button type="submit" id="btnSubmitClaim" class="w-full sm:w-auto px-7 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  <span>GỬI KHIẾU NẠI / HỖ TRỢ</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Box Gửi Khiếu Nại Thành Công -->
+            <div id="boxClaimSuccess" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 space-y-2">
+              <div class="flex items-center space-x-2 font-bold text-sm text-amber-900">
+                <i class="fa-solid fa-circle-check text-amber-600 text-base"></i>
+                <span>Khiếu Nại / Yêu Cầu Đã Được Tiếp Nhận!</span>
+              </div>
+              <p id="txtClaimSuccessContent" class="text-xs leading-relaxed text-amber-900"></p>
+              <button type="button" onclick="switchSupportTab('myTickets'); scrollToSupport();" class="px-3.5 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 transition">
+                Kiểm Tra Tiến Trình Giải Quyết
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 5. 4 THẺ TIỆN ÍCH NHANH CHUẨN UPS (QUICK ACTIONS TILES)   -->
+  <!-- ======================================================== -->
+  <section class="py-10 bg-stone-50 border-b border-stone-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        
+        <!-- Tile 1 -->
+        <div onclick="switchUtilityTab('pickup'); scrollToUtility();" class="bg-white p-5 rounded-2xl border border-stone-200 hover:border-amber-400 ups-shadow hover:scale-102 transition cursor-pointer space-y-2 group">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-lg font-black group-hover:bg-[#ffb500] group-hover:text-stone-950 transition">
+            <i class="fa-solid fa-truck-pickup"></i>
+          </div>
+          <h4 class="font-extrabold text-sm text-stone-900">Lên Lịch Lấy Hàng</h4>
+          <p class="text-[11px] text-stone-500 leading-relaxed">Bưu tá qua lấy tận nhà trong 30-45 phút miễn phí</p>
+        </div>
+
+        <!-- Tile 2 -->
+        <a href="#secHubs" class="bg-white p-5 rounded-2xl border border-stone-200 hover:border-amber-400 ups-shadow hover:scale-102 transition cursor-pointer space-y-2 group block">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center text-lg font-black group-hover:bg-blue-600 group-hover:text-white transition">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <h4 class="font-extrabold text-sm text-stone-900">Tìm Hub Gần Nhất</h4>
+          <p class="text-[11px] text-stone-500 leading-relaxed">3 Tổng kho khai thác tại Hà Nội, Sài Gòn &amp; Đà Nẵng</p>
+        </a>
+
+        <!-- Tile 3 -->
+        <div onclick="switchUtilityTab('quote'); scrollToUtility();" class="bg-white p-5 rounded-2xl border border-stone-200 hover:border-amber-400 ups-shadow hover:scale-102 transition cursor-pointer space-y-2 group">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg font-black group-hover:bg-emerald-600 group-hover:text-white transition">
+            <i class="fa-solid fa-calculator"></i>
+          </div>
+          <h4 class="font-extrabold text-sm text-stone-900">Tính Thời Gian &amp; Giá</h4>
+          <p class="text-[11px] text-stone-500 leading-relaxed">Ước tính cước phí và ngày phát hàng Door-to-Door</p>
+        </div>
+
+        <!-- Tile 4 -->
+        <div onclick="toggleFloatingMessenger()" class="bg-white p-5 rounded-2xl border border-stone-200 hover:border-amber-400 ups-shadow hover:scale-102 transition cursor-pointer space-y-2 group">
+          <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center text-lg font-black group-hover:bg-rose-600 group-hover:text-white transition">
+            <i class="fa-solid fa-headset"></i>
+          </div>
+          <h4 class="font-extrabold text-sm text-stone-900">Hỗ Trợ &amp; CSKH 24/7</h4>
+          <p class="text-[11px] text-stone-500 leading-relaxed">Chat trực tuyến với nhân viên điều phối và chăm sóc</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 6. TRUNG TÂM GIAO TIẾP & TRAO ĐỔI TICKET (SUPPORT CENTER) -->
+  <!-- ======================================================== -->
+  <section id="secSupportCenter" class="py-14 bg-white border-b border-stone-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 border-b border-stone-200 pb-4">
+        <div>
+          <span class="text-[10px] font-black uppercase text-amber-700 tracking-wider">CỔNG TIẾP NHẬN YÊU CẦU MINH BẠCH</span>
+          <h2 class="text-xl sm:text-2xl font-black text-[#351c15]">Tra Cứu Tiến Độ Xử Lý Yêu Cầu &amp; Đối Thoại 2 Chiều</h2>
+        </div>
+        <p class="text-xs text-stone-500 max-w-md">
+          Nhập số điện thoại hoặc mã Ticket để xem phản hồi chính thức từ Ban Quản Lý và trao đổi trực tiếp
+        </p>
+      </div>
+
+      <!-- Ô Tìm Kiếm Ticket -->
+      <div class="max-w-3xl mx-auto mb-6">
+        <form onsubmit="handleSearchCustomerTickets(event)" class="flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <input type="text" id="inpSearchTicketKeyword" placeholder="Nhập Số điện thoại của bạn, Mã Ticket (TK-...) hoặc Mã AWB..." required class="w-full bg-stone-50 border border-stone-300 rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-stone-900 focus:ring-1 focus:ring-amber-500 outline-none">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-stone-400 text-xs"></i>
+          </div>
+          <button type="submit" class="bg-[#351c15] hover:bg-stone-800 text-white font-extrabold px-6 py-3 rounded-xl text-xs shadow-sm flex items-center justify-center space-x-1.5 transition shrink-0">
+            <i class="fa-solid fa-search text-amber-400"></i>
+            <span>TÌM KIẾM TIẾN ĐỘ</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Danh Sách Ticket Của Khách -->
+      <div id="containerMyTicketsList" class="max-w-4xl mx-auto space-y-3">
+        <div class="text-center py-8 text-xs text-stone-400 bg-stone-50 rounded-2xl border border-stone-200 p-6">
+          <i class="fa-solid fa-inbox text-3xl mb-2 text-stone-300 block"></i>
+          <span>Vui lòng nhập Số điện thoại hoặc bấm tra cứu để xem các phản hồi của bạn.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 7. HỆ THỐNG DỊCH VỤ VẬN CHUYỂN QUỐC TẾ                   -->
+  <!-- ======================================================== -->
+  <section id="secServices" class="py-14 sm:py-20 bg-stone-50 border-b border-stone-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-2 mb-12">
+        <span class="text-[10px] font-black uppercase text-amber-700 tracking-wider bg-amber-100 border border-amber-300 px-3 py-1 rounded-full">
+          DỊCH VỤ LOGISTICS TOÀN CẦU
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-black text-[#351c15] tracking-tight">
+          Giải Pháp Vận Chuyển Tiêu Chuẩn Quốc Tế
+        </h2>
+        <p class="text-xs sm:text-sm text-stone-500">
+          Tối ưu chi phí và thời gian giao hàng cho bưu kiện cá nhân, hàng mẫu doanh nghiệp và seller E-Commerce
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Dịch Vụ 1: UPS & FedEx -->
+        <div class="p-6 rounded-3xl bg-white border border-stone-200 hover:border-amber-400 ups-shadow transition space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl font-black">
+            <i class="fa-solid fa-plane"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base text-stone-900">Chuyển Phát Nhanh UPS &amp; FedEx</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Door-to-Door đi Mỹ, Canada, Châu Âu và Châu Á trong 2 - 4 ngày làm việc. Chiết khấu cao lên đến 35 - 45% so với giá công bố hãng.
+            </p>
+          </div>
+          <ul class="text-xs text-stone-600 space-y-1.5 pt-2 border-t border-stone-100">
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>UPS Worldwide Saver / Express</li>
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>FedEx International Priority</li>
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>In nhãn AWB nhiệt 4x6" chuẩn hãng</li>
+          </ul>
+        </div>
+
+        <!-- Dịch Vụ 2: FBA Amazon -->
+        <div class="p-6 rounded-3xl bg-white border border-stone-200 hover:border-amber-400 ups-shadow transition space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-[#ffb500]/20 text-stone-900 flex items-center justify-center text-xl font-black">
+            <i class="fa-brands fa-amazon text-amber-600"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base text-stone-900">Chuyên Tuyến FBA Amazon &amp; E-Commerce</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Giải pháp trọn gói bao thuế nhập khẩu (DDP) đến các kho Amazon US, EU, AU. Dán nhãn FBA Box/Item, gom hàng và đóng gói đạt chuẩn.
+            </p>
+          </div>
+          <ul class="text-xs text-stone-600 space-y-1.5 pt-2 border-t border-stone-100">
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>Giao tận kho FBA Mỹ, Đức, Anh, Úc</li>
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>Kiểm tra nhãn SKU, UPC</li>
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>Theo dõi hành trình real-time qua API</li>
+          </ul>
+        </div>
+
+        <!-- Dịch Vụ 3: Air Cargo & Hải Quan -->
+        <div class="p-6 rounded-3xl bg-white border border-stone-200 hover:border-amber-400 ups-shadow transition space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-stone-100 text-stone-800 flex items-center justify-center text-xl font-black">
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base text-stone-900">Vận Tải Air Cargo &amp; Khai Báo Hải Quan</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Vận tải lô hàng tải trọng lớn (&gt;100kg, &gt;500kg). Booking bay thẳng trực tiếp qua các hãng hàng không lớn kèm thủ tục thông quan trọn gói.
+            </p>
+          </div>
+          <ul class="text-xs text-stone-600 space-y-1.5 pt-2 border-t border-stone-100">
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>MAWB / HAWB bay thẳng tiết kiệm chi phí</li>
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>Tư vấn giấy phép MSDS, kiểm dịch</li>
+            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-600 mr-2"></i>Khai báo hải quan điện tử VNACCS</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 8. MẠNG LƯỚI 3 TỔNG KHO VẬN HÀNH (HUBS)                  -->
+  <!-- ======================================================== -->
+  <section id="secHubs" class="py-14 sm:py-20 bg-white border-b border-stone-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
+        <span class="text-[10px] font-black uppercase text-amber-700 tracking-wider bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
+          MẠNG LƯỚI KHAI THÁC TRỰC TIẾP
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-black text-[#351c15] tracking-tight">
+          Hệ Thống 3 Tổng Kho Vận Hành Toàn Quốc
+        </h2>
+        <p class="text-xs sm:text-sm text-stone-500">
+          Khách hàng có thể mang hàng trực tiếp đến Hub hoặc gọi hotline để bưu tá qua lấy tận nơi
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Hub Hà Nội -->
+        <div class="bg-stone-50 rounded-3xl p-6 border border-stone-200 ups-shadow space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-lg bg-[#351c15] text-[#ffb500] font-mono font-black text-xs">HAN HUB (Miền Bắc)</span>
+            <span class="flex items-center space-x-1 text-[11px] font-bold text-emerald-600">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Đang Hoạt Động</span>
+            </span>
+          </div>
+          <h3 class="font-extrabold text-stone-900 text-sm">Tổng Kho Vận Hành Hà Nội</h3>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            <i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>
+            Số 45 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội
+          </p>
+          <div class="pt-3 border-t border-stone-200 flex items-center justify-between text-xs">
+            <a href="tel:0976843168" class="text-amber-700 font-bold hover:underline flex items-center space-x-1">
+              <i class="fa-solid fa-phone"></i>
+              <span>0976 843 168</span>
+            </a>
+            <span class="text-stone-500 text-[11px]">08:00 - 21:00</span>
+          </div>
+        </div>
+
+        <!-- Hub TP.HCM -->
+        <div class="bg-stone-50 rounded-3xl p-6 border border-stone-200 ups-shadow space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-lg bg-[#351c15] text-[#ffb500] font-mono font-black text-xs">SGN HUB (Miền Nam)</span>
+            <span class="flex items-center space-x-1 text-[11px] font-bold text-emerald-600">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Đang Hoạt Động</span>
+            </span>
+          </div>
+          <h3 class="font-extrabold text-stone-900 text-sm">Tổng Kho Vận Hành TP. Hồ Chí Minh</h3>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            <i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>
+            Kho SGN-Express, Phường 2, Tân Bình (Cạnh sân bay Tân Sơn Nhất)
+          </p>
+          <div class="pt-3 border-t border-stone-200 flex items-center justify-between text-xs">
+            <a href="tel:0988123456" class="text-emerald-700 font-bold hover:underline flex items-center space-x-1">
+              <i class="fa-solid fa-phone"></i>
+              <span>0988 123 456</span>
+            </a>
+            <span class="text-stone-500 text-[11px]">08:00 - 22:00</span>
+          </div>
+        </div>
+
+        <!-- Hub Đà Nẵng -->
+        <div class="bg-stone-50 rounded-3xl p-6 border border-stone-200 ups-shadow space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-lg bg-[#351c15] text-[#ffb500] font-mono font-black text-xs">DAD HUB (Miền Trung)</span>
+            <span class="flex items-center space-x-1 text-[11px] font-bold text-emerald-600">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Đang Hoạt Động</span>
+            </span>
+          </div>
+          <h3 class="font-extrabold text-stone-900 text-sm">Chi Nhánh &amp; Kho Hàng Đà Nẵng</h3>
+          <p class="text-xs text-stone-600 leading-relaxed">
+            <i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>
+            Đường Nguyễn Văn Linh, Quận Hải Châu, TP. Đà Nẵng
+          </p>
+          <div class="pt-3 border-t border-stone-200 flex items-center justify-between text-xs">
+            <a href="tel:0935999888" class="text-blue-700 font-bold hover:underline flex items-center space-x-1">
+              <i class="fa-solid fa-phone"></i>
+              <span>0935 999 888</span>
+            </a>
+            <span class="text-stone-500 text-[11px]">08:00 - 18:30</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- 9. FOOTER DOANH NGHIỆP CHUẨN UPS                         -->
+  <!-- ======================================================== -->
+  <footer class="bg-[#22120d] text-stone-300 pt-12 pb-8 border-t border-stone-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
+        <div class="space-y-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-2xl">🐼</span>
+            <span class="text-base font-black text-[#ffb500]">PandaLex Express</span>
+          </div>
+          <p class="text-stone-400 leading-relaxed">
+            Hệ thống bưu chính chuyển phát nhanh quốc tế UPS &amp; FedEx. Kết nối 220+ quốc gia toàn cầu.
+          </p>
+          <p class="text-stone-400 font-mono">Giấy phép bưu chính: 286/GP-BTTTT</p>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="font-bold text-white uppercase tracking-wider text-[11px]">Dịch Vụ Nổi Bật</h4>
+          <ul class="text-stone-400 space-y-2">
+            <li><a href="#secMainUtility" onclick="switchUtilityTab('track'); scrollToUtility();" class="hover:text-amber-400 transition">Theo dõi vận đơn AWB</a></li>
+            <li><a href="#secMainUtility" onclick="switchUtilityTab('pickup'); scrollToUtility();" class="hover:text-amber-400 transition">Lên lịch lấy hàng bưu tá</a></li>
+            <li><a href="#secMainUtility" onclick="switchUtilityTab('quote'); scrollToUtility();" class="hover:text-amber-400 transition">Tính cước &amp; thời gian</a></li>
+            <li><a href="#secMainUtility" onclick="switchUtilityTab('claims'); scrollToUtility();" class="hover:text-amber-400 transition">Khiếu nại &amp; Tra soát</a></li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="font-bold text-white uppercase tracking-wider text-[11px]">Cổng Nghiệp Vụ</h4>
+          <ul class="text-stone-400 space-y-2">
+            <li><a href="/ship.html" class="hover:text-amber-400 transition">Phát hành vận đơn AWB</a></li>
+            <li><a href="/invoice.html" class="hover:text-amber-400 transition">Commercial Invoice Hóa đơn</a></li>
+            <li><a href="/index.html" class="hover:text-amber-400 transition">Biểu cước đa hãng Universal</a></li>
+            <li><a href="/permissions.html" class="hover:text-amber-400 transition">Phân quyền bảo mật RBAC</a></li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="font-bold text-white uppercase tracking-wider text-[11px]">Hotline Trực Ban 24/7</h4>
+          <ul class="text-stone-400 space-y-2 font-mono">
+            <li>Hà Nội: <a href="tel:0976843168" class="text-amber-400 hover:underline">0976 843 168</a></li>
+            <li>TP.HCM: <a href="tel:0988123456" class="text-amber-400 hover:underline">0988 123 456</a></li>
+            <li>Đà Nẵng: <a href="tel:0935999888" class="text-amber-400 hover:underline">0935 999 888</a></li>
+            <li>Email: <a href="mailto:support@pandalex.vn" class="text-stone-300 hover:underline">support@pandalex.vn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-6 border-t border-stone-800 text-center text-stone-500 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p>© 2026 PandaLex Express Logistics. Toàn bộ quyền được bảo lưu.</p>
+        <p class="font-mono text-[11px]">Hệ Thống Khai Thác: Hà Nội • Đà Nẵng • Sài Gòn</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================== -->
+  <!-- 10. FLOATING MESSENGER CHAT (INTERCOM / ZENDESK STYLE)   -->
+  <!-- ======================================================== -->
+  <!-- Nút Tròn Bật Chat (Desktop & Tablet) -->
+  <div class="hidden sm:block fixed bottom-6 right-6 z-50">
+    <button type="button" onclick="toggleFloatingMessenger()" class="flex items-center space-x-2 bg-[#351c15] hover:bg-[#22120d] text-[#ffb500] font-black px-4 py-3.5 rounded-full shadow-2xl transition hover:scale-105 border-2 border-[#ffb500]">
+      <span class="relative flex h-3 w-3">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+      </span>
+      <span class="text-xs text-white">Chat CSKH (24/7)</span>
+    </button>
+  </div>
+
+  <!-- Cửa Sổ Live Chat Nổi -->
+  <div id="floatingChatWindow" class="fixed bottom-0 sm:bottom-20 right-0 sm:right-6 w-full sm:w-96 max-w-full h-full sm:h-[500px] z-50 bg-white sm:rounded-3xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden transition-all duration-300 hidden">
+    <!-- Chat Header -->
+    <div class="p-4 bg-[#351c15] text-white flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="relative">
+          <div class="w-8 h-8 rounded-full bg-[#ffb500] text-stone-950 flex items-center justify-center text-sm font-black">
+            🐼
+          </div>
+          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-stone-900 rounded-full"></span>
+        </div>
+        <div>
+          <h4 class="font-bold text-xs text-white">CSKH PandaLex 24/7</h4>
+          <p class="text-[10px] text-amber-300">Đang trực tuyến • Phản hồi tức thì</p>
+        </div>
+      </div>
+      <button onclick="toggleFloatingMessenger()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Thông Tin Khách Hàng -->
+    <div class="px-3 py-2 bg-stone-100 border-b border-stone-200 flex gap-1.5 text-xs">
+      <input type="text" id="inpFloatingChatName" placeholder="Tên của bạn..." value="Khách Hàng" class="flex-1 bg-white border border-stone-300 rounded-lg px-2 py-1 text-xs font-bold outline-none">
+      <input type="tel" id="inpFloatingChatPhone" placeholder="Số điện thoại..." class="flex-1 bg-white border border-stone-300 rounded-lg px-2 py-1 text-xs outline-none">
+    </div>
+
+    <!-- Khung Tin Nhắn Cuộn -->
+    <div id="boxFloatingChatMessages" class="flex-1 p-3.5 overflow-y-auto space-y-2.5 bg-stone-50 custom-scroll text-xs">
+      <div class="flex items-start space-x-2">
+        <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">🤖</div>
+        <div class="max-w-[85%] p-3 rounded-2xl bg-white border border-stone-200 text-stone-800 shadow-sm leading-relaxed">
+          <span class="font-bold text-[10px] text-emerald-700 block mb-0.5">Trợ Lý PandaLex</span>
+          Xin chào Quý khách! Quý khách cần lên lịch lấy hàng, kiểm tra cước phí hay cần hỗ trợ đơn hàng nào ạ?
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Gõ Tin Nhắn -->
+    <form onsubmit="handleSendFloatingChat(event)" class="p-3 bg-white border-t border-stone-200 flex gap-2">
+      <input type="text" id="inpFloatingChatMessage" placeholder="Nhập câu hỏi hoặc yêu cầu..." required class="flex-1 bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-amber-500">
+      <button type="submit" class="w-9 h-9 rounded-xl bg-[#ffb500] hover:bg-amber-400 text-stone-950 flex items-center justify-center text-xs shrink-0 shadow font-bold">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 11. MOBILE BOTTOM NAVIGATION BAR (THAO TÁC 1-CHẠM)       -->
+  <!-- ======================================================== -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 shadow-2xl py-2 px-3 flex items-center justify-around text-[10px] font-bold text-stone-600">
+    <button type="button" onclick="switchUtilityTab('track'); scrollToUtility();" class="flex flex-col items-center space-y-1 hover:text-[#351c15]">
+      <i class="fa-solid fa-magnifying-glass text-base text-amber-600"></i>
+      <span>Theo Dõi</span>
+    </button>
+    <button type="button" onclick="switchUtilityTab('pickup'); scrollToUtility();" class="flex flex-col items-center space-y-1 hover:text-[#351c15]">
+      <i class="fa-solid fa-truck-pickup text-base text-emerald-600"></i>
+      <span>Lấy Hàng</span>
+    </button>
+    <button type="button" onclick="toggleFloatingMessenger()" class="flex flex-col items-center space-y-1 hover:text-[#351c15]">
+      <div class="relative">
+        <i class="fa-solid fa-comments text-base text-[#351c15]"></i>
+        <span class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+      </div>
+      <span>Chat CSKH</span>
+    </button>
+    <a href="tel:0976843168" class="flex flex-col items-center space-y-1 hover:text-rose-600">
+      <i class="fa-solid fa-phone text-base text-rose-600"></i>
+      <span>Hotline</span>
+    </a>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 12. JAVASCRIPT XỬ LÝ TOÀN BỘ NGHIỆP VỤ & TƯƠNG TÁC        -->
+  <!-- ======================================================== -->
+  <script>
+    const API_BASE = '';
+    let currentSessionId = localStorage.getItem('pdl_chat_session') || ('sess_' + Date.now());
+    localStorage.setItem('pdl_chat_session', currentSessionId);
+
+    // 1. Mobile Drawer Toggle
+    function toggleMobileDrawer() {
+      const drawer = document.getElementById('mobileDrawer');
+      if (drawer.classList.contains('hidden')) {
+        drawer.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      } else {
+        drawer.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+    }
+
+    // 2. Chuyển Tab Utility Card Chuẩn UPS
+    function switchUtilityTab(tab) {
+      const tabs = ['track', 'pickup', 'quote', 'claims'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('btnTab' + capitalize(t));
+        const pnl = document.getElementById('panelUtility' + capitalize(t));
+        if (btn) btn.className = 'py-4 px-3 text-stone-600 hover:text-stone-900 hover:bg-stone-100 flex items-center justify-center space-x-2 transition text-center';
+        if (pnl) pnl.classList.add('hidden');
+      });
+
+      const activeBtn = document.getElementById('btnTab' + capitalize(tab));
+      const activePnl = document.getElementById('panelUtility' + capitalize(tab));
+      if (activeBtn) activeBtn.className = 'py-4 px-3 bg-white text-[#351c15] border-b-2 border-[#ffb500] font-black flex items-center justify-center space-x-2 transition text-center';
+      if (activePnl) activePnl.classList.remove('hidden');
+    }
+
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function scrollToUtility() {
+      document.getElementById('secMainUtility')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function scrollToSupport() {
+      document.getElementById('secSupportCenter')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ==========================================
+    // 3. FLOATING MESSENGER CHAT
+    // ==========================================
+    function toggleFloatingMessenger() {
+      const win = document.getElementById('floatingChatWindow');
+      if (win.classList.contains('hidden')) {
+        win.classList.remove('hidden');
+        loadFloatingChatMessages();
+      } else {
+        win.classList.add('hidden');
+      }
+    }
+
+    async function loadFloatingChatMessages() {
+      try {
+        const res = await fetch(`${API_BASE}/api/customer/chat/messages?sessionId=${encodeURIComponent(currentSessionId)}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          renderFloatingChatMessages(json.data);
+        }
+      } catch (err) {
+        console.error('Lỗi tải chat:', err);
+      }
+    }
+
+    function renderFloatingChatMessages(messages) {
+      const box = document.getElementById('boxFloatingChatMessages');
+      if (!box) return;
+      box.innerHTML = '';
+
+      messages.forEach(m => {
+        const div = document.createElement('div');
+        const isMe = m.sender === 'CUSTOMER';
+        const isBot = m.sender === 'PANDALEX_BOT';
+
+        if (isMe) {
+          div.className = 'flex justify-end';
+          div.innerHTML = `
+            <div class="max-w-[85%] p-3 rounded-2xl bg-[#351c15] text-white text-xs leading-relaxed shadow-sm">
+              <span class="text-[10px] text-amber-300 font-bold block mb-0.5">${escapeHtml(m.senderName)}</span>
+              <p>${escapeHtml(m.message)}</p>
+            </div>
+          `;
+        } else if (isBot) {
+          div.className = 'flex items-start space-x-2';
+          div.innerHTML = `
+            <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">🤖</div>
+            <div class="max-w-[85%] p-3 rounded-2xl bg-white border border-stone-200 text-stone-800 text-xs shadow-sm leading-relaxed">
+              <span class="font-bold text-[10px] text-emerald-700 block mb-0.5">${escapeHtml(m.senderName)}</span>
+              <p>${escapeHtml(m.message)}</p>
+            </div>
+          `;
+        } else {
+          div.className = 'flex items-start space-x-2';
+          div.innerHTML = `
+            <div class="w-6 h-6 rounded-full bg-[#ffb500] text-stone-950 flex items-center justify-center text-[10px] shrink-0 font-bold">🐼</div>
+            <div class="max-w-[85%] p-3 rounded-2xl bg-amber-50 border border-amber-200 text-stone-900 text-xs shadow-sm leading-relaxed">
+              <span class="font-bold text-[10px] text-amber-800 block mb-0.5">${escapeHtml(m.senderName)} (CSKH)</span>
+              <p>${escapeHtml(m.message)}</p>
+            </div>
+          `;
+        }
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function handleSendFloatingChat(e) {
+      e.preventDefault();
+      const inp = document.getElementById('inpFloatingChatMessage');
+      const msg = inp.value.trim();
+      if (!msg) return;
+
+      const name = document.getElementById('inpFloatingChatName').value.trim() || 'Khách Hàng';
+      const phone = document.getElementById('inpFloatingChatPhone').value.trim();
+      if (phone) localStorage.setItem('pdl_user_phone', phone);
+      inp.value = '';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/customer/chat/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: currentSessionId,
+            customerName: name,
+            customerPhone: phone,
+            sender: 'CUSTOMER',
+            senderName: name,
+            message: msg
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          loadFloatingChatMessages();
+        }
+      } catch (err) {
+        console.error('Lỗi gửi chat:', err);
+      }
+    }
+
+    // ==========================================
+    // 4. LÊN LỊCH LẤY HÀNG (PICK-UP SUBMIT)
+    // ==========================================
+    async function handlePickupSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitPickup');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang gửi...`;
+
+      const name = document.getElementById('inpPickupName').value.trim();
+      const phone = document.getElementById('inpPickupPhone').value.trim();
+      const address = document.getElementById('inpPickupAddress').value.trim();
+      const hub = document.getElementById('selPickupHub').value;
+      const time = document.getElementById('selPickupTime').value;
+      const packages = parseInt(document.getElementById('inpPickupPackages').value) || 1;
+      const weight = parseFloat(document.getElementById('inpPickupWeight').value) || 2.5;
+      const notes = document.getElementById('inpPickupNotes').value.trim();
+
+      localStorage.setItem('pdl_user_phone', phone);
+      localStorage.setItem('pdl_user_name', name);
+
+      try {
+        const payload = {
+          type: 'PICKUP_REQUEST',
+          title: `Đặt lấy hàng tận nơi (${packages} kiện ~ ${weight}kg) - ${hub} Hub`,
+          customerName: name,
+          customerPhone: phone,
+          hub: hub,
+          priority: 'HIGH',
+          initialMessage: `Địa chỉ: ${address}. Giờ hẹn: ${time}. Số kiện: ${packages}, Ước tính: ${weight}kg. Ghi chú: ${notes || 'Không có'}`,
+          pickupDetails: {
+            address,
+            city: hub === 'HAN' ? 'Hà Nội' : (hub === 'SGN' ? 'TP. Hồ Chí Minh' : 'Đà Nẵng'),
+            estimatedWeightKg: weight,
+            estimatedPackages: packages,
+            scheduledTime: time,
+            notes
+          }
+        };
+
+        const res = await fetch(`${API_BASE}/api/customer/tickets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.success && json.data) {
+          const t = json.data;
+          const box = document.getElementById('boxPickupSuccess');
+          const txt = document.getElementById('txtPickupSuccessContent');
+          txt.innerHTML = `
+            Yêu cầu lấy hàng đã được chuyển tới điều phối viên <b>${hub} Hub</b> với mã tiếp nhận: <b class="font-mono text-emerald-800 text-sm">${t.ticketCode}</b>.<br>
+            Bưu tá sẽ liên hệ số điện thoại <b>${phone}</b> trước khi qua lấy hàng. Quý khách có thể theo dõi tiến độ bằng số điện thoại này.
+          `;
+          box.classList.remove('hidden');
+          box.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          alert('Không thể gửi yêu cầu: ' + (json.message || 'Lỗi hệ thống'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1"></i> LÊN LỊCH LẤY HÀNG NGAY`;
+      }
+    }
+
+    // ==========================================
+    // 5. GỬI KHIẾU NẠI & HỖ TRỢ (CLAIMS SUBMIT)
+    // ==========================================
+    async function handleClaimSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitClaim');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang gửi...`;
+
+      const type = document.getElementById('selClaimType').value;
+      const awb = document.getElementById('inpClaimAwb').value.trim();
+      const priority = document.getElementById('selClaimPriority').value;
+      const name = document.getElementById('inpClaimName').value.trim();
+      const phone = document.getElementById('inpClaimPhone').value.trim();
+      const hub = document.getElementById('selClaimHub').value;
+      const title = document.getElementById('inpClaimTitle').value.trim();
+      const content = document.getElementById('inpClaimContent').value.trim();
+
+      localStorage.setItem('pdl_user_phone', phone);
+      localStorage.setItem('pdl_user_name', name);
+
+      try {
+        const payload = {
+          type,
+          title,
+          customerName: name,
+          customerPhone: phone,
+          awbNumber: awb,
+          hub,
+          priority,
+          initialMessage: content
+        };
+
+        const res = await fetch(`${API_BASE}/api/customer/tickets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.success && json.data) {
+          const t = json.data;
+          const box = document.getElementById('boxClaimSuccess');
+          const txt = document.getElementById('txtClaimSuccessContent');
+          txt.innerHTML = `
+            Khiếu nại/tra soát đã được ghi nhận với Mã Ticket: <b class="font-mono text-amber-900 text-sm">${t.ticketCode}</b>.<br>
+            Bộ phận CSKH &amp; Điều hành <b>${hub} Hub</b> đã nhận được cảnh báo ưu tiên (${priority}) và sẽ liên hệ giải quyết qua số <b>${phone}</b>.
+          `;
+          box.classList.remove('hidden');
+          box.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          alert('Không thể gửi khiếu nại: ' + (json.message || 'Lỗi hệ thống'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1"></i> GỬI KHIẾU NẠI / HỖ TRỢ`;
+      }
+    }
+
+    // ==========================================
+    // 6. TRA CỨU TIẾN ĐỘ YÊU CẦU CỦA KHÁCH HÀNG
+    // ==========================================
+    async function handleSearchCustomerTickets(e) {
+      if (e) e.preventDefault();
+      const kw = document.getElementById('inpSearchTicketKeyword').value.trim();
+      if (!kw) return;
+      searchCustomerTickets(kw);
+    }
+
+    async function searchCustomerTickets(keyword) {
+      const container = document.getElementById('containerMyTicketsList');
+      container.innerHTML = `<div class="text-center py-6 text-xs text-stone-500"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang tìm kiếm yêu cầu...</div>`;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/customer/tickets?keyword=${encodeURIComponent(keyword)}`);
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          renderCustomerTickets(json.data);
+        } else {
+          container.innerHTML = `
+            <div class="text-center py-8 text-xs text-stone-400 bg-stone-50 rounded-2xl border border-stone-200 p-6">
+              <i class="fa-solid fa-circle-question text-3xl mb-2 text-stone-300 block"></i>
+              <span>Không tìm thấy yêu cầu nào phù hợp với từ khóa "<b>${escapeHtml(keyword)}</b>".</span>
+            </div>
+          `;
+        }
+      } catch (err) {
+        container.innerHTML = `<div class="text-rose-600 text-xs text-center py-4">Lỗi kết nối: ${err.message}</div>`;
+      }
+    }
+
+    function renderCustomerTickets(list) {
+      const container = document.getElementById('containerMyTicketsList');
+      container.innerHTML = '';
+
+      const statusBadges = {
+        'NEW': '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800">Mới Tiếp Nhận</span>',
+        'PROCESSING': '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900">Đang Xử Lý</span>',
+        'RESOLVED': '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">Đã Giải Quyết</span>',
+        'CLOSED': '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-stone-100 text-stone-700">Đã Đóng</span>'
+      };
+
+      list.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'bg-stone-50 rounded-2xl border border-stone-200 p-4 sm:p-5 space-y-3';
+
+        let messagesHtml = '';
+        (t.messages || []).forEach(m => {
+          const isCust = m.senderRole === 'CUSTOMER';
+          messagesHtml += `
+            <div class="p-2.5 rounded-xl text-xs ${isCust ? 'bg-white border border-stone-200 text-stone-800' : 'bg-amber-50 border border-amber-200 text-amber-950'} space-y-1">
+              <div class="flex items-center justify-between text-[11px] font-bold ${isCust ? 'text-stone-900' : 'text-amber-900'}">
+                <span>${isCust ? '👤 ' + escapeHtml(m.senderName) + ' (Bạn)' : '🐼 ' + escapeHtml(m.senderName) + ' (CSKH PandaLex)'}</span>
+                <span class="text-[10px] text-stone-400 font-normal">${new Date(m.timestamp).toLocaleString('vi-VN')}</span>
+              </div>
+              <p class="leading-relaxed">${escapeHtml(m.message)}</p>
+            </div>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200 pb-3 gap-2">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono font-black text-[#351c15] text-xs sm:text-sm bg-[#ffb500] px-2.5 py-0.5 rounded-lg">${t.ticketCode}</span>
+              <span class="font-extrabold text-stone-900 text-xs sm:text-sm">${escapeHtml(t.title)}</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-[10px] font-bold text-stone-500 uppercase">${t.hub} HUB</span>
+              ${statusBadges[t.status] || ''}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-stone-200">
+            <div><span class="text-stone-400">Khách hàng:</span> <b class="text-stone-800">${escapeHtml(t.customerName)}</b></div>
+            <div><span class="text-stone-400">Điện thoại:</span> <b class="text-stone-800">${escapeHtml(t.customerPhone)}</b></div>
+            <div><span class="text-stone-400">Mã AWB:</span> <b class="font-mono text-amber-700">${t.awbNumber || 'Chưa có'}</b></div>
+            <div><span class="text-stone-400">Ngày tạo:</span> <b class="text-stone-800">${new Date(t.createdAt).toLocaleDateString('vi-VN')}</b></div>
+          </div>
+
+          <div class="space-y-2 pt-1 max-h-48 overflow-y-auto custom-scroll">
+            <span class="text-[11px] font-bold text-stone-600 block">Lịch Sử Trao Đổi:</span>
+            ${messagesHtml}
+          </div>
+
+          <form onsubmit="handleCustomerTicketReply(event, '${t.ticketCode}')" class="pt-2 border-t border-stone-200 flex gap-2">
+            <input type="text" id="inpReplyTicket_${t.ticketCode}" placeholder="Nhập thêm thông tin hoặc phản hồi tới CSKH..." required class="flex-1 bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-amber-500">
+            <button type="submit" class="bg-[#351c15] hover:bg-stone-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition shrink-0 flex items-center space-x-1">
+              <i class="fa-solid fa-reply text-amber-400"></i>
+              <span>Gửi Trả Lời</span>
+            </button>
+          </form>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    async function handleCustomerTicketReply(e, ticketCode) {
+      e.preventDefault();
+      const inp = document.getElementById('inpReplyTicket_' + ticketCode);
+      const msg = inp.value.trim();
+      if (!msg) return;
+
+      const myName = localStorage.getItem('pdl_user_name') || 'Khách Hàng';
+      inp.value = '';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/customer/tickets/${ticketCode}/reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senderRole: 'CUSTOMER',
+            senderName: myName,
+            message: msg
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          const kw = document.getElementById('inpSearchTicketKeyword').value.trim() || ticketCode;
+          searchCustomerTickets(kw);
+        }
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    }
+
+    function contactSupportForThisAwb() {
+      const awb = document.getElementById('trkTrackingNumber').innerText.trim();
+      switchUtilityTab('claims');
+      document.getElementById('inpClaimAwb').value = awb;
+      document.getElementById('inpClaimTitle').value = `Tra soát đơn hàng AWB ${awb}`;
+      document.getElementById('inpClaimContent').value = `Tôi cần hỗ trợ kiểm tra tiến độ giao hàng và thông quan cho mã vận đơn ${awb}.`;
+      scrollToUtility();
+    }
+
+    // ==========================================
+    // 7. TRA CỨU VẬN ĐƠN (TRACKING)
+    // ==========================================
+    async function handleTrackingSubmit(e) {
+      e.preventDefault();
+      const code = document.getElementById('inpTrackingNumber').value.trim();
+      if (!code) return;
+
+      const boxRes = document.getElementById('boxTrackingResult');
+      boxRes.classList.remove('hidden');
+      document.getElementById('trkTrackingNumber').innerText = code;
+      document.getElementById('trkStatusText').innerText = 'Đang tra cứu dữ liệu...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/tracking/${encodeURIComponent(code)}`);
+        const json = await res.json();
+
+        if (json.success && json.data) {
+          const d = json.data;
+          document.getElementById('trkCarrierBadge').innerText = d.carrier || 'UPS';
+          document.getElementById('trkTrackingNumber').innerText = d.trackingNumber || code;
+          document.getElementById('trkStatusText').innerText = d.statusDescription || d.status || 'Đang vận chuyển';
+          document.getElementById('trkOrigin').innerText = d.originCity || 'VIỆT NAM';
+          document.getElementById('trkDest').innerText = (d.destinationCountry || 'US') + ' - ' + (d.destinationCity || '');
+          document.getElementById('trkWeight').innerText = (d.weightKg || '2.5') + ' KG (' + (d.packageCount || 1) + ' Kiện)';
+          document.getElementById('trkEta').innerText = d.estimatedDeliveryDate || 'Đang cập nhật';
+
+          const timelineBox = document.getElementById('trkTimelineSteps');
+          timelineBox.innerHTML = '';
+          (d.checkpoints || []).forEach(cp => {
+            const div = document.createElement('div');
+            div.className = 'flex items-start space-x-2.5 p-2 rounded-lg bg-stone-900 border border-stone-800 text-[11px]';
+            div.innerHTML = `
+              <div class="w-2 h-2 rounded-full bg-emerald-400 mt-1 shrink-0"></div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between text-stone-400 text-[10px]">
+                  <span>${cp.timestamp}</span>
+                  <span class="font-bold text-stone-300">${cp.location || ''}</span>
+                </div>
+                <p class="font-bold text-stone-100">${cp.status} - ${cp.description || ''}</p>
+              </div>
+            `;
+            timelineBox.appendChild(div);
+          });
+        } else {
+          document.getElementById('trkStatusText').innerText = 'Vận đơn đã được tạo trên hệ thống';
+          document.getElementById('trkTimelineSteps').innerHTML = `
+            <div class="p-2.5 rounded-lg bg-stone-900 border border-stone-800 text-xs text-stone-400">
+              Kiện hàng ${code} đã tiếp nhận dữ liệu điện tử. Đang chuyển giao xử lý phân loại tại Hub.
+            </div>
+          `;
+        }
+      } catch (err) {
+        document.getElementById('trkStatusText').innerText = 'Đã tiếp nhận AWB';
+      }
+    }
+
+    function quickFillTrack(awb) {
+      document.getElementById('inpTrackingNumber').value = awb;
+      handleTrackingSubmit(new Event('submit'));
+    }
+
+    // ==========================================
+    // 8. DỰ TÍNH CƯỚC (QUOTE)
+    // ==========================================
+    async function handleQuoteSubmit(e) {
+      e.preventDefault();
+      const dest = document.getElementById('selQuoteDest').value;
+      const actualWeight = parseFloat(document.getElementById('inpQuoteWeight').value) || 1;
+      const l = parseFloat(document.getElementById('inpDimL').value) || 0;
+      const w = parseFloat(document.getElementById('inpDimW').value) || 0;
+      const h = parseFloat(document.getElementById('inpDimH').value) || 0;
+
+      const dimWeight = (l * w * h) / 5000;
+      const chgWeight = Math.max(actualWeight, dimWeight);
+
+      const boxRes = document.getElementById('boxQuoteResult');
+      boxRes.classList.remove('hidden');
+      document.getElementById('txtQuoteWeightSummary').innerText = `Tính cước: ${chgWeight.toFixed(1)} KG (Thực: ${actualWeight}kg, Thể tích: ${dimWeight.toFixed(1)}kg)`;
+
+      const container = document.getElementById('containerQuoteRates');
+      container.innerHTML = `<div class="text-xs text-stone-400 py-2"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang tính cước Universal...</div>`;
+
+      try {
+        const payload = {
+          destinationCountry: dest,
+          packageType: 'NON_DOC',
+          packages: [{ weight: actualWeight, length: l, width: w, height: h }]
+        };
+
+        const res = await fetch(`${API_BASE}/api/v1/rates/quote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.success && json.results && json.results.length > 0) {
+          container.innerHTML = '';
+          json.results.slice(0, 3).forEach((r, idx) => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-3 rounded-xl bg-stone-800/90 border border-stone-700 text-xs';
+            div.innerHTML = `
+              <div class="flex items-center space-x-2.5">
+                <span class="w-6 h-6 rounded-lg bg-[#ffb500]/20 text-[#ffb500] font-black flex items-center justify-center text-xs">#${idx+1}</span>
+                <div>
+                  <h4 class="font-extrabold text-white text-xs">${r.carrier} - ${r.serviceName || 'Express'}</h4>
+                  <p class="text-[10px] text-stone-400">Thời gian: 2 - 4 ngày • Bao gồm phụ phí nhiên liệu FSC</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[#ffb500] font-mono font-black text-sm">${(r.finalTotalVnd || 0).toLocaleString('vi-VN')} đ</span>
+                <span class="text-[10px] text-stone-400 block">~$${(r.finalTotalUsd || 0).toFixed(2)}</span>
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        } else {
+          const estVnd = Math.round(chgWeight * 320000);
+          container.innerHTML = `
+            <div class="flex items-center justify-between p-3 rounded-xl bg-stone-800 border border-stone-700 text-xs">
+              <div>
+                <h4 class="font-bold text-white">UPS Worldwide Saver (Tiêu Chuẩn)</h4>
+                <p class="text-[10px] text-stone-400">Door-to-Door đi ${dest} • 3 - 5 ngày làm việc</p>
+              </div>
+              <span class="text-[#ffb500] font-mono font-black text-sm">${estVnd.toLocaleString('vi-VN')} đ</span>
+            </div>
+          `;
+        }
+      } catch (err) {
+        container.innerHTML = `<div class="text-xs text-rose-400">Lỗi: ${err.message}</div>`;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

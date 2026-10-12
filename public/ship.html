@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PandaLex - Tạo Vận Đơn Quốc Tế (Chuẩn Form UPS / FedEx)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bwip-js@4/dist/bwip-js-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    :root { --brand: #351c15; --brand-accent: #ffb500; }
+    body.carrier-fedex { --brand: #4d148c; --brand-accent: #ff6200; }
+    .brand-bg { background: var(--brand); }
+    .brand-text { color: var(--brand); }
+    .brand-border { border-color: var(--brand); }
+    .accent-bg { background: var(--brand-accent); }
+    .step-num { background: var(--brand); color: #fff; }
+    .fld label { display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:2px; }
+    .fld label .req { color:#dc2626; }
+    .fld input, .fld select, .fld textarea {
+      width:100%; background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px;
+      font-size:12px; font-weight:600; color:#0f172a;
+    }
+    .fld input:focus, .fld select:focus { outline:none; border-color: var(--brand); box-shadow: 0 0 0 2px rgba(0,0,0,.06); }
+    .fld .hint { font-size:10px; color:#94a3b8; margin-top:1px; }
+    .carrier-btn.active { background: var(--brand); color:#fff; border-color: var(--brand); }
+
+    /* ================= NHÃN 4x6 (101.6 x 152.4 mm) ================= */
+    .lbl { width:101.6mm; height:152.4mm; background:#fff; color:#000; font-family: Arial, Helvetica, sans-serif;
+      box-sizing:border-box; border:1px solid #000; overflow:hidden; display:flex; flex-direction:column; position:relative; }
+    .lbl * { box-sizing:border-box; }
+    .lbl .b2 { border-bottom:2px solid #000; }
+    .lbl .b3 { border-bottom:3.5px solid #000; }
+    .lbl .b1 { border-bottom:1px solid #000; }
+    .lbl .t6 { font-size:6pt; line-height:1.15; }
+    .lbl .t7 { font-size:7pt; line-height:1.18; }
+    .lbl .t8 { font-size:8pt; line-height:1.2; }
+    .lbl .t9 { font-size:9pt; line-height:1.2; }
+    .lbl .t11 { font-size:11pt; line-height:1.15; }
+    .lbl .t13 { font-size:13pt; line-height:1.1; }
+    .lbl .t15 { font-size:15pt; line-height:1.05; }
+    .lbl .bold { font-weight:700; }
+    .lbl .blk { font-weight:900; }
+    .lbl svg.bc { display:block; width:100%; }
+    .lbl img.code2d { display:block; image-rendering: pixelated; }
+
+    /* ================= COMMERCIAL INVOICE A4 ================= */
+    .inv { width:210mm; min-height:297mm; background:#fff; color:#000; padding:12mm; font-family: Arial, Helvetica, sans-serif; font-size:9pt; box-sizing:border-box; }
+    .inv table { width:100%; border-collapse:collapse; }
+    .inv td, .inv th { border:1px solid #000; padding:3px 4px; vertical-align:top; }
+    .inv th { background:#eee; font-size:8pt; }
+
+    #printRoot { display:none; }
+    @media print {
+      body > *:not(#printRoot) { display:none !important; }
+      #printRoot { display:block !important; }
+      #printRoot .lbl { border:none; page-break-after:always; break-after:page; }
+      #printRoot .inv { page-break-after:always; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+
+  <!-- HEADER -->
+  <header class="brand-bg text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-[1400px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="/" class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center text-xl">🐼</a>
+        <div>
+          <h1 class="text-base font-extrabold leading-tight">Tạo Vận Đơn Quốc Tế</h1>
+          <p class="text-[11px] text-white/70">Form đồng bộ theo màn hình <b>Create a Shipment (ups.com)</b> &amp; <b>FedEx Ship Manager</b></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs font-bold">
+        <span class="text-white/70 mr-1">Hãng:</span>
+        <button type="button" data-carrier="UPS" class="carrier-btn active px-4 py-1.5 rounded-lg border border-white/40 bg-white/10">UPS</button>
+        <button type="button" data-carrier="FEDEX" class="carrier-btn px-4 py-1.5 rounded-lg border border-white/40 bg-white/10">FedEx</button>
+        <span class="w-px h-6 bg-white/30 mx-2"></span>
+        <button type="button" onclick="loadSample('UPS')" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Mẫu UPS (AWB thật)</button>
+        <span class="w-px h-6 bg-white/30 mx-1"></span>
+        <button type="button" onclick="openAwbScanModalInShip()" class="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-300 font-extrabold flex items-center gap-1.5 shadow"><i class="fa-solid fa-camera"></i><span>📸 Quét Nhãn AWB</span></button>
+        <a href="/" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center gap-1.5"><i class="fa-solid fa-calculator"></i><span>Báo Giá</span></a>
+        <a href="/invoice.html" class="px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-white flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i><span>Tạo Invoice</span></a>
+        <a href="/home.html" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold flex items-center gap-1.5 shadow"><i class="fa-solid fa-house"></i><span>Home UPS</span></a>
+        <a href="/admin.html" class="px-3 py-1.5 rounded-lg accent-bg text-slate-900 font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-sliders"></i><span>Admin</span></a>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-[1400px] mx-auto px-4 py-5 grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+    <!-- ============ FORM ============ -->
+    <form id="shipForm" class="xl:col-span-8 space-y-4" autocomplete="off" novalidate>
+
+      <!-- 1 + 2: SHIP FROM / SHIP TO -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Ship From -->
+        <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="flex items-center gap-2 text-sm font-extrabold"><span class="step-num w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Ship From <span class="text-slate-400 font-semibold">/ Người gửi</span></h2>
+            <div class="flex items-center space-x-1.5">
+              <select id="selectSavedShipper" onchange="applySavedShipper(this.value)" class="text-[11px] bg-slate-50 border border-slate-300 rounded px-2 py-1 font-bold text-slate-700">
+                <option value="">📖 Chọn từ Sổ địa chỉ...</option>
+              </select>
+            </div>
+          </div>
+          <div id="fromBox" class="grid grid-cols-2 gap-2"></div>
+        </section>
+
+        <!-- Ship To -->
+        <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="flex items-center gap-2 text-sm font-extrabold"><span class="step-num w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Ship To <span class="text-slate-400 font-semibold">/ Người nhận</span></h2>
+            <div class="flex items-center space-x-1.5">
+              <select id="selectSavedRecipient" onchange="applySavedRecipient(this.value)" class="text-[11px] bg-slate-50 border border-slate-300 rounded px-2 py-1 font-bold text-slate-700">
+                <option value="">📖 Sổ người nhận...</option>
+              </select>
+              <button type="button" onclick="openSmartParserModal()" class="text-[11px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded px-2 py-1 font-bold flex items-center space-x-1">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Dán Nhanh (Parse)</span>
+              </button>
+            </div>
+          </div>
+          <div id="toBox" class="grid grid-cols-2 gap-2"></div>
+          <label class="flex items-center gap-2 mt-2 text-xs font-semibold"><input type="checkbox" id="to_residential"> Địa chỉ nhà riêng (Residential address)</label>
+        </section>
+      </div>
+
+      <!-- 3: PACKAGES -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="flex items-center gap-2 text-sm font-extrabold"><span class="step-num w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> Packages <span class="text-slate-400 font-semibold">/ Kiện hàng</span></h2>
+          <div class="flex items-center space-x-2">
+            <select id="shipDimDivisor" onchange="calc()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold bg-slate-50 text-slate-700">
+              <option value="5000" selected>⚡ DIM 5000 (IATA)</option>
+              <option value="6000">📦 DIM 6000 (Cargo)</option>
+            </select>
+            <div class="fld w-56"><select id="packagingType"></select></div>
+          </div>
+        </div>
+        <table class="w-full text-xs">
+          <thead><tr class="text-left text-slate-500">
+            <th class="py-1 w-10">#</th><th>Trọng lượng (kg) <span class="text-red-600">*</span></th><th>Dài (cm)</th><th>Rộng (cm)</th><th>Cao (cm)</th><th>KL quy đổi</th><th>Khai giá (tùy chọn)</th><th></th>
+          </tr></thead>
+          <tbody id="pkgBody"></tbody>
+        </table>
+        <button type="button" onclick="addPackage()" class="mt-2 text-xs font-bold brand-text hover:underline"><i class="fa-solid fa-plus mr-1"></i>Add another package / Thêm kiện</button>
+      </section>
+
+      <!-- 4: SERVICE -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <h2 class="flex items-center gap-2 text-sm font-extrabold mb-3"><span class="step-num w-6 h-6 rounded-full flex items-center justify-center text-xs">4</span> Service &amp; Ship Date <span class="text-slate-400 font-semibold">/ Dịch vụ</span></h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div class="fld col-span-2"><label>Dịch vụ <span class="req">*</span></label><select id="serviceCode"></select></div>
+          <div class="fld"><label>Ngày gửi (Ship date) <span class="req">*</span></label><input type="date" id="shipDate"></div>
+          <div class="fld"><label id="accLabel">Số tài khoản UPS (Shipper #)</label><input id="accountNumber" maxlength="9" class="uppercase font-mono"></div>
+        </div>
+        <div class="flex flex-wrap gap-4 mt-3 text-xs font-semibold">
+          <label class="flex items-center gap-2"><input type="checkbox" id="signatureRequired"> Yêu cầu ký nhận (Signature required)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="saturdayDelivery"> Giao thứ Bảy (Saturday delivery)</label>
+        </div>
+      </section>
+
+      <!-- 5: PAYMENT -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
+        <h2 class="flex items-center gap-2 text-sm font-extrabold mb-1"><span class="step-num w-6 h-6 rounded-full flex items-center justify-center text-xs">5</span> Payment &amp; Billing Terms <span class="text-slate-400 font-semibold">/ Thanh toán &amp; Công nợ khách</span></h2>
+
+        <!-- Khách hàng xuất hóa đơn & Hình thức thanh toán -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Khách Hàng Thanh Toán</label>
+            <select id="selectCustomerShipment" onchange="applyShipmentCustomer(this.value)" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-slate-800">
+              <option value="">-- Chọn khách hàng hợp đồng --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Hình Thức Thanh Toán</label>
+            <div id="customerTermBadge" class="p-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold rounded-lg flex items-center space-x-1.5">
+              <i class="fa-solid fa-money-bill-wave text-emerald-600"></i>
+              <span>Thanh toán tiền ngay (Prepaid)</span>
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Hạn Mức &amp; Thời Hạn Nợ</label>
+            <div id="customerCreditInfo" class="p-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold rounded-lg text-[11px]">
+              Không áp dụng công nợ
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div class="fld"><label>Cước vận chuyển trả bởi</label>
+            <select id="billShippingTo"><option value="SHIPPER">Người gửi (Shipper)</option><option value="RECEIVER">Người nhận (Receiver)</option><option value="THIRD_PARTY">Bên thứ 3 (Third party)</option></select></div>
+          <div class="fld"><label>TK thanh toán cước</label><input id="billShippingAccount" class="uppercase font-mono" placeholder="Nếu không phải người gửi"></div>
+          <div class="fld"><label>Thuế &amp; phí nhập khẩu trả bởi</label>
+            <select id="billDutiesTo"><option value="RECEIVER">Người nhận (DAP)</option><option value="SHIPPER">Người gửi (DDP)</option><option value="THIRD_PARTY">Bên thứ 3</option></select></div>
+          <div class="fld"><label>TK thanh toán thuế</label><input id="billDutiesAccount" class="uppercase font-mono"></div>
+        </div>
+      </section>
+
+      <!-- 6: CUSTOMS -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <h2 class="flex items-center gap-2 text-sm font-extrabold mb-3"><span class="step-num w-6 h-6 rounded-full flex items-center justify-center text-xs">6</span> Customs / Commercial Invoice <span class="text-slate-400 font-semibold">/ Khai hải quan</span></h2>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+          <div class="fld md:col-span-2"><label>Loại hàng <span class="req">*</span></label>
+            <select id="contentsType"><option value="NON_DOCUMENT">Hàng hóa (Non-document / Dutiable)</option><option value="DOCUMENT">Chứng từ (Document)</option></select></div>
+          <div class="fld"><label>Lý do xuất</label>
+            <select id="exportReason"><option>SALE</option><option>GIFT</option><option>SAMPLE</option><option>RETURN</option><option>REPAIR</option><option>PERSONAL EFFECTS</option></select></div>
+          <div class="fld"><label>Số Invoice</label><input id="invoiceNumber" class="uppercase"></div>
+          <div class="fld"><label>Tiền tệ</label><select id="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>CAD</option><option>JPY</option><option>VND</option></select></div>
+          <div class="fld"><label>Incoterm</label><select id="incoterm"><option>DAP</option><option>DDP</option><option>EXW</option><option>FCA</option><option>CPT</option><option>CIP</option></select></div>
+        </div>
+        <label class="flex items-center gap-2 mt-2 text-xs font-semibold"><input type="checkbox" id="paperlessInvoice" checked> <span id="paperlessLabel">Hóa đơn điện tử (UPS Paperless Invoice → in "EDI-IDIS" trên nhãn)</span></label>
+
+        <div id="itemsWrap" class="mt-3">
+          <table class="w-full text-xs">
+            <thead><tr class="text-left text-slate-500">
+              <th class="py-1 w-6">#</th><th>Mô tả chi tiết (tiếng Anh) <span class="text-red-600">*</span></th><th class="w-24">Mã HS</th><th class="w-14">Xuất xứ</th><th class="w-14">SL</th><th class="w-16">ĐVT</th><th class="w-20">Đơn giá</th><th class="w-16">KL tịnh</th><th class="w-20 text-right">Thành tiền</th><th class="w-6"></th>
+            </tr></thead>
+            <tbody id="itemBody"></tbody>
+          </table>
+          <button type="button" onclick="addItem()" class="mt-2 text-xs font-bold brand-text hover:underline"><i class="fa-solid fa-plus mr-1"></i>Thêm dòng hàng</button>
+        </div>
+
+        <!-- Cảnh báo An ninh Hàng không & Hàng cấm bay -->
+        <div id="complianceAlertWrap" class="mt-3 hidden p-3 rounded-xl border transition-all text-xs"></div>
+
+        <div class="fld mt-3"><label>Mô tả in trên nhãn (DESC) <span class="hint inline">— để trống sẽ lấy từ dòng hàng</span></label><input id="itemDescription" maxlength="50" class="uppercase"></div>
+      </section>
+
+      <!-- 7: REFERENCES -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <h2 class="flex items-center gap-2 text-sm font-extrabold mb-3"><span class="step-num w-6 h-6 rounded-full flex items-center justify-center text-xs">7</span> References <span class="text-slate-400 font-semibold">/ Mã tham chiếu</span></h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div class="fld"><label>Reference # 1</label><input id="reference1" maxlength="35" class="uppercase"></div>
+          <div class="fld"><label>Reference # 2</label><input id="reference2" maxlength="35" class="uppercase"></div>
+          <div class="fld" id="ursaFld"><label>Mã URSA FedEx (nếu có)</label><input id="ursaCode" maxlength="10" class="uppercase" placeholder="VD: XO SFOA"></div>
+        </div>
+      </section>
+    </form>
+
+    <!-- ============ SUMMARY ============ -->
+    <aside class="xl:col-span-4">
+      <div class="sticky top-20 space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="brand-bg text-white px-4 py-2.5 text-sm font-extrabold flex items-center justify-between">
+            <span>Shipment Summary</span><span id="sumCarrier" class="text-xs accent-bg text-slate-900 px-2 py-0.5 rounded">UPS</span>
+          </div>
+          <div class="p-4 text-xs space-y-1.5" id="summaryBox"></div>
+          <div id="msgBox" class="px-4 pb-3 space-y-1"></div>
+          <div class="p-4 pt-0">
+            <button type="button" id="btnShip" onclick="submitShipment()" class="w-full brand-bg text-white font-extrabold py-3 rounded-lg shadow hover:opacity-90 text-sm">
+              <i class="fa-solid fa-truck-fast mr-1"></i> SHIP NOW — TẠO VẬN ĐƠN
+            </button>
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 leading-relaxed">
+          <b><i class="fa-solid fa-triangle-exclamation mr-1"></i>Lưu ý:</b> Số tracking hệ thống sinh ra đúng cấu trúc &amp; check digit của hãng nhưng là <b>số mô phỏng</b>. Để dán lên kiện đi thật, cần kết nối <b>UPS Shipping API / FedEx Ship API</b> để hãng cấp số và nhãn chính thức.
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ RESULT ============ -->
+    <section id="resultSection" class="xl:col-span-12 hidden">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-extrabold">Vận đơn đã tạo <span id="resTracking" class="font-mono brand-text"></span></h2>
+            <p id="resMeta" class="text-xs text-slate-500"></p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="printDocs('labels')" class="brand-bg text-white text-xs font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-print mr-1"></i>In nhãn 4x6</button>
+            <button type="button" onclick="printDocs('invoice')" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-file-invoice mr-1"></i>In Commercial Invoice (A4)</button>
+            <button type="button" onclick="downloadInvoiceExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-file-excel mr-1"></i>Tải Excel CI Mẫu Chuẩn</button>
+            <button type="button" onclick="printDocs('all')" class="bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2 rounded-lg">In tất cả</button>
+          </div>
+        </div>
+        <div id="labelsOut" class="flex flex-wrap gap-6 justify-center bg-slate-100 p-6 rounded-lg"></div>
+        <h3 class="text-sm font-extrabold mt-6 mb-2">Commercial Invoice</h3>
+        <div id="invoiceOut" class="overflow-auto bg-slate-100 p-6 rounded-lg flex justify-center"></div>
+    </section>
+
+    <!-- ============ DANH SÁCH VẬN ĐƠN ĐÃ TẠO (QUẢN LÝ TẬP TRUNG) ============ -->
+    <section class="xl:col-span-12">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+              <i class="fa-solid fa-boxes-stacked text-blue-600"></i>
+              <span>Lịch Sử Vận Đơn Đã Tạo & Bàn Giao</span>
+            </h3>
+            <p class="text-xs text-slate-500">Quản lý toàn bộ danh sách AWB, in lại tem, in lại invoice, hoặc tra cứu hành trình</p>
+          </div>
+          <button type="button" onclick="loadSavedShipmentsList()" class="text-xs font-bold text-blue-600 hover:underline">
+            <i class="fa-solid fa-rotate-right mr-1"></i> Làm mới danh sách
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Thời Gian</th>
+                <th class="py-2.5 px-3">Mã Đơn / Tracking</th>
+                <th class="py-2.5 px-3">Hãng & Dịch Vụ</th>
+                <th class="py-2.5 px-3">Người Nhận (Ship To)</th>
+                <th class="py-2.5 px-3">Quy Cách</th>
+                <th class="py-2.5 px-3">Trạng Thái</th>
+                <th class="py-2.5 px-3 text-right">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="savedShipmentsTableBody" class="divide-y divide-slate-100 font-medium">
+              <tr><td colspan="7" class="text-center py-6 text-slate-400">Đang tải danh sách vận đơn...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODAL: SMART ADDRESS PARSER (DÁN NHANH ĐOẠN TIN NHẮN) -->
+  <div id="modalSmartParser" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-1.5">
+          <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i>
+          <span>Dán Đoạn Tin Nhắn Địa Chỉ (Smart Address Parser)</span>
+        </h3>
+        <button type="button" onclick="closeSmartParserModal()" class="w-7 h-7 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-3 text-xs">
+        <p class="text-slate-500 text-[11px]">
+          Copy toàn bộ tin nhắn từ Zalo/Telegram/Facebook của khách và dán vào đây. Hệ thống sẽ tự động bóc tách Tên, SĐT, Địa chỉ, Bang, Zipcode:
+        </p>
+        <textarea id="rawAddressInput" rows="5" placeholder="Ví dụ:&#10;Gửi Tammy Nguyen, 774-810-5199, 1219 Main St, Worcester, MA 01603, USA" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"></textarea>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeSmartParserModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Hủy</button>
+          <button type="button" onclick="executeSmartParse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow flex items-center space-x-1.5">
+            <i class="fa-solid fa-bolt"></i>
+            <span>BÓC TÁCH & ĐIỀN FORM</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SCAN ẢNH TEM AWB TRONG SHIP.HTML -->
+  <div id="modalAwbScanInShip" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-slate-900 to-indigo-950 text-white">
+        <h3 class="text-sm font-black flex items-center space-x-2">
+          <i class="fa-solid fa-camera text-amber-400"></i>
+          <span>📸 Quét / Chụp Ảnh Tem AWB (FedEx &amp; UPS)</span>
+        </h3>
+        <button type="button" onclick="closeAwbScanModalInShip()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <p class="text-slate-600 text-[11px]">
+          Chụp ảnh tem nhiệt dán trên thùng hàng hoặc tải file ảnh. Hệ thống sẽ tự động bóc tách mã vận đơn, người gửi, người nhận, trọng lượng và điền trực tiếp vào form:
+        </p>
+
+        <!-- Thử nghiệm nhanh -->
+        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <span class="font-bold text-slate-600">Thử nhanh bằng mẫu nhãn có sẵn:</span>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="runAwbScanSampleInShip('UPS')" class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-lg text-xs flex items-center space-x-1 shadow-sm">
+              <i class="fa-solid fa-bolt"></i>
+              <span>Mẫu UPS (1Z84Y...)</span>
+            </button>
+            <button type="button" onclick="runAwbScanSampleInShip('FEDEX')" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-lg text-xs flex items-center space-x-1 shadow-sm">
+              <i class="fa-solid fa-bolt"></i>
+              <span>Mẫu FedEx (77123...)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dropzone tải ảnh hoặc PDF -->
+        <div onclick="document.getElementById('shipAwbFileInput').click()" class="border-2 border-dashed border-indigo-200 hover:border-indigo-500 bg-indigo-50/40 hover:bg-indigo-50/70 transition rounded-2xl p-6 text-center cursor-pointer relative overflow-hidden group">
+          <input type="file" id="shipAwbFileInput" accept="image/*,.pdf" capture="environment" onchange="handleAwbFileSelectedInShip(this.files)" class="hidden">
+          <div class="flex flex-col items-center justify-center space-y-2">
+            <div class="w-12 h-12 rounded-full bg-white shadow-md text-indigo-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+            <p class="font-extrabold text-slate-800">
+              Bấm vào đây để <span class="text-indigo-600 underline">Chụp Ảnh Bằng Camera</span> hoặc Tải File Ảnh (.JPG, .PNG) / File PDF AWB (.PDF)
+            </p>
+            <p class="text-[10px] text-slate-400">Tự động chuyển ảnh chụp camera thành File PDF AWB chuẩn 4x6" đính kèm theo đơn</p>
+          </div>
+        </div>
+
+        <div id="shipAwbScanningStatus" class="hidden p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-800 font-bold flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-spinner fa-spin text-indigo-600"></i>
+          <span>Đang phân tích hình ảnh và nhận diện thông tin...</span>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button type="button" onclick="closeAwbScanModalInShip()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="printRoot"></div>
+  <style id="pageStyle"></style>
+
+<script>
+// ======================================================================
+// DANH MỤC
+// ======================================================================
+const COUNTRIES = [
+  ['VN','VIETNAM'],['US','UNITED STATES'],['CA','CANADA'],['GB','UNITED KINGDOM'],['AU','AUSTRALIA'],['NZ','NEW ZEALAND'],
+  ['DE','GERMANY'],['FR','FRANCE'],['NL','NETHERLANDS'],['BE','BELGIUM'],['IT','ITALY'],['ES','SPAIN'],['CH','SWITZERLAND'],
+  ['SE','SWEDEN'],['NO','NORWAY'],['DK','DENMARK'],['JP','JAPAN'],['KR','SOUTH KOREA'],['TW','TAIWAN'],['HK','HONG KONG'],
+  ['CN','CHINA'],['SG','SINGAPORE'],['MY','MALAYSIA'],['TH','THAILAND'],['PH','PHILIPPINES'],['ID','INDONESIA'],['IN','INDIA'],
+  ['AE','UNITED ARAB EMIRATES'],['KH','CAMBODIA'],['LA','LAOS']
+];
+const SERVICES = {
+  UPS: [['SAVER','UPS Worldwide Saver® (nhãn: UPS SAVER · 1P)'],['EXPRESS','UPS Worldwide Express® (1)'],['EXPRESS_PLUS','UPS Worldwide Express Plus® (1+)'],['EXPEDITED','UPS Worldwide Expedited® (2)']],
+  FEDEX: [['IP','FedEx International Priority® (IP)'],['IE','FedEx International Economy® (IE)'],['IF','FedEx International First® (IF)']]
+};
+const PACKAGING = {
+  UPS: ['Your Packaging (Thùng của khách)','UPS Express Envelope','UPS Pak','UPS Express Box - Small','UPS Express Box - Medium','UPS Express Box - Large','UPS 10KG Box','UPS 25KG Box'],
+  FEDEX: ['Your Packaging (Thùng của khách)','FedEx Envelope','FedEx Pak','FedEx Box - Small','FedEx Box - Medium','FedEx Box - Large','FedEx Tube','FedEx 10kg Box','FedEx 25kg Box']
+};
+const LIMITS = { UPS: { kg: 70, lg: 400 }, FEDEX: { kg: 68, lg: 330 } };
+let carrier = 'UPS';
+let lastAwb = null;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toCarrierText = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\s+/g,' ').toUpperCase();
+
+// ======================================================================
+// DỰNG FORM NGƯỜI GỬI / NGƯỜI NHẬN (cùng cấu trúc ups.com / FedEx)
+// ======================================================================
+function partyFields(prefix) {
+  const countryOpts = COUNTRIES.map(([c,n]) => `<option value="${c}">${n} (${c})</option>`).join('');
+  return `
+    <div class="fld col-span-2"><label>Quốc gia / Country <span class="req">*</span></label><select id="${prefix}_countryCode">${countryOpts}</select></div>
+    <div class="fld"><label>Tên liên hệ / Contact name <span class="req">*</span></label><input id="${prefix}_contactName" maxlength="35" data-upper></div>
+    <div class="fld"><label>Công ty / Company</label><input id="${prefix}_companyName" maxlength="35" data-upper></div>
+    <div class="fld col-span-2"><label>Địa chỉ dòng 1 / Address 1 <span class="req">*</span></label><input id="${prefix}_address1" maxlength="35" data-upper><div class="hint">Tối đa 35 ký tự · tự bỏ dấu tiếng Việt</div></div>
+    <div class="fld"><label>Địa chỉ dòng 2</label><input id="${prefix}_address2" maxlength="35" data-upper></div>
+    <div class="fld"><label>Địa chỉ dòng 3</label><input id="${prefix}_address3" maxlength="35" data-upper></div>
+    <div class="fld"><label>Mã bưu chính / Postal code</label><input id="${prefix}_postalCode" maxlength="10" data-upper></div>
+    <div class="fld"><label>Thành phố / City <span class="req">*</span></label><input id="${prefix}_city" maxlength="30" data-upper></div>
+    <div class="fld"><label>Bang/Tỉnh / State</label><input id="${prefix}_state" maxlength="2" data-upper placeholder="VD: MA, CA"></div>
+    <div class="fld"><label>Điện thoại / Phone <span class="req">*</span></label><input id="${prefix}_phone" maxlength="20"></div>
+    <div class="fld"><label>Email</label><input id="${prefix}_email" type="email"></div>
+    <div class="fld"><label>Mã số thuế / CCCD / EORI</label><input id="${prefix}_taxId" maxlength="20" data-upper></div>`;
+}
+$('fromBox').innerHTML = partyFields('from');
+$('toBox').innerHTML = partyFields('to');
+
+document.addEventListener('blur', e => {
+  if (e.target.matches && e.target.matches('[data-upper]')) { e.target.value = toCarrierText(e.target.value).trim(); refreshSummary(); }
+}, true);
+
+// ======================================================================
+// KIỆN HÀNG
+// ======================================================================
+let pkgSeq = 0;
+function addPackage(w = '', l = '', wi = '', h = '', dv = '') {
+  pkgSeq++;
+  const tr = document.createElement('tr');
+  tr.className = 'pkg-row border-t border-slate-100';
+  tr.innerHTML = `
+    <td class="py-1.5 font-bold text-slate-500 pkg-idx"></td>
+    <td class="fld pr-1"><input type="number" step="0.1" min="0" class="p-w" value="${w}"></td>
+    <td class="fld pr-1"><input type="number" min="0" class="p-l" value="${l}"></td>
+    <td class="fld pr-1"><input type="number" min="0" class="p-wi" value="${wi}"></td>
+    <td class="fld pr-1"><input type="number" min="0" class="p-h" value="${h}"></td>
+    <td class="p-vol font-mono text-slate-600 text-[11px]">-</td>
+    <td class="fld pr-1"><input type="number" min="0" class="p-dv" value="${dv}"></td>
+    <td><button type="button" class="text-red-500 px-1" onclick="this.closest('tr').remove(); refreshSummary()"><i class="fa-solid fa-xmark"></i></button></td>`;
+  $('pkgBody').appendChild(tr);
+  refreshSummary();
+}
+function readPackages() {
+  return [...document.querySelectorAll('.pkg-row')].map(r => ({
+    weightKg: parseFloat(r.querySelector('.p-w').value) || 0,
+    lengthCm: parseFloat(r.querySelector('.p-l').value) || 0,
+    widthCm: parseFloat(r.querySelector('.p-wi').value) || 0,
+    heightCm: parseFloat(r.querySelector('.p-h').value) || 0,
+    declaredValue: parseFloat(r.querySelector('.p-dv').value) || 0
+  }));
+}
+
+// ======================================================================
+// DÒNG HÀNG HẢI QUAN
+// ======================================================================
+function addItem(d = '', hs = '', origin = 'VN', qty = '', unit = 'PCS', uv = '', nw = '') {
+  const tr = document.createElement('tr');
+  tr.className = 'item-row border-t border-slate-100';
+  const units = ['PCS','PRS','SET','DOZ','KG','BOX'].map(u => `<option ${u===unit?'selected':''}>${u}</option>`).join('');
+  tr.innerHTML = `
+    <td class="py-1.5 font-bold text-slate-500 it-idx"></td>
+    <td class="fld pr-1"><input class="i-d" data-upper value="${esc(d)}" placeholder="VD: WOMEN'S SILK DRESS (AO DAI)"></td>
+    <td class="fld pr-1"><input class="i-hs font-mono" value="${esc(hs)}" placeholder="6204.49"></td>
+    <td class="fld pr-1"><input class="i-o" data-upper maxlength="2" value="${esc(origin)}"></td>
+    <td class="fld pr-1"><input type="number" min="0" class="i-q" value="${qty}"></td>
+    <td class="fld pr-1"><select class="i-u">${units}</select></td>
+    <td class="fld pr-1"><input type="number" min="0" step="0.01" class="i-v" value="${uv}"></td>
+    <td class="fld pr-1"><input type="number" min="0" step="0.1" class="i-nw" value="${nw}"></td>
+    <td class="i-t text-right font-bold font-mono">0.00</td>
+    <td><button type="button" class="text-red-500 px-1" onclick="this.closest('tr').remove(); refreshSummary()"><i class="fa-solid fa-xmark"></i></button></td>`;
+  $('itemBody').appendChild(tr);
+  refreshSummary();
+}
+function readItems() {
+  return [...document.querySelectorAll('.item-row')].map(r => ({
+    description: r.querySelector('.i-d').value,
+    hsCode: r.querySelector('.i-hs').value,
+    originCountry: r.querySelector('.i-o').value,
+    quantity: parseFloat(r.querySelector('.i-q').value) || 0,
+    unit: r.querySelector('.i-u').value,
+    unitValue: parseFloat(r.querySelector('.i-v').value) || 0,
+    netWeightKg: parseFloat(r.querySelector('.i-nw').value) || 0
+  }));
+}
+
+// ======================================================================
+// CHUYỂN HÃNG
+// ======================================================================
+function setCarrier(c) {
+  carrier = c;
+  document.body.classList.toggle('carrier-fedex', c === 'FEDEX');
+  document.querySelectorAll('.carrier-btn').forEach(b => b.classList.toggle('active', b.dataset.carrier === c));
+  $('serviceCode').innerHTML = SERVICES[c].map(([v,n]) => `<option value="${v}">${n}</option>`).join('');
+  $('packagingType').innerHTML = PACKAGING[c].map(p => `<option>${p}</option>`).join('');
+  $('accLabel').textContent = c === 'UPS' ? 'Số tài khoản UPS (6 ký tự)' : 'Số tài khoản FedEx (9 số)';
+  $('accountNumber').maxLength = c === 'UPS' ? 6 : 9;
+  $('paperlessLabel').textContent = c === 'UPS'
+    ? 'Hóa đơn điện tử (UPS Paperless Invoice → in "EDI-IDIS" trên nhãn)'
+    : 'Hóa đơn điện tử (FedEx Electronic Trade Documents → in "ETD" trên nhãn)';
+  $('ursaFld').style.display = c === 'FEDEX' ? '' : 'none';
+  $('sumCarrier').textContent = c;
+  refreshSummary();
+}
+document.querySelectorAll('.carrier-btn').forEach(b => b.addEventListener('click', () => setCarrier(b.dataset.carrier)));
+$('contentsType').addEventListener('change', () => { $('itemsWrap').style.display = $('contentsType').value === 'DOCUMENT' ? 'none' : ''; refreshSummary(); });
+$('billDutiesTo').addEventListener('change', () => { $('incoterm').value = $('billDutiesTo').value === 'SHIPPER' ? 'DDP' : 'DAP'; });
+$('shipForm').addEventListener('input', refreshSummary);
+
+// ======================================================================
+// TÓM TẮT + KIỂM TRA NHANH PHÍA CLIENT
+// ======================================================================
+function refreshSummary() {
+  const pkgs = readPackages();
+  let actual = 0, vol = 0;
+  const msgs = [];
+  const lim = LIMITS[carrier];
+  document.querySelectorAll('.pkg-row').forEach((r, i) => {
+    r.querySelector('.pkg-idx').textContent = i + 1;
+    const p = pkgs[i];
+    const dimDiv = parseInt($('shipDimDivisor')?.value || '5000');
+    const v = p.lengthCm * p.widthCm * p.heightCm / dimDiv;
+    r.querySelector('.p-vol').textContent = v ? v.toFixed(1) + ' kg' : '-';
+    actual += p.weightKg; vol += Math.max(v, p.weightKg);
+    const d = [p.lengthCm, p.widthCm, p.heightCm].sort((a,b) => b-a);
+    if (p.weightKg > lim.kg) msgs.push(['err', `Kiện ${i+1}: vượt ${lim.kg}kg/kiện của ${carrier}`]);
+    if (d[0] + 2*(d[1]+d[2]) > lim.lg) msgs.push(['err', `Kiện ${i+1}: Dài+Vòng bụng vượt ${lim.lg}cm`]);
+    if (carrier === 'UPS' && (d[0] > 122 || d[1] > 76 || p.weightKg > 25)) msgs.push(['warn', `Kiện ${i+1}: có thể tính phụ phí AHC`]);
+  });
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach((r, i) => {
+    r.querySelector('.it-idx').textContent = i + 1;
+    const t = (parseFloat(r.querySelector('.i-q').value) || 0) * (parseFloat(r.querySelector('.i-v').value) || 0);
+    r.querySelector('.i-t').textContent = t.toFixed(2);
+    total += t;
+  });
+  const chargeable = Math.ceil(Math.max(actual, vol) * 2) / 2;
+  const to = `${$('to_city').value || '—'}, ${$('to_state').value || ''} ${$('to_postalCode').value || ''} ${$('to_countryCode').value}`;
+  $('summaryBox').innerHTML = `
+    <div class="flex justify-between"><span class="text-slate-500">Đến</span><b class="text-right">${esc(to)}</b></div>
+    <div class="flex justify-between"><span class="text-slate-500">Dịch vụ</span><b>${esc($('serviceCode').selectedOptions[0]?.text.split('(')[0] || '')}</b></div>
+    <div class="flex justify-between"><span class="text-slate-500">Số kiện</span><b>${pkgs.length}</b></div>
+    <div class="flex justify-between"><span class="text-slate-500">KL thực</span><b>${actual.toFixed(1)} kg</b></div>
+    <div class="flex justify-between"><span class="text-slate-500">KL tính cước (DIM 5000)</span><b>${chargeable.toFixed(1)} kg</b></div>
+    <div class="flex justify-between"><span class="text-slate-500">Trị giá hải quan</span><b>${total.toFixed(2)} ${$('currency').value}</b></div>`;
+  $('msgBox').innerHTML = msgs.map(([t, m]) =>
+    `<div class="text-[11px] px-2 py-1 rounded ${t==='err'?'bg-red-50 text-red-700':'bg-amber-50 text-amber-800'}">${t==='err'?'⛔':'⚠️'} ${esc(m)}</div>`).join('');
+
+  checkComplianceLive();
+}
+
+let complianceDebounce = null;
+function checkComplianceLive() {
+  clearTimeout(complianceDebounce);
+  complianceDebounce = setTimeout(async () => {
+    const descs = [];
+    document.querySelectorAll('.item-row .i-d').forEach(inp => { if (inp.value) descs.push(inp.value); });
+    if ($('itemDescription').value) descs.push($('itemDescription').value);
+    const wrap = $('complianceAlertWrap');
+    if (!wrap) return;
+
+    if (descs.length === 0) {
+      wrap.classList.add('hidden');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/compliance/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descriptions: descs })
+      });
+      const d = await res.json();
+      if (d.success && d.data && d.data.warnings.length > 0) {
+        wrap.classList.remove('hidden');
+        const hasProhibited = d.data.hasProhibited;
+        wrap.className = hasProhibited 
+          ? 'mt-3 p-3 rounded-xl border bg-rose-50 border-rose-300 text-rose-900 space-y-1.5'
+          : 'mt-3 p-3 rounded-xl border bg-amber-50 border-amber-300 text-amber-900 space-y-1.5';
+
+        wrap.innerHTML = `
+          <div class="font-extrabold flex items-center space-x-1.5 text-xs">
+            <i class="fa-solid fa-triangle-exclamation ${hasProhibited ? 'text-rose-600' : 'text-amber-600'}"></i>
+            <span>CẢNH BÁO AN NINH HÀNG KHÔNG &amp; HẢI QUAN (${d.data.warnings.length} lưu ý)</span>
+          </div>
+          ${d.data.warnings.map(w => `
+            <div class="text-[11px] leading-relaxed pl-4 border-l-2 ${w.severity === 'PROHIBITED' ? 'border-rose-500' : 'border-amber-500'}">
+              <strong>[${w.category}] Phát hiện từ khóa: "${w.keywordMatched}"</strong>
+              <div class="text-slate-600">${w.messageVi}</div>
+              <div class="text-blue-800 font-medium">➔ Giải pháp: ${w.solutionVi}</div>
+            </div>
+          `).join('')}
+        `;
+      } else {
+        wrap.classList.add('hidden');
+      }
+    } catch (e) {
+      console.error('Lỗi check compliance:', e);
+    }
+  }, 300);
+}
+
+// ======================================================================
+// DỮ LIỆU MẪU
+// ======================================================================
+function setParty(prefix, p) {
+  Object.entries(p).forEach(([k, v]) => {
+    const el = $(`${prefix}_${k}`);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+  });
+}
+function loadSample(c) {
+  setCarrier(c);
+  $('pkgBody').innerHTML = ''; $('itemBody').innerHTML = '';
+  $('shipDate').value = new Date().toISOString().slice(0, 10);
+  if (c === 'UPS') {
+    // Theo đúng AWB UPS thật anh gửi
+    setParty('from', { countryCode:'VN', contactName:'MR CUONG - 036084005796', companyName:'MR CUONG - 036084005796', address1:'PHUC YEN, PHAN HUY ICH, P15, T', address2:'', address3:'', postalCode:'700000', city:'HO CHI MINH', state:'', phone:'0976843168', email:'', taxId:'036084005796' });
+    setParty('to', { countryCode:'US', contactName:'TAMMY NGUYEN', companyName:'TAMMY NGUYEN', address1:'1219 MAIN ST', address2:'', address3:'', postalCode:'01603', city:'WORCESTER', state:'MA', phone:'774-810-5199', email:'', taxId:'' });
+    $('to_residential').checked = true;
+    $('serviceCode').value = 'SAVER';
+    $('accountNumber').value = '84Y820';
+    addPackage(22, 67, 48, 28); addPackage(22.5, 67, 48, 28); addPackage(22.5, 67, 48, 28);
+    $('contentsType').value = 'NON_DOCUMENT';
+    $('exportReason').value = 'SALE';
+    addItem("AO DAI - WOMEN'S SILK TRADITIONAL DRESS", '620449', 'VN', 30, 'PCS', 35, 2);
+    $('itemDescription').value = 'AO DAI VIET NAM';
+    $('reference1').value = 'NDPB';
+    $('reference2').value = '99999999999998';
+    $('paperlessInvoice').checked = true;
+  } else {
+    setParty('from', { countryCode:'VN', contactName:'NGUYEN VAN AN', companyName:'PANDALEX LOGISTICS VN', address1:'102 TRUONG SON, P2, TAN BINH', address2:'', address3:'', postalCode:'700000', city:'HO CHI MINH', state:'', phone:'0988123456', email:'ops@pandalex.vn', taxId:'0312345678' });
+    setParty('to', { countryCode:'US', contactName:'MICHAEL JOHNSON', companyName:'BLUE OCEAN TRADING LLC', address1:'450 MISSION ST', address2:'STE 700', address3:'', postalCode:'94105', city:'SAN FRANCISCO', state:'CA', phone:'415-555-0199', email:'', taxId:'' });
+    $('to_residential').checked = false;
+    $('serviceCode').value = 'IP';
+    $('accountNumber').value = '';
+    addPackage(5.5, 40, 30, 20);
+    $('contentsType').value = 'NON_DOCUMENT';
+    $('exportReason').value = 'SAMPLE';
+    addItem("MEN'S COTTON T-SHIRT SAMPLE", '610910', 'VN', 10, 'PCS', 5, 2);
+    addItem('POLYESTER WOVEN FABRIC SWATCH', '540752', 'VN', 20, 'PCS', 1.5, 1);
+    $('itemDescription').value = '';
+    $('reference1').value = 'PO-2026-US';
+    $('reference2').value = '';
+    $('ursaCode').value = '';
+  }
+  $('invoiceNumber').value = 'INV' + Date.now().toString().slice(-6);
+  $('itemsWrap').style.display = '';
+  refreshSummary();
+}
+
+// ======================================================================
+// GỬI LÊN SERVER
+// ======================================================================
+function readParty(prefix) {
+  const g = k => ($(`${prefix}_${k}`)?.value || '').trim();
+  return {
+    contactName: g('contactName'), companyName: g('companyName'), phone: g('phone'), email: g('email'), taxId: g('taxId'),
+    address1: g('address1'), address2: g('address2'), address3: g('address3'), city: g('city'), state: g('state'),
+    postalCode: g('postalCode'), countryCode: g('countryCode'),
+    countryName: COUNTRIES.find(c => c[0] === g('countryCode'))?.[1],
+    residential: prefix === 'to' ? $('to_residential').checked : false
+  };
+}
+async function submitShipment() {
+  const btn = $('btnShip');
+  const custId = $('selectCustomerShipment')?.value || '';
+  const custObj = shipmentCustomers.find(c => c.id === custId);
+  const finCat = custObj?.financialCategory || 'IMMEDIATE';
+  let paymentTerm = 'PREPAID';
+  let paymentStatus = 'UNPAID';
+  let paymentMethod = 'Thanh toán tiền ngay theo đơn';
+
+  if (finCat === 'POSTPAID_CONTRACT') {
+    paymentTerm = 'POSTPAID';
+    paymentStatus = 'UNPAID';
+    paymentMethod = 'Hợp đồng công nợ (Trả sau)';
+  } else if (finCat === 'PREPAID_WALLET') {
+    paymentTerm = 'PREPAID';
+    paymentStatus = 'PAID';
+    paymentMethod = 'Trừ ví ký quỹ trả trước';
+  } else {
+    paymentTerm = 'PREPAID';
+    paymentStatus = 'UNPAID';
+    paymentMethod = 'Chờ thu tiền mặt/chuyển khoản';
+  }
+
+  const payload = {
+    carrier, serviceCode: $('serviceCode').value, accountNumber: $('accountNumber').value, shipDate: $('shipDate').value,
+    packagingType: $('packagingType').value.replace(/\s*\(.*\)/, ''),
+    shipFrom: readParty('from'), shipTo: readParty('to'), pieces: readPackages(),
+    contentsType: $('contentsType').value, exportReason: $('exportReason').value, invoiceNumber: $('invoiceNumber').value,
+    currency: $('currency').value, incoterm: $('incoterm').value, paperlessInvoice: $('paperlessInvoice').checked,
+    items: $('contentsType').value === 'DOCUMENT' ? [] : readItems(),
+    billShippingTo: $('billShippingTo').value, billShippingAccount: $('billShippingAccount').value,
+    billDutiesTo: $('billDutiesTo').value, billDutiesAccount: $('billDutiesAccount').value,
+    signatureRequired: $('signatureRequired').checked, saturdayDelivery: $('saturdayDelivery').checked,
+    ursaCode: $('ursaCode').value, itemDescription: $('itemDescription').value,
+    reference1: $('reference1').value, reference2: $('reference2').value,
+    masterTrackingNumber: window._scannedMasterTracking || undefined,
+    existingTrackingNumber: window._scannedMasterTracking || undefined,
+    pdfBase64: window._scannedAwbPdfBase64 || undefined,
+    customerId: custId,
+    customerCode: custObj?.customerCode || 'PDL-GUEST',
+    customerName: custObj?.customerName || custObj?.name || readParty('from')?.companyName || readParty('from')?.contactName,
+    paymentTerm: paymentTerm,
+    paymentStatus: paymentStatus,
+    paymentMethod: paymentMethod,
+    hub: custObj?.hub || 'SGN',
+    notes: custObj ? `Khách: ${custObj.name || custObj.customerName} (${custObj.customerCode || custObj.id}) - Phân loại TC: ${finCat} - HTTT: ${paymentMethod}` : undefined
+  };
+  try {
+    const res = await fetch('/api/shipments/create', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!data.success) {
+      $('msgBox').innerHTML = `<div class="text-[11px] font-bold text-red-700">${esc(data.message)}</div>` +
+        (data.errors || []).map(e => `<div class="text-[11px] px-2 py-1 rounded bg-red-50 text-red-700">⛔ ${esc(e)}</div>`).join('');
+      return;
+    }
+    lastAwb = data.data;
+    renderResult(lastAwb);
+    $('msgBox').innerHTML = (lastAwb.warnings || []).map(w => `<div class="text-[11px] px-2 py-1 rounded bg-amber-50 text-amber-800">⚠️ ${esc(w)}</div>`).join('');
+  } catch (e) {
+    $('msgBox').innerHTML = `<div class="text-[11px] text-red-700">Lỗi kết nối: ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-truck-fast mr-1"></i> SHIP NOW — TẠO VẬN ĐƠN';
+  }
+}
+
+// ======================================================================
+// VẼ MÃ VẠCH
+// ======================================================================
+function code128Svg(data, heightMm) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  try {
+    JsBarcode(svg, data, { format: 'CODE128', width: 2, height: 100, displayValue: false, margin: 0 });
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('class', 'bc');
+    svg.style.height = heightMm + 'mm';
+  } catch (e) { console.error(e); }
+  return svg.outerHTML;
+}
+function code2dImg(bcid, text, widthMm, extra = {}) {
+  try {
+    const canvas = document.createElement('canvas');
+    bwipjs.toCanvas(canvas, { bcid, text, scale: 3, ...extra });
+    return `<img class="code2d" src="${canvas.toDataURL('image/png')}" style="width:${widthMm}mm">`;
+  } catch (e) {
+    console.error(e);
+    return `<div style="width:${widthMm}mm;height:${widthMm}mm;border:1px solid #000;font-size:6pt;display:flex;align-items:center;justify-content:center">${bcid.toUpperCase()}</div>`;
+  }
+}
+
+// ======================================================================
+// NHÃN UPS (theo bố cục nhãn UPS thật: MR CUONG → TAMMY NGUYEN)
+// ======================================================================
+function upsLabel(a, p) {
+  const f = a.shipFrom, t = a.shipTo;
+  const fromLines = [
+    f.contactName, f.phone, f.companyName && f.companyName !== f.contactName ? f.companyName : f.contactName,
+    f.address1, f.address2, f.address3, `${f.postalCode || ''} ${f.city}`.trim(), f.countryName
+  ].filter(Boolean);
+  const toLines = [t.contactName, t.phone, t.companyName, t.address1, t.address2, t.address3].filter(Boolean);
+  const maxi = code2dImg('maxicode', `[)>\u001e01\u001d96${(t.postalCode||'').replace(/-/g,'')}\u001d840\u001d${a.serviceCode}\u001d${p.trackingNumber}\u001dUPSN\u001d${a.accountNumber}\u001e\u0004`, 27);
+  return `
+  <div class="lbl">
+    <!-- 1. Shipper + trọng lượng -->
+    <div class="b2" style="display:flex;padding:1.5mm 2mm;height:30mm">
+      <div class="t7" style="width:55%">${fromLines.map(esc).join('<br>')}</div>
+      <div style="width:45%">
+        <div style="display:flex;justify-content:space-between" class="t13 blk"><span>${p.weightKg} KG</span><span>${p.pieceNumber} OF ${a.totalPieces}</span></div>
+        <div class="t7" style="margin-top:2mm;padding-left:2mm">
+          SHP#: ${esc(a.shipmentNumber)}<br>SHP WT: ${a.totalWeightKg} KG<br>DATE: ${esc(a.dateFormatted)}<br>DWT: ${esc(p.dimsText)}
+        </div>
+      </div>
+    </div>
+    <!-- 2. Ship To -->
+    <div class="b2" style="padding:1.5mm 2mm;height:34mm">
+      <div class="t8 bold" style="text-decoration:underline">SHIP TO:</div>
+      <div class="t9 bold" style="padding-left:4mm">${toLines.map(esc).join('<br>')}</div>
+      <div class="t15 blk" style="padding-left:4mm;margin-top:.5mm">${esc(t.city)} ${esc(t.state || '')} ${esc(t.postalCode || '')}</div>
+      <div class="t15 blk" style="padding-left:4mm">${esc(t.countryName)}</div>
+    </div>
+    <!-- 3. MaxiCode + Routing -->
+    <div class="b3" style="display:flex;height:31mm">
+      <div style="width:33mm;border-right:2px solid #000;display:flex;align-items:center;justify-content:center">${maxi}</div>
+      <div style="flex:1;padding:1.5mm 2mm;display:flex;flex-direction:column;justify-content:space-between">
+        <div class="blk" style="font-size:24pt;line-height:1;letter-spacing:.5px">${esc(a.routingCode)}</div>
+        <div style="width:80%">${code128Svg(a.routingBarcode, 12)}</div>
+      </div>
+    </div>
+    <!-- 4. Service + 1P -->
+    <div class="b1" style="display:flex;height:14mm">
+      <div style="flex:1;padding:1mm 2mm">
+        <div class="blk" style="font-size:17pt;line-height:1.05">${esc(a.serviceName)}</div>
+        <div class="t8 bold">TRACKING #: ${esc(p.trackingFormatted)}</div>
+      </div>
+      <div style="width:22mm;border-left:2px solid #000;display:flex;align-items:center;justify-content:center" class="blk"><span style="font-size:30pt">${esc(a.serviceTag)}</span></div>
+    </div>
+    <!-- 5. Tracking barcode -->
+    <div class="b3" style="padding:2mm 6mm;height:24mm">${code128Svg(p.trackingNumber, 20)}</div>
+    <!-- 6. Billing / desc / ref -->
+    <div style="display:flex;padding:1mm 2mm 0" class="t8">
+      <div style="flex:1">BILLING: ${esc(a.billingCode)}<br>DESC: ${esc(a.itemDescription)}</div>
+      ${a.paperlessInvoice ? `<div class="blk" style="font-size:15pt;display:flex;align-items:center;gap:2mm">EDI-IDIS <span style="border:1.5px solid #000;font-size:6pt;padding:.5mm 1mm">✉</span></div>` : ''}
+    </div>
+    <div class="t8 b1" style="padding:1mm 2mm">
+      Reference # 1: ${esc(a.reference1)}<br>Reference # 2: ${esc(a.reference2)}
+      ${a.signatureRequired ? '<br><b>SIGNATURE REQUIRED</b>' : ''}${a.saturdayDelivery ? ' <b>· SATURDAY DELIVERY</b>' : ''}
+      <div style="text-align:right;font-size:5pt">PANDALEX 2.0 · ${esc(a.shipDate)}</div>
+    </div>
+    <!-- 7. Terms -->
+    <div style="padding:1mm 2mm;font-size:4.6pt;line-height:1.15;flex:1;overflow:hidden">
+      Shipper agrees to the UPS Terms found at www.ups.com and UPS service centers. For international air carriage, the Warsaw Convention or the Montreal Convention may apply and limits UPS's liability for loss or damage to cargo. International carriage by road may be subject to the Convention on the Contract for the International Carriage of Goods by Road. Except as otherwise governed by international conventions or other mandatory law, the UPS Terms limit UPS's liability for damage, loss or delay of this shipment. There are no stopping places agreed upon at the time of tender of the shipment and UPS reserves the right to route the shipment in any way it deems appropriate. Shipper certifies that the commodities, technology or software were exported in accordance with applicable export regulations. Diversion contrary to law is prohibited.
+    </div>
+  </div>`;
+}
+
+// ======================================================================
+// NHÃN FEDEX (bố cục FedEx Ship Manager - International)
+// ======================================================================
+function fedexLabel(a, p) {
+  const f = a.shipFrom, t = a.shipTo;
+  const pdf = code2dImg('pdf417', `[)>\u001e06\u001d10Z${p.trackingNumber}\u001d12Z${t.phone}\u001d11Z${t.contactName}\u001d${t.address1}\u001d${t.city}\u001d${t.state || ''}\u001d${t.postalCode || ''}\u001d${t.countryCode}\u001e\u0004`, 52, { columns: 8, rowheight: 2 });
+  const isMps = a.totalPieces > 1;
+  const zip5 = (t.postalCode || '').replace(/\D/g, '').padEnd(5, '0').slice(0, 5);
+  const bottomBc = `9622${zip5}0000${p.trackingNumber}${String(a.totalPieces).padStart(3, '0')}`.slice(0, 34);
+  return `
+  <div class="lbl">
+    <!-- Origin + ship info -->
+    <div class="b1" style="display:flex;padding:1.5mm 2mm;height:26mm">
+      <div class="t7" style="width:58%">
+        ORIGIN ID: ${esc((f.city || '').slice(0, 3))}A &nbsp; (${esc(f.phone)})<br>
+        ${esc(f.contactName)}<br>${f.companyName ? esc(f.companyName) + '<br>' : ''}
+        ${esc(f.address1)}<br>${f.address2 ? esc(f.address2) + '<br>' : ''}
+        ${esc(f.city)} ${esc(f.postalCode || '')}<br>${esc(f.countryCode)}
+      </div>
+      <div class="t7" style="width:42%">
+        SHIP DATE: ${esc(a.fedexDate)}<br>ACTWGT: ${p.weightKg.toFixed(2)} KG<br>
+        CAD: ${esc(a.accountNumber)}/PLX2.0<br>DIMS: ${esc(p.dimsText)}<br>
+        <b>${esc(a.billingText)}</b><br>${esc(a.dutiesText)}
+      </div>
+    </div>
+    <!-- TO -->
+    <div class="b2" style="display:flex;padding:1.5mm 2mm;height:36mm">
+      <div class="t13 blk" style="width:8mm">TO</div>
+      <div style="flex:1" class="t11 bold">
+        ${esc(t.contactName)}<br>${t.companyName ? esc(t.companyName) + '<br>' : ''}
+        ${esc(t.address1)}<br>${t.address2 ? esc(t.address2) + '<br>' : ''}
+        <span class="blk">${esc(t.city)} ${esc(t.state || '')} ${esc(t.postalCode || '')}</span><br>
+        <span class="blk">${esc(t.countryName)} ${esc(t.countryCode)}</span>
+        <div class="t7" style="font-weight:400;margin-top:1mm">(${esc(t.phone)}) &nbsp; REF: ${esc(a.reference1)}<br>INV: ${esc(a.invoiceNumber)} &nbsp; PO: ${esc(a.reference2)}</div>
+      </div>
+    </div>
+    <!-- 2D + brand -->
+    <div class="b1" style="display:flex;height:24mm;align-items:center;padding:1mm 2mm">
+      <div style="flex:1">${pdf}</div>
+      <div style="width:30mm;text-align:center">
+        <div class="blk" style="font-size:20pt;line-height:1">FedEx</div>
+        <div class="t8 bold">Express</div>
+        <div style="display:inline-block;border:2px solid #000;font-size:18pt;font-weight:900;padding:0 2mm;margin-top:1mm">E</div>
+      </div>
+    </div>
+    <!-- TRK + service -->
+    <div class="b2" style="display:flex;padding:1mm 2mm;height:22mm">
+      <div style="flex:1">
+        <div class="t9">TRK# <span class="blk t13">${esc(p.trackingFormatted)}</span> <span class="t7">0430</span></div>
+        ${isMps ? `<div class="t9 bold">MPS ${p.pieceNumber} of ${a.totalPieces} ${p.pieceNumber > 1 ? `<span class="t7">Mstr# ${esc(a.masterTrackingNumber)}</span>` : '<span class="t7">MASTER</span>'}</div>` : ''}
+        ${a.paperlessInvoice ? '<div class="t11 blk" style="margin-top:1mm">ETD</div>' : ''}
+      </div>
+      <div style="text-align:right">
+        <div class="t9 bold">${esc(a.deliveryCommit)}</div>
+        <div class="t13 blk">${esc(a.serviceName)}</div>
+        ${a.signatureRequired ? '<div class="t8 bold">SIGNATURE REQ.</div>' : ''}${a.saturdayDelivery ? '<div class="t8 bold">SATURDAY</div>' : ''}
+      </div>
+    </div>
+    <!-- Routing -->
+    <div class="b1" style="display:flex;justify-content:space-between;align-items:center;padding:1mm 2mm;height:13mm">
+      <div class="blk" style="font-size:20pt">${esc(a.ursaCode || '')}</div>
+      <div class="blk" style="font-size:16pt">${esc(a.routingCode)}</div>
+    </div>
+    <!-- Barcode -->
+    <div style="padding:2mm 4mm;flex:1;display:flex;flex-direction:column;justify-content:center">
+      ${code128Svg(bottomBc, 20)}
+      <div class="t6" style="text-align:center;margin-top:1mm">DESC: ${esc(a.itemDescription)} · ${a.contentsType === 'DOCUMENT' ? 'DOCUMENTS' : 'COMMODITIES'} · ${a.totalWeightKg} KG TOTAL</div>
+    </div>
+  </div>`;
+}
+
+// ======================================================================
+// COMMERCIAL INVOICE (A4)
+// ======================================================================
+function invoiceHtml(a) {
+  const f = a.shipFrom, t = a.shipTo;
+  const party = p => [p.companyName, p.contactName, p.address1, p.address2, p.address3, `${p.city} ${p.state || ''} ${p.postalCode || ''}`, p.countryName,
+    `TEL: ${p.phone}`, p.email ? `EMAIL: ${p.email}` : '', p.taxId ? `TAX ID: ${p.taxId}` : ''].filter(Boolean).map(esc).join('<br>');
+  const rows = a.items.length ? a.items.map((it, i) => `<tr>
+      <td>${i + 1}</td><td>${esc(it.description)}</td><td>${esc(it.hsCode)}</td><td>${esc(it.originCountry)}</td>
+      <td style="text-align:right">${it.quantity}</td><td>${esc(it.unit)}</td><td style="text-align:right">${it.netWeightKg || ''}</td>
+      <td style="text-align:right">${it.unitValue.toFixed(2)}</td><td style="text-align:right">${it.lineTotal.toFixed(2)}</td></tr>`).join('')
+    : `<tr><td colspan="9" style="text-align:center">DOCUMENTS - NO COMMERCIAL VALUE</td></tr>`;
+  return `
+  <div class="inv">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm">
+      <div style="font-size:18pt;font-weight:900">COMMERCIAL INVOICE</div>
+      <div style="text-align:right;font-size:9pt">Carrier: <b>${a.carrier}</b> · ${esc(a.serviceName)}<br>AWB / Tracking: <b>${esc(a.masterTrackingNumber)}</b></div>
+    </div>
+    <table>
+      <tr><td style="width:50%"><b>EXPORTER / SHIPPER</b><br>${party(f)}</td>
+          <td><b>CONSIGNEE / SHIP TO</b><br>${party(t)}</td></tr>
+      <tr><td>Invoice No: <b>${esc(a.invoiceNumber)}</b><br>Invoice Date: ${esc(a.dateFormatted)}<br>Reason for Export: ${esc(a.exportReason)}</td>
+          <td>Country of Export: ${esc(f.countryName)}<br>Country of Destination: ${esc(t.countryName)}<br>Incoterms: <b>${esc(a.incoterm)}</b> · Currency: ${esc(a.currency)}</td></tr>
+    </table>
+    <table style="margin-top:4mm">
+      <thead><tr><th>#</th><th>Full Description of Goods</th><th>HS Code</th><th>Origin</th><th>Qty</th><th>Unit</th><th>Net Wt (kg)</th><th>Unit Value</th><th>Total (${esc(a.currency)})</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="8" style="text-align:right"><b>TOTAL INVOICE VALUE</b></td><td style="text-align:right"><b>${a.totalCustomsValue.toFixed(2)}</b></td></tr></tfoot>
+    </table>
+    <table style="margin-top:4mm">
+      <tr><td>Total Packages: <b>${a.totalPieces}</b></td><td>Total Gross Weight: <b>${a.totalWeightKg} KG</b></td>
+          <td>Freight: ${a.billingCode === 'F/C' ? 'COLLECT' : 'PREPAID'}</td><td>Duties &amp; Taxes: ${esc(a.dutiesText.replace('D/T: ', ''))}</td></tr>
+      <tr><td colspan="4">Packages: ${a.pieces.map(p => `#${p.pieceNumber} ${p.weightKg}kg ${p.lengthCm}x${p.widthCm}x${p.heightCm}cm`).join(' · ')}<br>Refs: ${esc(a.reference1)} ${esc(a.reference2)}</td></tr>
+    </table>
+    <p style="margin-top:6mm;font-size:8.5pt">I declare that all the information contained in this invoice is true and correct, and that the contents of this shipment are as stated above. These commodities, technology or software were exported from ${esc(f.countryName)} in accordance with export regulations.</p>
+    <div style="display:flex;justify-content:space-between;margin-top:14mm;font-size:9pt">
+      <div>Name: <b>${esc(f.contactName)}</b><br>Date: ${esc(a.dateFormatted)}</div>
+      <div style="text-align:center;width:70mm;border-top:1px solid #000;padding-top:1mm">Signature / Company Stamp</div>
+    </div>
+  </div>`;
+}
+
+// ======================================================================
+// HIỂN THỊ KẾT QUẢ & IN ẤN / XUẤT FILE COMMERCIAL INVOICE
+// ======================================================================
+function renderResult(a) {
+  if (!a) return;
+  const resSec = $('resultSection');
+  if (resSec) resSec.classList.remove('hidden');
+
+  $('resTracking').textContent = a.masterTrackingNumber || '';
+  $('resMeta').textContent = `${a.carrier} · ${a.serviceName} · ${a.totalPieces} kiện · ${a.totalWeightKg} kg · ${a.shipTo?.city || ''}, ${a.shipTo?.countryCode || ''}`;
+
+  const labelsHtml = (a.pieces || []).map(p => {
+    return a.carrier === 'FEDEX' ? fedexLabel(a, p) : upsLabel(a, p);
+  }).join('');
+  $('labelsOut').innerHTML = labelsHtml;
+  $('invoiceOut').innerHTML = invoiceHtml(a);
+
+  if (resSec) {
+    resSec.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function printDocs(type) {
+  if (type === 'invoice' && lastAwb && (lastAwb.shipmentId || lastAwb.id)) {
+    const id = lastAwb.shipmentId || lastAwb.id;
+    window.open(`/api/shipments/${id}/invoice.html`, '_blank');
+    return;
+  }
+  window.print();
+}
+
+function downloadInvoiceExcel() {
+  if (!lastAwb) {
+    alert('Vui lòng tạo hoặc chọn một vận đơn trước khi tải Excel!');
+    return;
+  }
+  const id = lastAwb.shipmentId || lastAwb.id;
+  if (!id) {
+    alert('Không tìm thấy mã vận đơn.');
+    return;
+  }
+  window.location.href = `/api/shipments/${id}/invoice.xlsx`;
+}
+
+// ======================================================================
+// SMART ADDRESS PARSER & ADDRESS BOOK & SHIPMENT LIFECYCLE
+// ======================================================================
+let addressBook = [];
+let shipmentCustomers = [];
+
+async function loadShipmentCustomers() {
+  try {
+    const res = await fetch('/api/customers');
+    const json = await res.json();
+    if (json.success && json.data) {
+      shipmentCustomers = json.data;
+      const sel = $('selectCustomerShipment');
+      if (sel) {
+        sel.innerHTML = '<option value="">-- Chọn khách hàng / đại lý --</option>' + 
+          shipmentCustomers.map(c => {
+            const code = c.customerCode || c.id.toUpperCase();
+            const name = c.customerName || c.name;
+            let catText = '1. Tiền ngay';
+            if (c.financialCategory === 'PREPAID_WALLET') {
+              catText = `2. Trả trước (Ví: ${(c.walletBalance || 0).toLocaleString('vi-VN')} đ)`;
+            } else if (c.financialCategory === 'POSTPAID_CONTRACT') {
+              catText = `3. HĐ Công nợ (${c.creditDays || 30}n)`;
+            }
+            const pendingTag = c.approvalStatus === 'PENDING_APPROVAL' ? ' [⏳ Chờ duyệt]' : '';
+            return `<option value="${c.id}">[${code}] ${name} (${catText})${pendingTag}</option>`;
+          }).join('');
+      }
+    }
+  } catch (e) { console.error('Lỗi tải khách hàng:', e); }
+}
+
+function applyShipmentCustomer(id) {
+  const badge = $('customerTermBadge');
+  const info = $('customerCreditInfo');
+  if (!id) {
+    badge.className = 'p-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold rounded-lg flex items-center space-x-1.5';
+    badge.innerHTML = '<i class="fa-solid fa-money-bill-wave text-emerald-600"></i><span>1. Thanh toán tiền ngay theo đơn</span>';
+    info.textContent = 'Đơn tạo xong ở trạng thái UNPAID, phải thanh toán trước khi in nhãn & xuất kho';
+    return;
+  }
+  const cust = shipmentCustomers.find(c => c.id === id);
+  if (!cust) return;
+
+  if (cust.approvalStatus === 'PENDING_APPROVAL') {
+    badge.className = 'p-2 bg-amber-50 border border-amber-300 text-amber-900 font-bold rounded-lg flex items-center space-x-1.5 animate-pulse';
+    badge.innerHTML = '<i class="fa-solid fa-clock text-amber-700"></i><span>TÀI KHOẢN ĐANG CHỜ PHÊ DUYỆT (PENDING_APPROVAL)</span>';
+    info.innerHTML = '<span class="text-rose-600 font-bold">⚠️ Vui lòng liên hệ Kế toán/Quản trị phê duyệt tài khoản trước khi tiếp tục tạo đơn hàng!</span>';
+    return;
+  }
+
+  if (cust.financialCategory === 'POSTPAID_CONTRACT') {
+    badge.className = 'p-2 bg-purple-50 border border-purple-300 text-purple-900 font-bold rounded-lg flex items-center space-x-1.5';
+    badge.innerHTML = `<i class="fa-solid fa-file-contract text-purple-700"></i><span>3. Khách hàng Có Hợp Đồng Trả Sau (Công nợ ${cust.creditDays || 30} ngày)</span>`;
+    const remaining = (cust.creditLimit || 0) - (cust.currentDebt || 0);
+    info.innerHTML = `Hạn mức: <strong class="text-purple-950">${((cust.creditLimit || 0)/1e6).toFixed(0)} triệu đ</strong> • Nợ: <strong class="text-rose-600">${(cust.currentDebt || 0).toLocaleString('vi-VN')} đ</strong> • Khả dụng: <strong class="text-emerald-700">${remaining.toLocaleString('vi-VN')} đ</strong>`;
+  } else if (cust.financialCategory === 'PREPAID_WALLET') {
+    badge.className = 'p-2 bg-blue-50 border border-blue-300 text-blue-900 font-bold rounded-lg flex items-center space-x-1.5';
+    badge.innerHTML = `<i class="fa-solid fa-wallet text-blue-700"></i><span>2. Khách hàng Trả Trước Qua Ví Ký Quỹ</span> • Số dư ví: <strong class="text-blue-950">${(cust.walletBalance || 0).toLocaleString('vi-VN')} đ</strong>`;
+    info.textContent = `Hệ thống tự động trừ tiền cước từ ví khi tạo đơn. Nếu số dư không đủ sẽ yêu cầu nạp thêm.`;
+  } else {
+    badge.className = 'p-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold rounded-lg flex items-center space-x-1.5';
+    badge.innerHTML = '<i class="fa-solid fa-money-bill-wave text-emerald-600"></i><span>1. Khách hàng Thanh Toán Tiền Ngay Theo Đơn</span>';
+    info.textContent = 'Đơn tạo ra sẽ ở trạng thái Chưa Thu (UNPAID). Bắt buộc thanh toán xong mới in tem nhiệt AWB và xuất kho!';
+  }
+
+  // Tự động điền Người Gửi nếu chưa nhập
+  if (cust.phone && !$('from_phone').value) $('from_phone').value = cust.phone;
+  if (cust.address && !$('from_address1').value) $('from_address1').value = cust.address;
+  if (cust.representative && !$('from_contactName').value) $('from_contactName').value = cust.representative;
+  else if (cust.name && !$('from_contactName').value) $('from_contactName').value = cust.name;
+  if (cust.name && !$('from_companyName').value) $('from_companyName').value = cust.name;
+}
+
+async function loadAddressBook() {
+  try {
+    const res = await fetch('/api/address-book');
+    const json = await res.json();
+    if (json.success && json.data) {
+      addressBook = json.data;
+      const shpSelect = $('selectSavedShipper');
+      const recSelect = $('selectSavedRecipient');
+
+      const shippers = addressBook.filter(a => a.type === 'SHIPPER');
+      const recipients = addressBook.filter(a => a.type === 'RECIPIENT');
+
+      shpSelect.innerHTML = '<option value="">📖 Chọn người gửi từ sổ...</option>' + 
+        shippers.map(s => `<option value="${s.id}">${s.contactName} (${s.city})</option>`).join('');
+
+      recSelect.innerHTML = '<option value="">📖 Chọn người nhận từ sổ...</option>' + 
+        recipients.map(r => `<option value="${r.id}">${r.contactName} (${r.city}, ${r.state || r.countryCode})</option>`).join('');
+    }
+  } catch (err) {
+    console.error('Lỗi tải sổ địa chỉ:', err);
+  }
+}
+
+function applySavedShipper(id) {
+  if (!id) return;
+  const s = addressBook.find(a => a.id === id);
+  if (s) setParty('from', s);
+}
+
+function applySavedRecipient(id) {
+  if (!id) return;
+  const r = addressBook.find(a => a.id === id);
+  if (r) setParty('to', r);
+}
+
+// Modal Smart Address Parser
+function openSmartParserModal() {
+  $('modalSmartParser').classList.remove('hidden');
+  $('rawAddressInput').focus();
+}
+
+function closeSmartParserModal() {
+  $('modalSmartParser').classList.add('hidden');
+}
+
+function executeSmartParse() {
+  const text = $('rawAddressInput').value;
+  if (!text.trim()) return;
+
+  // Regex thông minh bóc tách thông tin
+  // Tìm SĐT: cụm 8 - 14 số có thể có dấu gạch ngang hoặc ngoặc
+  const phoneMatch = text.match(/(?:(?:\+?84|0|\b\d{3})[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/) || text.match(/\b\d{9,12}\b/);
+  const phone = phoneMatch ? phoneMatch[0].replace(/[\s().]/g, '') : '';
+
+  // Tìm ZIP Code Mỹ: 5 chữ số
+  const zipMatch = text.match(/\b\d{5}(?:-\d{4})?\b/);
+  const zip = zipMatch ? zipMatch[0] : '';
+
+  // Tìm mã Bang (State) Mỹ: MA, CA, NY, TX, FL, WA...
+  const stateMatch = text.match(/\b(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)\b/i);
+  const state = stateMatch ? stateMatch[0].toUpperCase() : '';
+
+  // Tách các phần bằng dấu phẩy
+  const parts = text.split(/[,;\n]+/).map(p => p.trim()).filter(Boolean);
+  let name = '';
+  let address1 = '';
+  let city = '';
+
+  if (parts.length > 0) {
+    name = parts[0].replace(/^(gửi|to|ship to|người nhận|recipient)[\s:]+/i, '').replace(phone, '').trim();
+  }
+  if (parts.length > 2) {
+    address1 = parts[1].replace(phone, '').trim();
+    city = parts[2].replace(state, '').replace(zip, '').trim();
+  } else if (parts.length === 2) {
+    address1 = parts[1].replace(phone, '').replace(state, '').replace(zip, '').trim();
+  }
+
+  // Điền vào Form Người Nhận
+  if (name) $('to_contactName').value = toCarrierText(name);
+  if (phone) $('to_phone').value = phone;
+  if (address1) $('to_address1').value = toCarrierText(address1);
+  if (city) $('to_city').value = toCarrierText(city);
+  if (state) $('to_state').value = state;
+  if (zip) $('to_postalCode').value = zip;
+  $('to_countryCode').value = 'US';
+
+  closeSmartParserModal();
+  refreshSummary();
+  alert('✅ Đã tự động bóc tách và điền thông tin người nhận thành công!');
+}
+
+// Danh Sách Vận Đơn Lưu Trữ
+async function loadSavedShipmentsList() {
+  const tbody = $('savedShipmentsTableBody');
+  try {
+    const res = await fetch('/api/shipments');
+    const json = await res.json();
+    if (json.success && json.data) {
+      if (json.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">Chưa có vận đơn nào được lưu trong hệ thống.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = json.data.map(s => {
+        const d = new Date(s.createdAt);
+        const timeFmt = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const badgeColor = s.status === 'CREATED' ? 'bg-blue-100 text-blue-800' :
+          s.status === 'PRINTED' ? 'bg-amber-100 text-amber-800' :
+          s.status === 'DISPATCHED' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800';
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-2.5 px-3 text-[11px] text-slate-500">${timeFmt}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">
+              ${s.masterTrackingNumber}
+              <span class="block text-[10px] text-slate-400 font-normal">SHP#: ${s.shipmentNumber || '-'}</span>
+            </td>
+            <td class="py-2.5 px-3 font-bold text-slate-700">
+              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] ${s.carrier === 'UPS' ? 'bg-amber-500 text-slate-950' : 'bg-purple-700 text-white'}">${s.carrier}</span>
+              ${s.serviceName}
+            </td>
+            <td class="py-2.5 px-3">
+              <strong class="text-slate-800 block">${s.shipTo.contactName}</strong>
+              <span class="text-[11px] text-slate-500">${s.shipTo.city}, ${s.shipTo.state || s.shipTo.countryCode}</span>
+            </td>
+            <td class="py-2.5 px-3 font-mono">${s.totalPieces} kiện (${s.totalWeightKg}kg)</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}">
+                ${s.status}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+              <button onclick="reprintSavedShipment('${s.shipmentId}')" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded text-xs" title="In lại tem nhãn">
+                <i class="fa-solid fa-print"></i> Tem
+              </button>
+              <a href="/api/shipments/${s.shipmentId}/invoice.html" target="_blank" class="px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 font-bold rounded text-xs inline-block" title="Xem/In Commercial Invoice A4">
+                <i class="fa-solid fa-file-invoice"></i> CI
+              </a>
+              <a href="/api/shipments/${s.shipmentId}/invoice.xlsx" download class="px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold rounded text-xs inline-block" title="Tải Excel Commercial Invoice mẫu chuẩn">
+                <i class="fa-solid fa-file-excel"></i> Excel
+              </a>
+              <a href="/track.html?q=${s.masterTrackingNumber}" target="_blank" class="px-2 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded text-xs inline-block" title="Tra cứu tracking">
+                <i class="fa-solid fa-satellite-dish"></i> Track
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-rose-500 text-xs">Lỗi tải danh sách: ${err.message}</td></tr>`;
+  }
+}
+
+async function reprintSavedShipment(id) {
+  try {
+    const res = await fetch(`/api/shipments/${id}`);
+    const json = await res.json();
+    if (json.success && json.data) {
+      lastAwb = json.data;
+      renderResult(lastAwb);
+    }
+  } catch (err) {
+    alert('Không thể tải lại vận đơn: ' + err.message);
+  }
+}
+
+// Kiểm tra nếu có dữ liệu draft từ màn hình Báo Giá chuyển sang
+function checkQuoteDraft() {
+  const raw = sessionStorage.getItem('pandalex_quote_draft');
+  if (raw) {
+    sessionStorage.removeItem('pandalex_quote_draft');
+    try {
+      const draft = JSON.parse(raw);
+      setCarrier(draft.carrier || 'UPS');
+      if (draft.destinationCountry) $('to_countryCode').value = draft.destinationCountry;
+      if (draft.pieces && draft.pieces.length > 0) {
+        $('pkgBody').innerHTML = '';
+        draft.pieces.forEach(p => addPackage(p.weightKg, p.lengthCm, p.widthCm, p.heightCm));
+      }
+      refreshSummary();
+      alert(`✅ Đã nạp thành công thông số lô hàng từ Báo Giá: ${draft.carrier} (${draft.pieces[0].weightKg}kg đi ${draft.destinationCountry})`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+// ==========================================
+// 📸 QUÉT / CHỤP ẢNH TEM AWB TRONG SHIP.HTML
+// ==========================================
+function openAwbScanModalInShip() {
+  $('modalAwbScanInShip').classList.remove('hidden');
+  $('shipAwbScanningStatus').classList.add('hidden');
+  $('shipAwbFileInput').value = '';
+}
+
+function closeAwbScanModalInShip() {
+  $('modalAwbScanInShip').classList.add('hidden');
+}
+
+async function runAwbScanSampleInShip(carrier) {
+  $('shipAwbScanningStatus').classList.remove('hidden');
+  try {
+    const res = await fetch('/api/shipments/scan-awb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sample: carrier, autoSave: false })
+    });
+    const d = await res.json();
+    $('shipAwbScanningStatus').classList.add('hidden');
+    if (d.success && d.data) {
+      closeAwbScanModalInShip();
+      applyAwbScannedDataToForm(d.data);
+    } else {
+      alert('❌ ' + d.message);
+    }
+  } catch (err) {
+    $('shipAwbScanningStatus').classList.add('hidden');
+    alert('Lỗi: ' + err.message);
+  }
+}
+
+function handleAwbFileSelectedInShip(files) {
+  if (!files || files.length === 0) return;
+  const file = files[0];
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  const reader = new FileReader();
+  $('shipAwbScanningStatus').classList.remove('hidden');
+
+  reader.onload = async (e) => {
+    const base64Data = e.target.result;
+    if (isPdf) {
+      window._scannedAwbPdfBase64 = base64Data;
+    } else {
+      try {
+        if (window.jspdf) {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [101.6, 152.4] });
+          doc.addImage(base64Data, 'JPEG', 0, 0, 101.6, 152.4);
+          window._scannedAwbPdfBase64 = doc.output('datauristring');
+        }
+      } catch (err) {
+        console.warn('Lỗi tạo PDF từ ảnh:', err);
+      }
+    }
+
+    try {
+      const res = await fetch('/api/shipments/scan-awb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64Data, pdfBase64: window._scannedAwbPdfBase64, autoSave: false })
+      });
+      const d = await res.json();
+      $('shipAwbScanningStatus').classList.add('hidden');
+      if (d.success && d.data) {
+        closeAwbScanModalInShip();
+        applyAwbScannedDataToForm({ ...d.data, pdfBase64: window._scannedAwbPdfBase64 });
+      } else {
+        alert('❌ ' + d.message);
+      }
+    } catch (err) {
+      $('shipAwbScanningStatus').classList.add('hidden');
+      alert('Lỗi: ' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyAwbScannedDataToForm(data) {
+  if (!data) return;
+  if (data.pdfBase64) {
+    window._scannedAwbPdfBase64 = data.pdfBase64;
+  }
+  setCarrier(data.carrier || 'UPS');
+  $('pkgBody').innerHTML = ''; $('itemBody').innerHTML = '';
+  $('shipDate').value = new Date().toISOString().slice(0, 10);
+
+  if (data.shipFrom) {
+    setParty('from', {
+      countryCode: data.shipFrom.countryCode || 'VN',
+      contactName: data.shipFrom.contactName || '',
+      companyName: data.shipFrom.companyName || '',
+      address1: data.shipFrom.address1 || '',
+      address2: data.shipFrom.address2 || '',
+      postalCode: data.shipFrom.postalCode || '700000',
+      city: data.shipFrom.city || 'HO CHI MINH',
+      state: data.shipFrom.state || '',
+      phone: data.shipFrom.phone || '',
+      email: data.shipFrom.email || '',
+      taxId: data.shipFrom.taxId || ''
+    });
+  }
+
+  if (data.shipTo) {
+    setParty('to', {
+      countryCode: data.shipTo.countryCode || 'US',
+      contactName: data.shipTo.contactName || '',
+      companyName: data.shipTo.companyName || '',
+      address1: data.shipTo.address1 || '',
+      address2: data.shipTo.address2 || '',
+      postalCode: data.shipTo.postalCode || '',
+      city: data.shipTo.city || '',
+      state: data.shipTo.state || '',
+      phone: data.shipTo.phone || '',
+      email: data.shipTo.email || '',
+      taxId: data.shipTo.taxId || ''
+    });
+  }
+
+  if (data.serviceCode && $('serviceCode')) $('serviceCode').value = data.serviceCode;
+  if (data.accountNumber && $('accountNumber')) $('accountNumber').value = data.accountNumber;
+  if (data.itemDescription && $('itemDescription')) $('itemDescription').value = data.itemDescription;
+  if (data.reference1 && $('reference1')) $('reference1').value = data.reference1;
+
+  if (data.pieces && data.pieces.length > 0) {
+    data.pieces.forEach(p => addPackage(p.weightKg || 1, p.lengthCm || 20, p.widthCm || 15, p.heightCm || 10));
+  } else {
+    addPackage(data.weightKg || 2, 20, 15, 10);
+  }
+
+  $('contentsType').value = 'NON_DOCUMENT';
+  addItem(data.itemDescription || 'INTERNATIONAL GOODS', '850440', 'VN', 1, 'PCS', 50, data.weightKg || 2);
+
+  if (data.customerCode && $('selectShipmentCustomer')) {
+    $('selectShipmentCustomer').value = data.customerCode;
+  }
+  if (data.hub && $('selectShipmentHub')) {
+    $('selectShipmentHub').value = data.hub;
+  }
+
+  if (data.trackingNumber) {
+    window._scannedMasterTracking = data.trackingNumber;
+  }
+
+  refreshSummary();
+  alert(`📸 Đã nạp thành công thông tin tem AWB ${data.carrier}: ${data.trackingFormatted || data.trackingNumber}\n• Người nhận: ${data.shipTo?.contactName || ''} (${data.shipTo?.city || ''}, ${data.shipTo?.state || data.shipTo?.countryCode})\n• Trọng lượng: ${data.weightKg} kg`);
+}
+
+function checkAwbPrefill() {
+  const raw = localStorage.getItem('pandalex_prefill_awb');
+  if (raw) {
+    localStorage.removeItem('pandalex_prefill_awb');
+    try {
+      const data = JSON.parse(raw);
+      applyAwbScannedDataToForm(data);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+// ======================================================================
+// KHỞI TẠO
+// ======================================================================
+setCarrier('UPS');
+loadSample('UPS');
+loadAddressBook();
+loadShipmentCustomers();
+loadSavedShipmentsList();
+checkQuoteDraft();
+checkAwbPrefill();
+</script>
+</body>
+</html>

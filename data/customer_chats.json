@@ -1,0 +1,29 @@
+[
+  {
+    "id": "chat_init_1",
+    "sessionId": "default_session",
+    "customerName": "Khách hàng vãng lai",
+    "sender": "PANDALEX_BOT",
+    "senderName": "Trợ lý CSKH PandaLex 24/7",
+    "message": "Xin chào Quý khách! PandaLex Express sẵn sàng hỗ trợ tra cứu AWB, đặt lịch lấy hàng, hoặc tư vấn cước phí gửi hàng quốc tế. Quý khách cần hỗ trợ gì ạ?",
+    "timestamp": "2026-10-12T08:00:00.000Z"
+  },
+  {
+    "id": "chat_1791771517660_iyru",
+    "sessionId": "test_sess_1",
+    "customerName": "Anh Nam",
+    "sender": "CUSTOMER",
+    "senderName": "Anh Nam",
+    "message": "Giá cước đi Mỹ 10kg bao nhiêu em?",
+    "timestamp": "2026-10-12T02:18:37.660Z"
+  },
+  {
+    "id": "chat_1791771517661_bot",
+    "sessionId": "test_sess_1",
+    "customerName": "Anh Nam",
+    "sender": "PANDALEX_BOT",
+    "senderName": "Trợ lý CSKH PandaLex 24/7",
+    "message": "Chào Anh Nam! Giá cước gửi hàng đi Mỹ hiện tại chỉ từ 210.000đ/kg đối với hàng lô và có ưu đãi 35% cho đại lý. Quý khách có thể sử dụng công cụ tính cước nhanh ngay trên trang hoặc để lại số điện thoại để chuyên viên gọi lại nhé!",
+    "timestamp": "2026-10-12T02:18:37.660Z"
+  }
+]

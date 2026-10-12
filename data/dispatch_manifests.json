@@ -1,0 +1,43 @@
+[
+  {
+    "manifestId": "BK-HAN-20261011-001",
+    "manifestDate": "2026-10-10T17:07:18.975Z",
+    "manifestDateFormatted": "11/10/2026 00:07",
+    "hub": "HAN",
+    "carrier": "UPS",
+    "courierDriverName": "Nguyễn Văn Tài (UPS Courier)",
+    "courierDriverPhone": "0988 123 456",
+    "vehiclePlate": "29C-888.99",
+    "dispatcherStaffName": "Trần Văn Kho (Thủ Kho PandaLex)",
+    "notes": "Hàng kiểm tra niêm phong nguyên vẹn, bàn giao xe gom UPS đợt 1",
+    "totalShipments": 1,
+    "totalPieces": 2,
+    "totalActualWeightKg": 17.5,
+    "totalChargeableWeightKg": 17.5,
+    "totalDeclaredValueUsd": 30,
+    "shipments": [
+      {
+        "stt": 1,
+        "shipmentId": "SHP_1791644866958",
+        "masterTrackingNumber": "1Z861R320493609873",
+        "childTrackingNumbers": [
+          "1Z861R320491786882"
+        ],
+        "customerCode": "PDL-KH001",
+        "customerName": "Công ty TNHH Xuất Nhập Khẩu Đông Dương",
+        "recipientName": "AMAZON",
+        "destinationCountry": "US",
+        "serviceName": "UPS WORLDWIDE SAVER",
+        "piecesCount": 2,
+        "actualWeightKg": 17.5,
+        "volumetricWeightKg": 16.5,
+        "chargeableWeightKg": 17.5,
+        "declaredValueUsd": 30,
+        "notes": "Đã cân đo lại kiện 2 (AWB: 1Z861R320491786882): Trọng lượng mới 9.5kg -> Toàn lô tính cước 17.5kg (+110.000đ) | Nhân viên taixe_pandalex đã nhận hàng từ khách tại Hub HAN | Nhập kho tại Hub HAN",
+        "financialVerified": true
+      }
+    ],
+    "status": "DISPATCHED",
+    "createdAt": "2026-10-10T17:07:18.975Z"
+  }
+]

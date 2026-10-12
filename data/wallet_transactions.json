@@ -1,0 +1,43 @@
+[
+  {
+    "id": "tx_1791634473646",
+    "userId": "usr_agent_crossborder",
+    "username": "fba_seller",
+    "customerCode": "FBA-991",
+    "type": "DEDUCT_SHIPMENT",
+    "amount": -2500000,
+    "balanceAfter": 5700000,
+    "shipmentTracking": "739094264992",
+    "paymentMethod": "Trừ ví trả trước",
+    "reference": "739094264992",
+    "note": "Khấu trừ cước vận đơn quốc tế: 739094264992",
+    "createdAt": "2026-10-10T12:14:33.646Z",
+    "createdBy": "system"
+  },
+  {
+    "id": "tx_1791634464491",
+    "userId": "cust_fba",
+    "username": "FBA-991",
+    "customerCode": "FBA-991",
+    "type": "TOPUP",
+    "amount": 5000000,
+    "balanceAfter": 8200000,
+    "paymentMethod": "Chuyển khoản VCB",
+    "reference": "CK-9923812",
+    "note": "Khách nạp tiền cước chuyến FBA California",
+    "createdAt": "2026-10-10T12:14:24.491Z",
+    "createdBy": "ketoan_thuong"
+  },
+  {
+    "id": "tx_init_annam",
+    "userId": "usr_agent_annam",
+    "username": "daily_annam",
+    "customerCode": "AG-002",
+    "type": "TOPUP",
+    "amount": 20000000,
+    "balanceAfter": 20000000,
+    "note": "Nạp tiền ví đại lý qua Techcombank",
+    "createdAt": "2026-10-08T18:17:14.721Z",
+    "createdBy": "ketoan"
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "id": "vch_1791770176463",
+    "voucherCode": "PT-20261012-0002",
+    "type": "SHIPMENT_FEE",
+    "shipmentId": "SHP_1791644866958",
+    "trackingNumber": "1Z861R320493609873",
+    "customerCode": "AG-002",
+    "customerName": "Đại lý Cấp 2 - An Nam Logistics",
+    "amount": 4675000,
+    "paymentChannel": "BANK_TRANSFER",
+    "paymentChannelName": "Chuyển khoản Techcombank - 19036888999",
+    "bankAccount": "Techcombank - 19036888999",
+    "referenceCode": "FT26101299",
+    "payerName": "Nguyễn Văn An",
+    "reason": "Thu tiền cước AWB 1Z861R320493609873 qua Techcombank",
+    "hub": "SGN",
+    "createdAt": "2026-10-12T01:56:16.462Z",
+    "createdBy": "ketoan"
+  },
+  {
+    "id": "vch_init_001",
+    "voucherCode": "PT-20261008-0001",
+    "type": "WALLET_TOPUP",
+    "customerCode": "AG-002",
+    "customerName": "Đại Lý Cấp 2 - An Nam Logistics",
+    "amount": 20000000,
+    "paymentChannel": "BANK_TRANSFER",
+    "paymentChannelName": "Chuyển khoản Techcombank",
+    "bankAccount": "Techcombank - 19036888999",
+    "referenceCode": "UNC-TCB-88291",
+    "payerName": "Nguyễn Văn An",
+    "payerPhone": "0912345678",
+    "reason": "Ký quỹ nạp tiền ví trả trước phục vụ phát hành vận đơn AWB",
+    "hub": "SGN",
+    "createdAt": "2026-10-08T18:17:14.721Z",
+    "createdBy": "ketoan"
+  }
+]

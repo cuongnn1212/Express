@@ -1,0 +1,62 @@
+[
+  {
+    "seaId": "SEA_FCL_2026_001",
+    "freightMode": "SEA_FCL",
+    "shippingLine": "ONE (Ocean Network Express)",
+    "vesselName": "ONE COMMITMENT",
+    "voyageNumber": "028E",
+    "masterBillOfLading": "ONEYSGN260199",
+    "houseBillOfLading": "HBL-PLX-LAX-001",
+    "portOfLoading": "Cát Lái, TP.HCM (VNCLI)",
+    "portOfDischarge": "Los Angeles, USA (USLAX)",
+    "etd": "2026-10-12",
+    "eta": "2026-11-01",
+    "containerSize": "40HC",
+    "containerNumber": "TGHU9284102",
+    "sealNumber": "ONE-VN99281",
+    "grossWeightKg": 18500,
+    "oceanFreightCostUsd": 2150,
+    "oceanFreightSellUsd": 2650,
+    "localChargesVnd": {
+      "thc": 5400000,
+      "blFee": 950000,
+      "sealFee": 220000,
+      "telexReleaseFee": 750000
+    },
+    "shipper": "GO DANG SEAFOOD JOINT STOCK COMPANY",
+    "consignee": "OCEAN CROWN SEAFOOD CORP (LOS ANGELES, USA)",
+    "cargoDescription": "Frozen Pangasius Fillet in cartons (Cá tra fillet đông lạnh)",
+    "incoterm": "CIF",
+    "status": "LOADED",
+    "createdAt": "2026-10-08T18:22:40.128Z"
+  },
+  {
+    "seaId": "SEA_LCL_2026_002",
+    "freightMode": "SEA_LCL",
+    "shippingLine": "Maersk Line",
+    "vesselName": "MAERSK MC-KINNEY MOLLER",
+    "voyageNumber": "2604W",
+    "masterBillOfLading": "MAEU21948102",
+    "houseBillOfLading": "HBL-PLX-HAM-002",
+    "portOfLoading": "Cái Mép, Vũng Tàu (VNTOT)",
+    "portOfDischarge": "Hamburg, Germany (DEHAM)",
+    "etd": "2026-10-14",
+    "eta": "2026-11-09",
+    "totalCbm": 6.8,
+    "grossWeightKg": 2450,
+    "revenueTon": 6.8,
+    "oceanFreightCostUsd": 272,
+    "oceanFreightSellUsd": 442,
+    "localChargesVnd": {
+      "thc": 2720000,
+      "blFee": 900000,
+      "sealFee": 0
+    },
+    "shipper": "GOM SU MINH LONG TRADING CO.",
+    "consignee": "EUROPEAN HOMEWARES GMBH (HAMBURG, GERMANY)",
+    "cargoDescription": "Ceramic Tableware & Teasets (Đồ gốm sứ mỹ nghệ gia dụng)",
+    "incoterm": "FOB",
+    "status": "BOOKED",
+    "createdAt": "2026-10-08T18:22:40.128Z"
+  }
+]

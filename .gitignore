@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build Output
+dist/
+tmp_export/
+
+# Uploads & Temporary files
+uploads/awb_pdfs/*
+!uploads/awb_pdfs/.gitkeep
+
+# Environment variables
+.env.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.log
