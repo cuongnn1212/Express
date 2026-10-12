@@ -1,0 +1,172 @@
+[
+  {
+    "id": "cat_rev_01",
+    "code": "REV_AWB_CASH",
+    "name": "Cước vận chuyển AWB (Tiền mặt / Tiền ngay)",
+    "type": "REVENUE",
+    "description": "Thu tiền cước AWB khách thanh toán tiền mặt tại quầy hoặc tài khoản",
+    "isDefault": true,
+    "isActive": true,
+    "order": 1
+  },
+  {
+    "id": "cat_rev_02",
+    "code": "REV_CONTRACT_DEBT",
+    "name": "Thu công nợ cước hợp đồng trả sau",
+    "type": "REVENUE",
+    "description": "Thu tiền quyết toán công nợ khách hàng hợp đồng theo kỳ",
+    "isDefault": true,
+    "isActive": true,
+    "order": 2
+  },
+  {
+    "id": "cat_rev_03",
+    "code": "REV_WALLET_TOPUP",
+    "name": "Nạp tiền ví đại lý trả trước (Top-Up)",
+    "type": "REVENUE",
+    "description": "Đại lý nạp tiền vào ví điện tử để trừ dần cước khi xuất kho",
+    "isDefault": true,
+    "isActive": true,
+    "order": 3
+  },
+  {
+    "id": "cat_rev_04",
+    "code": "REV_VAS_FEE",
+    "name": "Thu phí dịch vụ gia tăng (VAS)",
+    "type": "REVENUE",
+    "description": "Thu phí bốc xếp, đóng gỗ, hun trùng, kiểm dịch, bảo hiểm hàng hóa",
+    "isDefault": true,
+    "isActive": true,
+    "order": 4
+  },
+  {
+    "id": "cat_rev_05",
+    "code": "REV_REWEIGH_DIFF",
+    "name": "Thu chênh lệch tái cân (Reweigh surcharge)",
+    "type": "REVENUE",
+    "description": "Thu phụ phí do kích thước, cân nặng tăng sau khi cân đo thực tế",
+    "isDefault": true,
+    "isActive": true,
+    "order": 5
+  },
+  {
+    "id": "cat_rev_06",
+    "code": "REV_REFUND_ADVANCE",
+    "name": "Thu hoàn ứng / Thu hồi tạm ứng nhân viên",
+    "type": "REVENUE",
+    "description": "Hoàn trả tiền tạm ứng nghiệp vụ hoặc thu hồi công nợ",
+    "isDefault": true,
+    "isActive": true,
+    "order": 6
+  },
+  {
+    "id": "cat_rev_07",
+    "code": "REV_OTHER",
+    "name": "Thu các khoản thu nhập khác",
+    "type": "REVENUE",
+    "description": "Thu thanh lý tài sản, chênh lệch tỷ giá hoặc thu ngoài nghiệp vụ",
+    "isDefault": true,
+    "isActive": true,
+    "order": 7
+  },
+  {
+    "id": "cat_exp_01",
+    "code": "EXP_CARRIER_COST",
+    "name": "Chi cước gốc Nhà cung cấp / Hãng bay (Cost)",
+    "type": "EXPENSE",
+    "description": "Chi trả tiền cước gốc cho UPS, FedEx, DHL, SF Express theo AWB",
+    "isDefault": true,
+    "isActive": true,
+    "order": 1
+  },
+  {
+    "id": "cat_exp_02",
+    "code": "EXP_CUSTOMS_CLEARANCE",
+    "name": "Chi phí Hải quan, kiểm tra chuyên ngành & hun trùng",
+    "type": "EXPENSE",
+    "description": "Chi phí mở tờ khai hải quan, kiểm tra chất lượng, chứng thư kiểm dịch",
+    "isDefault": true,
+    "isActive": true,
+    "order": 2
+  },
+  {
+    "id": "cat_exp_03",
+    "code": "EXP_FIRST_MILE_TRUCKING",
+    "name": "Chi phí vận chuyển nội địa & xe trung chuyển sân bay",
+    "type": "EXPENSE",
+    "description": "Chi phí xe tải gom hàng first-mile, trung chuyển ra sân bay Nội Bài/Tân Sơn Nhất",
+    "isDefault": true,
+    "isActive": true,
+    "order": 3
+  },
+  {
+    "id": "cat_exp_04",
+    "code": "EXP_PACKAGING_SUPPLIES",
+    "name": "Chi mua bao bì, thùng carton, màng PE & tem nhãn",
+    "type": "EXPENSE",
+    "description": "Chi phí mua vật tư phục vụ đóng gói và in ấn mã vạch AWB",
+    "isDefault": true,
+    "isActive": true,
+    "order": 4
+  },
+  {
+    "id": "cat_exp_05",
+    "code": "EXP_WAREHOUSE_RENTAL",
+    "name": "Chi thuê mặt bằng, điện nước & bến bãi kho",
+    "type": "EXPENSE",
+    "description": "Chi phí tiền thuê kho bãi, điện 3 pha, internet, bảo vệ kho",
+    "isDefault": true,
+    "isActive": true,
+    "order": 5
+  },
+  {
+    "id": "cat_exp_06",
+    "code": "EXP_SALARY_ALLOWANCE",
+    "name": "Chi lương, thưởng & phụ cấp nhân viên",
+    "type": "EXPENSE",
+    "description": "Chi trả lương định kỳ, phụ cấp trực ca đêm, công tác phí",
+    "isDefault": true,
+    "isActive": true,
+    "order": 6
+  },
+  {
+    "id": "cat_exp_07",
+    "code": "EXP_SHIPMENT_COMPENSATION",
+    "name": "Chi bồi thường mất mát, hư hỏng bưu gửi AWB",
+    "type": "EXPENSE",
+    "description": "Chi bồi hoàn cho khách hàng khi hàng hóa gặp sự cố theo chính sách",
+    "isDefault": true,
+    "isActive": true,
+    "order": 7
+  },
+  {
+    "id": "cat_exp_08",
+    "code": "EXP_ADMIN_OFFICE",
+    "name": "Chi văn phòng phẩm & phần mềm quản lý",
+    "type": "EXPENSE",
+    "description": "Chi phí giấy in nhiệt, văn phòng phẩm, server cloud, bảo trì",
+    "isDefault": true,
+    "isActive": true,
+    "order": 8
+  },
+  {
+    "id": "cat_exp_09",
+    "code": "EXP_MARKETING_CLIENT",
+    "name": "Chi tiếp khách & phát triển khách hàng",
+    "type": "EXPENSE",
+    "description": "Chi phí tiếp khách đối tác hãng bay, đại lý cấp 1 và khách hàng VIP",
+    "isDefault": true,
+    "isActive": true,
+    "order": 9
+  },
+  {
+    "id": "cat_exp_10",
+    "code": "EXP_OTHER",
+    "name": "Chi các khoản chi phí hoạt động khác",
+    "type": "EXPENSE",
+    "description": "Chi sửa chữa phương tiện, trang thiết bị kho và chi phí vãng lai",
+    "isDefault": true,
+    "isActive": true,
+    "order": 10
+  }
+]

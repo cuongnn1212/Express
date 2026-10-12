@@ -1,5 +1,38 @@
 [
   {
+    "id": "log_1791803537262_977",
+    "timestamp": "2026-10-12T11:12:17.262Z",
+    "userId": "usr_admin",
+    "username": "admin",
+    "userRole": "SUPER_ADMIN",
+    "action": "LOGIN",
+    "targetId": "admin",
+    "details": "Đăng nhập hệ thống thành công (SUPER_ADMIN @ Hub SGN)",
+    "hub": "SGN"
+  },
+  {
+    "id": "log_1791802987171_936",
+    "timestamp": "2026-10-12T11:03:07.171Z",
+    "userId": "ketoan",
+    "username": "ketoan",
+    "userRole": "ACCOUNTANT",
+    "action": "CREATE_PAYMENT_VOUCHER",
+    "targetId": "PC-20261012-0004",
+    "details": "Lập phiếu chi PC-20261012-0004 số tiền 150.000 đ cho Văn phòng phẩm Minh Khôi (Chi văn phòng phẩm & phần mềm quản lý)",
+    "hub": "SGN"
+  },
+  {
+    "id": "log_1791802982605_145",
+    "timestamp": "2026-10-12T11:03:02.605Z",
+    "userId": "ketoan",
+    "username": "ketoan",
+    "userRole": "ACCOUNTANT",
+    "action": "CREATE_PAYMENT_VOUCHER",
+    "targetId": "PC-20261012-0003",
+    "details": "Lập phiếu chi PC-20261012-0003 số tiền 350.000 đ cho Công ty Bao Bì Nam Long (Chi mua bao bì, thùng carton, màng PE & tem nhãn)",
+    "hub": "SGN"
+  },
+  {
     "id": "log_1791798353415_745",
     "timestamp": "2026-10-12T09:45:53.415Z",
     "userId": "ketoan",

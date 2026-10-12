@@ -2482,6 +2482,9 @@ app.post('/api/finance/receipt-vouchers', (req, res) => {
       payerName,
       payerPhone,
       reason,
+      categoryCode,
+      categoryName,
+      attachedDocCount,
       hub,
       operator
     } = req.body;
@@ -2504,6 +2507,9 @@ app.post('/api/finance/receipt-vouchers', (req, res) => {
       payerName,
       payerPhone,
       reason,
+      categoryCode,
+      categoryName,
+      attachedDocCount: attachedDocCount ? parseInt(attachedDocCount) : 1,
       hub: (hub || 'SGN') as ('HAN' | 'SGN' | 'DAD'),
       operator: operator || 'ketoan'
     });
@@ -2514,15 +2520,31 @@ app.post('/api/finance/receipt-vouchers', (req, res) => {
   }
 });
 
+// 4b. Thu tiền hàng loạt theo danh sách / Excel
+app.post('/api/finance/receipt-vouchers/batch', (req, res) => {
+  try {
+    const { vouchers, operator } = req.body;
+    if (!vouchers || !Array.isArray(vouchers) || vouchers.length === 0) {
+      return res.status(400).json({ success: false, message: 'Danh sách phiếu thu không hợp lệ hoặc rỗng' });
+    }
+    const result = FinanceService.createBatchReceiptVouchers(vouchers, operator || 'ketoan');
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // 5. Danh sách Sổ Quỹ & Phiếu Thu
 app.get('/api/finance/receipt-vouchers', (req, res) => {
-  const { customerCode, type, channel, hub, keyword } = req.query as any;
+  const { customerCode, type, channel, hub, keyword, fromDate, toDate } = req.query as any;
   const list = FinanceService.getAllReceiptVouchers({
     customerCode,
     type,
     channel,
     hub,
-    keyword
+    keyword,
+    fromDate,
+    toDate
   });
   res.json({ success: true, count: list.length, data: list });
 });
@@ -2532,6 +2554,164 @@ app.get('/api/finance/receipt-vouchers/:code', (req, res) => {
   const voucher = FinanceService.getReceiptVoucherByCode(req.params.code);
   if (!voucher) return res.status(404).json({ success: false, message: 'Không tìm thấy phiếu thu: ' + req.params.code });
   res.json({ success: true, data: voucher });
+});
+
+// 7. Lập Phiếu Chi Tiền (Payment Voucher) - Chi AWB, chi hãng, chi chi phí khác
+app.post('/api/finance/payment-vouchers', (req, res) => {
+  try {
+    const {
+      type,
+      shipmentId,
+      trackingNumber,
+      categoryCode,
+      categoryName,
+      vendorCode,
+      recipientName,
+      recipientPhone,
+      amount,
+      paymentMethod,
+      paymentMethodName,
+      bankAccount,
+      referenceCode,
+      reason,
+      attachedDocCount,
+      hub,
+      operator,
+      notes
+    } = req.body;
+
+    if (!recipientName || !amount) {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc: Người nhận tiền hoặc Số tiền' });
+    }
+
+    const result = FinanceService.createPaymentVoucher({
+      type: type || 'GENERAL_EXPENSE',
+      shipmentId,
+      trackingNumber,
+      categoryCode: categoryCode || 'EXP_OTHER',
+      categoryName,
+      vendorCode,
+      recipientName,
+      recipientPhone,
+      amount: parseFloat(amount),
+      paymentMethod: paymentMethod || 'CASH',
+      paymentMethodName,
+      bankAccount,
+      referenceCode,
+      reason,
+      attachedDocCount: attachedDocCount ? parseInt(attachedDocCount) : 1,
+      hub: (hub || 'SGN') as ('HAN' | 'SGN' | 'DAD'),
+      operator: operator || 'ketoan',
+      notes
+    });
+
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7b. Chi tiền hàng loạt theo danh sách / Excel
+app.post('/api/finance/payment-vouchers/batch', (req, res) => {
+  try {
+    const { vouchers, operator } = req.body;
+    if (!vouchers || !Array.isArray(vouchers) || vouchers.length === 0) {
+      return res.status(400).json({ success: false, message: 'Danh sách phiếu chi không hợp lệ hoặc rỗng' });
+    }
+    const result = FinanceService.createBatchPaymentVouchers(vouchers, operator || 'ketoan');
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 8. Danh sách Phiếu Chi
+app.get('/api/finance/payment-vouchers', (req, res) => {
+  const { categoryCode, type, paymentMethod, hub, keyword, fromDate, toDate } = req.query as any;
+  const list = FinanceService.getAllPaymentVouchers({
+    categoryCode,
+    type,
+    paymentMethod,
+    hub,
+    keyword,
+    fromDate,
+    toDate
+  });
+  res.json({ success: true, count: list.length, data: list });
+});
+
+// 8b. Chi tiết Phiếu Chi
+app.get('/api/finance/payment-vouchers/:code', (req, res) => {
+  const voucher = FinanceService.getPaymentVoucherByCode(req.params.code);
+  if (!voucher) return res.status(404).json({ success: false, message: 'Không tìm thấy phiếu chi: ' + req.params.code });
+  res.json({ success: true, data: voucher });
+});
+
+// 9. Danh mục Khoản Thu & Khoản Chi
+app.get('/api/finance/categories', (req, res) => {
+  const { type } = req.query as any;
+  const categories = FinanceService.getAllCategories(type);
+  res.json({ success: true, data: categories });
+});
+
+app.post('/api/finance/categories', (req, res) => {
+  try {
+    const { code, name, type, description, order } = req.body;
+    if (!code || !name || !type) {
+      return res.status(400).json({ success: false, message: 'Thiếu mã, tên danh mục hoặc phân loại (REVENUE/EXPENSE)' });
+    }
+    const result = FinanceService.addCategory({
+      code,
+      name,
+      type,
+      description,
+      order: order ? parseInt(order) : undefined
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/finance/categories/:id', (req, res) => {
+  try {
+    const result = FinanceService.updateCategory(req.params.id, req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/finance/categories/:id', (req, res) => {
+  try {
+    const deleted = FinanceService.deleteCategory(req.params.id);
+    if (!deleted) return res.status(400).json({ success: false, message: 'Không thể xóa danh mục hệ thống hoặc danh mục không tồn tại' });
+    res.json({ success: true, message: 'Đã xóa danh mục thành công' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 10. Tra cứu nhanh AWB cho việc lập phiếu thu / chi
+app.get('/api/finance/awb-lookup/:awb', (req, res) => {
+  const info = FinanceService.lookupAwbForVoucher(req.params.awb);
+  if (!info) return res.status(404).json({ success: false, message: 'Không tìm thấy vận đơn: ' + req.params.awb });
+  res.json(info);
+});
+
+// 11. Sổ Quỹ Thu - Chi Toàn Diện (Cash Book Ledger)
+app.get('/api/finance/cashbook', (req, res) => {
+  const { voucherType, paymentMethod, categoryCode, hub, keyword, fromDate, toDate } = req.query as any;
+  const ledger = FinanceService.getCashBookLedger({
+    voucherType,
+    paymentMethod,
+    categoryCode,
+    hub,
+    keyword,
+    fromDate,
+    toDate
+  });
+  res.json({ success: true, data: ledger });
 });
 
 /**
