@@ -58,6 +58,22 @@ export interface StoredShipment extends ShipmentAWBData {
   customerSettledAt?: string;
   customerSettlementRef?: string;
 
+  // Lịch sử chi phí & điểm đến vận đơn
+  destinationCountry?: string;
+  expenseHistory?: Array<{
+    voucherCode: string;
+    categoryCode: string;
+    categoryName?: string;
+    amount: number;
+    recipientName: string;
+    reason?: string;
+    paidAt?: string;
+    operator?: string;
+    paymentMethod?: string;
+    createdAt?: string;
+    createdBy?: string;
+  }>;
+
   // Nhật ký vận hành kho
   pickedUpAt?: string;
   pickedUpBy?: string;

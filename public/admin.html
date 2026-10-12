@@ -26,6 +26,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -5475,35 +5476,42 @@
       </div>
 
       <form id="formCreateReceiptVoucher" onsubmit="event.preventDefault(); submitCreateReceiptVoucher(false);" class="p-6 space-y-4 text-xs">
-        <!-- Phân Loại Thu -->
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Loại Phiếu Thu:</label>
-          <select id="receiptInputType" onchange="handleReceiptTypeChange()" class="w-full p-2.5 border border-slate-300 rounded-xl bg-slate-50 font-bold text-slate-800">
-            <option value="SHIPMENT_FEE">📦 Thu cước AWB (Tiền mặt / Tiền ngay tại quầy)</option>
-            <option value="CUSTOMER_DEBT">🤝 Thu công nợ Khách Hàng / Hợp Đồng</option>
-            <option value="WALLET_TOPUP">💳 Nạp tiền vào Ví Đại Lý (Top-Up)</option>
-            <option value="GENERAL_REVENUE">💰 Khoản thu / Doanh thu khác</option>
-          </select>
-        </div>
-
-        <!-- Ô Tra Cứu AWB (Khi loại là SHIPMENT_FEE) -->
-        <div id="receiptBoxAwb" class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2">
-          <label class="block font-bold text-amber-900">Mã Vận Đơn AWB (Bắt buộc cho đơn Tiền Mặt):</label>
+        <!-- Ô Tra Cứu AWB (BẮT BUỘC - Mọi khoản thu đều gắn liền AWB) -->
+        <div id="receiptBoxAwb" class="p-3 bg-amber-50/70 border-2 border-amber-300 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block font-bold text-amber-900">
+              <i class="fa-solid fa-barcode text-amber-600 mr-1"></i>
+              Mã Vận Đơn (AWB) Liên Kết: <span class="text-rose-600 font-black">* (Bắt buộc)</span>
+            </label>
+            <span class="text-[10px] text-amber-700 font-bold bg-amber-100 px-2 py-0.5 rounded-full">Thu chi bắt buộc theo AWB</span>
+          </div>
           <div class="flex space-x-2">
-            <input type="text" id="receiptInputAwb" placeholder="Nhập số AWB (VD: 1Z861R320493609873)" class="flex-1 p-2 border border-amber-300 rounded-xl bg-white font-mono font-bold uppercase text-slate-800">
-            <button type="button" onclick="lookupAwbForReceipt()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-sm">
-              <i class="fa-solid fa-magnifying-glass mr-1"></i>Tra Cứu
+            <input type="text" id="receiptInputAwb" required placeholder="Nhập số AWB (VD: 1Z861R320493609873)" class="flex-1 p-2.5 border border-amber-300 rounded-xl bg-white font-mono font-bold uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupAwbForReceipt();}">
+            <button type="button" onclick="lookupAwbForReceipt()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-sm flex items-center space-x-1 transition">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>Tra Cứu</span>
             </button>
           </div>
-          <div id="receiptAwbInfoAlert" class="text-[11px] text-amber-800 hidden p-2 bg-white rounded-lg border border-amber-200">
+          <div id="receiptAwbInfoAlert" class="text-[11px] text-amber-800 hidden p-2.5 bg-white rounded-lg border border-amber-200">
             <!-- Render kết quả tra cứu AWB -->
           </div>
         </div>
 
-        <!-- Ô Chọn Khách Hàng (Khi loại là CUSTOMER_DEBT hoặc GENERAL_REVENUE) -->
+        <!-- Phân Loại Thu -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Loại Phiếu Thu:</label>
+          <select id="receiptInputType" onchange="handleReceiptTypeChange()" class="w-full p-2.5 border border-slate-300 rounded-xl bg-slate-50 font-bold text-slate-800">
+            <option value="SHIPMENT_FEE">📦 Thu cước AWB Tiền Mặt (Mở khóa xuất kho)</option>
+            <option value="CUSTOMER_DEBT">🤝 Thu cước AWB Khách Hàng Hợp Đồng (Gạch nợ AWB &amp; giảm nợ KH)</option>
+            <option value="WALLET_TOPUP">💳 Nạp tiền vào Ví Đại Lý theo AWB</option>
+            <option value="GENERAL_REVENUE">💰 Thu phí phụ thu / Doanh thu khác theo AWB</option>
+          </select>
+        </div>
+
+        <!-- Thông Tin Khách Hàng Tự Động Từ AWB -->
         <div id="receiptBoxCustomer">
-          <label class="block font-bold text-slate-700 mb-1">Mã Khách Hàng / Đại Lý:</label>
-          <input type="text" id="receiptInputCustomerCode" placeholder="Mã khách hàng (VD: PDL-KH001, AG-002...)" class="w-full p-2.5 border border-slate-300 rounded-xl font-bold uppercase text-slate-800">
+          <label class="block font-bold text-slate-700 mb-1">Mã Khách Hàng / Đại Lý (Tự điền theo AWB):</label>
+          <input type="text" id="receiptInputCustomerCode" placeholder="Mã khách hàng (VD: PDL-KH001, AG-002...)" class="w-full p-2.5 border border-slate-300 rounded-xl font-bold uppercase text-slate-800 bg-slate-50">
           <p id="receiptCustomerDebtHint" class="text-[11px] text-slate-500 mt-1"></p>
         </div>
 
@@ -5601,28 +5609,35 @@
       </div>
 
       <form id="formCreatePaymentVoucher" onsubmit="event.preventDefault(); submitCreatePaymentVoucher(false);" class="p-6 space-y-4 text-xs">
+        <!-- Ô Tra Cứu AWB (BẮT BUỘC - Mọi khoản chi đều gắn liền AWB) -->
+        <div id="paymentBoxAwb" class="p-3 bg-rose-50/70 border-2 border-rose-300 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block font-bold text-rose-900">
+              <i class="fa-solid fa-barcode text-rose-600 mr-1"></i>
+              Mã Vận Đơn (AWB) Liên Kết: <span class="text-rose-600 font-black">* (Bắt buộc)</span>
+            </label>
+            <span class="text-[10px] text-rose-700 font-bold bg-rose-100 px-2 py-0.5 rounded-full">Chi phí gắn liền AWB</span>
+          </div>
+          <div class="flex space-x-2">
+            <input type="text" id="paymentInputAwb" required placeholder="Nhập số AWB (VD: 1Z861R320493609873)" class="flex-1 p-2.5 border border-rose-300 rounded-xl bg-white font-mono font-bold uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupAwbForPayment();}">
+            <button type="button" onclick="lookupAwbForPayment()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm flex items-center space-x-1 transition">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>Tra Cứu</span>
+            </button>
+          </div>
+          <div id="paymentAwbInfoAlert" class="text-[11px] text-rose-800 hidden p-2.5 bg-white rounded-lg border border-rose-200">
+            <!-- Render kết quả tra cứu AWB -->
+          </div>
+        </div>
+
         <!-- Phân Loại Chi -->
         <div>
           <label class="block font-bold text-slate-700 mb-1">Loại Phiếu Chi:</label>
           <select id="paymentInputType" onchange="handlePaymentTypeChange()" class="w-full p-2.5 border border-slate-300 rounded-xl bg-slate-50 font-bold text-slate-800">
-            <option value="GENERAL_EXPENSE">🏢 Chi phí vận hành khác (Văn phòng, kho bãi, nhân sự, bao bì...)</option>
-            <option value="AWB_EXPENSE">📦 Chi phí trực tiếp theo Vận Đơn AWB (Cước gốc, hải quan, trucking, bồi thường)</option>
-            <option value="VENDOR_SETTLEMENT">🏢 Quyết toán công nợ Nhà Cung Cấp / Hãng (UPS, FedEx, DHL...)</option>
+            <option value="AWB_EXPENSE">📦 Chi phí trực tiếp theo Vận Đơn AWB (Cước gốc hãng, hải quan, xe tải, bồi thường)</option>
+            <option value="VENDOR_SETTLEMENT">🏢 Quyết toán công nợ Nhà Cung Cấp / Hãng theo AWB</option>
+            <option value="GENERAL_EXPENSE">🏢 Chi phí vận hành khác gắn theo AWB (Bao bì, giao nhận, tem nhãn)</option>
           </select>
-        </div>
-
-        <!-- Ô Tra Cứu AWB (Khi loại là AWB_EXPENSE) -->
-        <div id="paymentBoxAwb" class="p-3 bg-rose-50/70 border border-rose-200 rounded-xl space-y-2 hidden">
-          <label class="block font-bold text-rose-900">Liên Kết Mã Vận Đơn AWB (Ghi nhận vào chi phí đơn):</label>
-          <div class="flex space-x-2">
-            <input type="text" id="paymentInputAwb" placeholder="Nhập số AWB (VD: 1Z861R320493609873)" class="flex-1 p-2 border border-rose-300 rounded-xl bg-white font-mono font-bold uppercase text-slate-800">
-            <button type="button" onclick="lookupAwbForPayment()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm">
-              <i class="fa-solid fa-magnifying-glass mr-1"></i>Tra Cứu
-            </button>
-          </div>
-          <div id="paymentAwbInfoAlert" class="text-[11px] text-rose-800 hidden p-2 bg-white rounded-lg border border-rose-200">
-            <!-- Render kết quả tra cứu AWB -->
-          </div>
         </div>
 
         <!-- Danh Mục Chi -->
@@ -5721,12 +5736,15 @@
   <!-- ======================================================== -->
   <!-- MODAL: THU TIỀN THEO FILE EXCEL / PASTE BẢNG EXCEL        -->
   <!-- ======================================================== -->
+  <!-- ======================================================== -->
+  <!-- MODAL: THU TIỀN HÀNG LOẠT THEO FILE EXCEL (.XLSX)          -->
+  <!-- ======================================================== -->
   <div id="modalBatchReceiptExcel" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] overflow-y-auto">
       <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white rounded-t-3xl">
         <h3 class="text-sm font-extrabold flex items-center space-x-2">
-          <i class="fa-solid fa-file-excel text-emerald-400"></i>
-          <span>THU TIỀN HÀNG LOẠT THEO FILE EXCEL / PASTE BẢNG EXCEL</span>
+          <i class="fa-solid fa-file-excel text-emerald-400 text-lg"></i>
+          <span>THU TIỀN HÀNG LOẠT THEO FILE EXCEL (CHUẨN UPLOAD AWB)</span>
         </h3>
         <button type="button" onclick="closeModalBatchReceiptExcel()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
@@ -5734,52 +5752,77 @@
       </div>
 
       <div class="p-6 space-y-4 text-xs">
-        <!-- Hướng dẫn định dạng -->
-        <div class="bg-indigo-50 border border-indigo-200 p-3.5 rounded-2xl text-indigo-900 space-y-1">
-          <div class="font-bold flex items-center space-x-1.5">
-            <i class="fa-solid fa-circle-info text-indigo-600"></i>
-            <span>Quy Cách Bảng Dữ Liệu Excel (Hỗ Trợ Copy Trực Tiếp Từ Excel):</span>
+        <!-- Hướng dẫn & Tải file mẫu -->
+        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="space-y-1">
+            <div class="font-extrabold text-emerald-950 flex items-center space-x-1.5 text-xs">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+              <span>Quy Chuẩn Bắt Buộc: Mọi khoản thu phải gắn liền với Mã Vận Đơn (AWB)</span>
+            </div>
+            <p class="text-[11px] text-emerald-800">
+              Tải file Excel mẫu chuẩn, điền danh sách số AWB &amp; số tiền cần thu, sau đó tải file lên hệ thống để gạch nợ và phát hành phiếu thu hàng loạt.
+            </p>
           </div>
-          <p class="text-[11px] text-indigo-800">
-            Bạn có thể bôi đen các cột trong file Excel rồi bấm <b>Ctrl + C</b> và dán <b>Ctrl + V</b> vào ô bên dưới. Thứ tự các cột:
-          </p>
-          <div class="bg-white p-2 rounded-xl font-mono text-[11px] border border-indigo-200 text-slate-800">
-            <b>Cột 1:</b> Mã AWB / Mã KH &nbsp;|&nbsp; <b>Cột 2:</b> Số Tiền &nbsp;|&nbsp; <b>Cột 3:</b> Kênh TT (CASH / BANK) &nbsp;|&nbsp; <b>Cột 4:</b> Lý Do Thu
-          </div>
+          <a href="/api/finance/templates/receipt-excel" download="PandaLex_Mau_Thu_Tien_AWB.xlsx" class="shrink-0 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-sm inline-flex items-center space-x-2 transition">
+            <i class="fa-solid fa-file-arrow-down text-sm"></i>
+            <span>📥 Tải File Mẫu Excel (.xlsx)</span>
+          </a>
         </div>
 
-        <!-- Textarea Paste từ Excel -->
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Dán Dữ Liệu Bảng Excel Vào Đây (Tab / Dấu Phẩy phân cách):</label>
-          <textarea id="txtBatchReceiptPaste" rows="6" placeholder="Ví dụ:&#10;1Z861R320493609873	4785000	CASH	Thu cước AWB chuyển phát nhanh&#10;PDL-KH001	10000000	BANK	Thanh toán công nợ cước tháng 10" class="w-full p-3 border border-slate-300 rounded-xl font-mono text-xs text-slate-800 bg-slate-50 focus:outline-none focus:border-emerald-500"></textarea>
-        </div>
-
-        <!-- Nút Phân Tích & Xem Trước -->
-        <div class="flex items-center justify-between">
-          <button type="button" onclick="parseBatchReceiptData()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm flex items-center space-x-1.5">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>⚡ Phân Tích &amp; Xem Trước Dữ Liệu</span>
+        <!-- Tab chuyển đổi giữa Upload File và Dán từ Clipboard -->
+        <div class="flex border-b border-slate-200 space-x-4">
+          <button type="button" id="tabBtnReceiptUpload" onclick="switchBatchReceiptTab('upload')" class="pb-2 font-bold text-xs border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-1.5">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Tải Lên File Excel (.xlsx / .xls / .csv)</span>
           </button>
-          <div id="batchReceiptSummaryStats" class="text-slate-600 font-bold hidden">
-            <!-- Hiển thị tổng số dòng & tổng tiền -->
+          <button type="button" id="tabBtnReceiptPaste" onclick="switchBatchReceiptTab('paste')" class="pb-2 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5">
+            <i class="fa-solid fa-paste"></i>
+            <span>Dán Bảng Từ Excel (Copy &amp; Paste)</span>
+          </button>
+        </div>
+
+        <!-- Khung 1: Upload File Excel -->
+        <div id="paneReceiptUpload" class="space-y-3">
+          <div id="dropzoneReceipt" ondragover="event.preventDefault(); this.classList.add('border-emerald-500', 'bg-emerald-50');" ondragleave="this.classList.remove('border-emerald-500', 'bg-emerald-50');" ondrop="handleReceiptDrop(event)" onclick="document.getElementById('inputReceiptExcelFile').click()" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 rounded-2xl p-6 text-center cursor-pointer transition">
+            <input type="file" id="inputReceiptExcelFile" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleReceiptFileChange(event)">
+            <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
+            <p class="font-bold text-slate-800 text-xs">Nhấp để chọn file Excel hoặc kéo &amp; thả file vào đây</p>
+            <p class="text-[11px] text-slate-500 mt-1">Định dạng hỗ trợ: .xlsx, .xls, .csv • Tự động đọc và kiểm tra tính hợp lệ của từng số AWB</p>
+            <div id="receiptSelectedFileName" class="mt-2 font-mono font-bold text-emerald-700 hidden"></div>
           </div>
         </div>
 
-        <!-- Bảng Xem Trước Dữ Liệu (Preview Table) -->
-        <div id="batchReceiptPreviewBox" class="border border-slate-200 rounded-2xl overflow-hidden hidden">
-          <div class="p-2.5 bg-slate-100 font-bold text-slate-700 border-b border-slate-200 flex items-center justify-between">
-            <span>BẢNG XEM TRƯỚC DỮ LIỆU SẼ TẠO PHIẾU THU:</span>
-            <span id="batchReceiptValidBadge" class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-black"></span>
+        <!-- Khung 2: Paste Clipboard -->
+        <div id="paneReceiptPaste" class="space-y-2 hidden">
+          <label class="block font-bold text-slate-700">Dán Dữ Liệu Bảng Excel Vào Đây (Tab hoặc Dấu Phẩy):</label>
+          <textarea id="txtBatchReceiptPaste" rows="5" placeholder="1Z861R320493609873	4785000	CASH	Thu cước AWB tiền mặt&#10;1Z999AA10123456784	5200000	BANK	Thu cước hợp đồng" class="w-full p-3 border border-slate-300 rounded-xl font-mono text-xs text-slate-800 bg-slate-50 focus:outline-none focus:border-emerald-500"></textarea>
+          <button type="button" onclick="parseBatchReceiptPaste()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm flex items-center space-x-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>⚡ Phân Tích Dữ Liệu Đã Dán</span>
+          </button>
+        </div>
+
+        <!-- Báo Cáo Thống Kê & Xem Trước Dữ Liệu (Preview Table) -->
+        <div id="batchReceiptPreviewBox" class="border border-slate-200 rounded-2xl overflow-hidden hidden space-y-0">
+          <div class="p-3 bg-slate-100 font-bold text-slate-700 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <span class="flex items-center space-x-1.5">
+              <i class="fa-solid fa-table-list text-emerald-600"></i>
+              <span>KẾT QUẢ ĐỐI SOÁT VẬN ĐƠN (AWB) TRƯỚC KHI THU:</span>
+            </span>
+            <div id="batchReceiptSummaryStats" class="flex items-center space-x-2 text-xs">
+              <!-- Render số dòng hợp lệ, số lỗi, tổng tiền -->
+            </div>
           </div>
-          <div class="max-h-60 overflow-y-auto">
+          <div class="max-h-64 overflow-y-auto">
             <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] font-black sticky top-0">
+              <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] font-black sticky top-0 border-b border-slate-200">
                 <tr>
-                  <th class="p-2">Dòng</th>
-                  <th class="p-2">Mã AWB / KH</th>
-                  <th class="p-2 text-right">Số Tiền (VNĐ)</th>
-                  <th class="p-2">Kênh TT</th>
-                  <th class="p-2">Lý Do</th>
+                  <th class="p-2.5">Dòng</th>
+                  <th class="p-2.5">Mã Vận Đơn (AWB) *</th>
+                  <th class="p-2.5">Khách Hàng / Hợp Đồng</th>
+                  <th class="p-2.5 text-right">Số Tiền (VNĐ)</th>
+                  <th class="p-2.5">Kênh TT</th>
+                  <th class="p-2.5">Trạng Thái AWB</th>
                 </tr>
               </thead>
               <tbody id="tblBatchReceiptPreviewBody" class="divide-y divide-slate-100 font-sans">
@@ -5793,9 +5836,9 @@
           <button type="button" onclick="closeModalBatchReceiptExcel()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition">
             Đóng
           </button>
-          <button type="button" id="btnSubmitBatchReceipt" onclick="executeBatchReceiptVouchers()" disabled class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black shadow-sm transition flex items-center space-x-1.5">
+          <button type="button" id="btnSubmitBatchReceipt" onclick="executeBatchReceiptFromPreview()" disabled class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black shadow-sm transition flex items-center space-x-1.5">
             <i class="fa-solid fa-paper-plane"></i>
-            <span>🚀 Xác Nhận Thu Tiền &amp; Phát Hành Phiếu</span>
+            <span>🚀 Xác Nhận Thu Tiền &amp; Phát Hành Phiếu Hàng Loạt</span>
           </button>
         </div>
       </div>
@@ -5803,14 +5846,14 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: CHI TIỀN THEO FILE EXCEL / PASTE BẢNG EXCEL        -->
+  <!-- MODAL: CHI TIỀN HÀNG LOẠT THEO FILE EXCEL (.XLSX)          -->
   <!-- ======================================================== -->
   <div id="modalBatchPaymentExcel" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] overflow-y-auto">
       <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white rounded-t-3xl">
         <h3 class="text-sm font-extrabold flex items-center space-x-2">
-          <i class="fa-solid fa-file-excel text-rose-400"></i>
-          <span>CHI TIỀN HÀNG LOẠT THEO FILE EXCEL / PASTE BẢNG EXCEL</span>
+          <i class="fa-solid fa-file-excel text-rose-400 text-lg"></i>
+          <span>CHI TIỀN HÀNG LOẠT THEO FILE EXCEL (CHUẨN UPLOAD AWB)</span>
         </h3>
         <button type="button" onclick="closeModalBatchPaymentExcel()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
@@ -5818,53 +5861,78 @@
       </div>
 
       <div class="p-6 space-y-4 text-xs">
-        <!-- Hướng dẫn định dạng -->
-        <div class="bg-rose-50 border border-rose-200 p-3.5 rounded-2xl text-rose-900 space-y-1">
-          <div class="font-bold flex items-center space-x-1.5">
-            <i class="fa-solid fa-circle-info text-rose-600"></i>
-            <span>Quy Cách Bảng Dữ Liệu Chi Phí Excel:</span>
+        <!-- Hướng dẫn & Tải file mẫu -->
+        <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="space-y-1">
+            <div class="font-extrabold text-rose-950 flex items-center space-x-1.5 text-xs">
+              <i class="fa-solid fa-circle-check text-rose-600"></i>
+              <span>Quy Chuẩn Bắt Buộc: Mọi khoản chi phải gắn liền với Mã Vận Đơn (AWB)</span>
+            </div>
+            <p class="text-[11px] text-rose-800">
+              Chi cước gốc hãng, phí hải quan, trucking, bao bì... gắn trực tiếp vào lịch sử chi phí từng AWB để tính lãi lỗ chính xác.
+            </p>
           </div>
-          <p class="text-[11px] text-rose-800">
-            Copy trực tiếp từ Excel rồi dán vào đây. Thứ tự các cột:
-          </p>
-          <div class="bg-white p-2 rounded-xl font-mono text-[11px] border border-rose-200 text-slate-800">
-            <b>Cột 1:</b> Người / Đơn Vị Nhận &nbsp;|&nbsp; <b>Cột 2:</b> Số Tiền &nbsp;|&nbsp; <b>Cột 3:</b> Mã DM Chi &nbsp;|&nbsp; <b>Cột 4:</b> Mã AWB (Nếu có) &nbsp;|&nbsp; <b>Cột 5:</b> Lý Do Chi
-          </div>
+          <a href="/api/finance/templates/payment-excel" download="PandaLex_Mau_Chi_Phi_AWB.xlsx" class="shrink-0 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-sm inline-flex items-center space-x-2 transition">
+            <i class="fa-solid fa-file-arrow-down text-sm"></i>
+            <span>📥 Tải File Mẫu Excel (.xlsx)</span>
+          </a>
         </div>
 
-        <!-- Textarea Paste từ Excel -->
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Dán Dữ Liệu Bảng Chi Phí Excel Vào Đây:</label>
-          <textarea id="txtBatchPaymentPaste" rows="6" placeholder="Ví dụ:&#10;Công ty Bao Bì Nam Long	850000	EXP_PACKAGING_SUPPLIES		Mua thùng carton 5 lớp và băng dính&#10;UPS Express	3740000	EXP_CARRIER_COST	1Z861R320493609873	Chi cước gốc vận chuyển hàng không" class="w-full p-3 border border-slate-300 rounded-xl font-mono text-xs text-slate-800 bg-slate-50 focus:outline-none focus:border-rose-500"></textarea>
-        </div>
-
-        <!-- Nút Phân Tích & Xem Trước -->
-        <div class="flex items-center justify-between">
-          <button type="button" onclick="parseBatchPaymentData()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm flex items-center space-x-1.5">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>⚡ Phân Tích &amp; Xem Trước Dữ Liệu</span>
+        <!-- Tab chuyển đổi giữa Upload File và Dán từ Clipboard -->
+        <div class="flex border-b border-slate-200 space-x-4">
+          <button type="button" id="tabBtnPaymentUpload" onclick="switchBatchPaymentTab('upload')" class="pb-2 font-bold text-xs border-b-2 border-rose-600 text-rose-700 flex items-center space-x-1.5">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Tải Lên File Excel (.xlsx / .xls / .csv)</span>
           </button>
-          <div id="batchPaymentSummaryStats" class="text-slate-600 font-bold hidden">
-            <!-- Hiển thị tổng số dòng & tổng tiền -->
+          <button type="button" id="tabBtnPaymentPaste" onclick="switchBatchPaymentTab('paste')" class="pb-2 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5">
+            <i class="fa-solid fa-paste"></i>
+            <span>Dán Bảng Từ Excel (Copy &amp; Paste)</span>
+          </button>
+        </div>
+
+        <!-- Khung 1: Upload File Excel -->
+        <div id="panePaymentUpload" class="space-y-3">
+          <div id="dropzonePayment" ondragover="event.preventDefault(); this.classList.add('border-rose-500', 'bg-rose-50');" ondragleave="this.classList.remove('border-rose-500', 'bg-rose-50');" ondrop="handlePaymentDrop(event)" onclick="document.getElementById('inputPaymentExcelFile').click()" class="border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/40 rounded-2xl p-6 text-center cursor-pointer transition">
+            <input type="file" id="inputPaymentExcelFile" accept=".xlsx,.xls,.csv" class="hidden" onchange="handlePaymentFileChange(event)">
+            <i class="fa-solid fa-cloud-arrow-up text-3xl text-rose-600 mb-2"></i>
+            <p class="font-bold text-slate-800 text-xs">Nhấp để chọn file Excel hoặc kéo &amp; thả file vào đây</p>
+            <p class="text-[11px] text-slate-500 mt-1">Định dạng hỗ trợ: .xlsx, .xls, .csv • Tự động đọc và kiểm tra tính hợp lệ của từng số AWB</p>
+            <div id="paymentSelectedFileName" class="mt-2 font-mono font-bold text-rose-700 hidden"></div>
           </div>
         </div>
 
-        <!-- Bảng Xem Trước Dữ Liệu (Preview Table) -->
-        <div id="batchPaymentPreviewBox" class="border border-slate-200 rounded-2xl overflow-hidden hidden">
-          <div class="p-2.5 bg-slate-100 font-bold text-slate-700 border-b border-slate-200 flex items-center justify-between">
-            <span>BẢNG XEM TRƯỚC DỮ LIỆU SẼ TẠO PHIẾU CHI:</span>
-            <span id="batchPaymentValidBadge" class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded font-black"></span>
+        <!-- Khung 2: Paste Clipboard -->
+        <div id="panePaymentPaste" class="space-y-2 hidden">
+          <label class="block font-bold text-slate-700">Dán Dữ Liệu Bảng Chi Phí Vào Đây:</label>
+          <textarea id="txtBatchPaymentPaste" rows="5" placeholder="1Z861R320493609873	EXP_CARRIER_COST	3740000	UPS Express Worldwide	CHUYEN_KHOAN	Chi cước gốc mua hãng bay" class="w-full p-3 border border-slate-300 rounded-xl font-mono text-xs text-slate-800 bg-slate-50 focus:outline-none focus:border-rose-500"></textarea>
+          <button type="button" onclick="parseBatchPaymentPaste()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm flex items-center space-x-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>⚡ Phân Tích Dữ Liệu Đã Dán</span>
+          </button>
+        </div>
+
+        <!-- Báo Cáo Thống Kê & Xem Trước Dữ Liệu (Preview Table) -->
+        <div id="batchPaymentPreviewBox" class="border border-slate-200 rounded-2xl overflow-hidden hidden space-y-0">
+          <div class="p-3 bg-slate-100 font-bold text-slate-700 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <span class="flex items-center space-x-1.5">
+              <i class="fa-solid fa-table-list text-rose-600"></i>
+              <span>KẾT QUẢ ĐỐI SOÁT CHI PHÍ AWB TRƯỚC KHI XUẤT PHIẾU CHI:</span>
+            </span>
+            <div id="batchPaymentSummaryStats" class="flex items-center space-x-2 text-xs">
+              <!-- Render số dòng hợp lệ, số lỗi, tổng tiền -->
+            </div>
           </div>
-          <div class="max-h-60 overflow-y-auto">
+          <div class="max-h-64 overflow-y-auto">
             <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] font-black sticky top-0">
+              <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] font-black sticky top-0 border-b border-slate-200">
                 <tr>
-                  <th class="p-2">Dòng</th>
-                  <th class="p-2">Người / Đơn Vị Nhận</th>
-                  <th class="p-2 text-right">Số Tiền (VNĐ)</th>
-                  <th class="p-2">Khoản Mục Chi</th>
-                  <th class="p-2">AWB Liên Quan</th>
-                  <th class="p-2">Lý Do Chi</th>
+                  <th class="p-2.5">Dòng</th>
+                  <th class="p-2.5">Mã Vận Đơn (AWB) *</th>
+                  <th class="p-2.5">Khoản Mục Chi</th>
+                  <th class="p-2.5">Người / Đơn Vị Nhận</th>
+                  <th class="p-2.5 text-right">Số Tiền (VNĐ)</th>
+                  <th class="p-2.5">Kênh TT</th>
+                  <th class="p-2.5">Trạng Thái AWB</th>
                 </tr>
               </thead>
               <tbody id="tblBatchPaymentPreviewBody" class="divide-y divide-slate-100 font-sans">
@@ -5878,9 +5946,9 @@
           <button type="button" onclick="closeModalBatchPaymentExcel()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition">
             Đóng
           </button>
-          <button type="button" id="btnSubmitBatchPayment" onclick="executeBatchPaymentVouchers()" disabled class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black shadow-sm transition flex items-center space-x-1.5">
+          <button type="button" id="btnSubmitBatchPayment" onclick="executeBatchPaymentFromPreview()" disabled class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black shadow-sm transition flex items-center space-x-1.5">
             <i class="fa-solid fa-paper-plane"></i>
-            <span>🚀 Xác Nhận Chi Tiền &amp; Phát Hành Phiếu</span>
+            <span>🚀 Xác Nhận Chi Tiền &amp; Phát Hành Phiếu Hàng Loạt</span>
           </button>
         </div>
       </div>
@@ -12307,13 +12375,9 @@ curl -X POST http://localhost:4000/api/shipments/create \\
         return;
       }
 
-      if (type === 'SHIPMENT_FEE' && !awb) {
-        alert('Vui lòng nhập số AWB cho phiếu thu cước đơn hàng');
-        return;
-      }
-
-      if (type !== 'SHIPMENT_FEE' && !customerCode) {
-        alert('Vui lòng nhập mã khách hàng / đối tác');
+      if (!awb) {
+        alert('Việc thu chi xoay quanh AWB vì vậy bắt buộc phải có số AWB hợp lệ!');
+        document.getElementById('receiptInputAwb').focus();
         return;
       }
 
@@ -12445,6 +12509,12 @@ curl -X POST http://localhost:4000/api/shipments/create \\
       const ref = document.getElementById('paymentInputRef').value.trim();
       const reason = document.getElementById('paymentInputReason').value.trim();
 
+      if (!awb) {
+        alert('Việc thu chi xoay quanh chi phí AWB vì vậy bắt buộc phải có số AWB hợp lệ!');
+        document.getElementById('paymentInputAwb').focus();
+        return;
+      }
+
       if (!recipientName) {
         alert('Vui lòng nhập họ tên hoặc đơn vị nhận tiền');
         return;
@@ -12558,215 +12628,399 @@ curl -X POST http://localhost:4000/api/shipments/create \\
       }
     }
 
-    // 9. Xử lý Thu Tiền Theo Excel (Batch Receipts)
+    // 9. Xử lý Thu Tiền Theo Excel (Batch Receipts - Chuẩn Upload File Excel)
+    let parsedReceiptRows = [];
+    let parsedPaymentRows = [];
+
     function openModalBatchReceiptExcel() {
       document.getElementById('modalBatchReceiptExcel').classList.remove('hidden');
+      switchBatchReceiptTab('upload');
+      document.getElementById('receiptSelectedFileName').classList.add('hidden');
+      document.getElementById('batchReceiptPreviewBox').classList.add('hidden');
+      document.getElementById('btnSubmitBatchReceipt').disabled = true;
+      parsedReceiptRows = [];
     }
 
     function closeModalBatchReceiptExcel() {
       document.getElementById('modalBatchReceiptExcel').classList.add('hidden');
     }
 
-    function parseBatchReceiptData() {
+    function switchBatchReceiptTab(mode) {
+      const isUpload = mode === 'upload';
+      document.getElementById('paneReceiptUpload').classList.toggle('hidden', !isUpload);
+      document.getElementById('paneReceiptPaste').classList.toggle('hidden', isUpload);
+      document.getElementById('tabBtnReceiptUpload').className = isUpload
+        ? 'pb-2 font-bold text-xs border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-1.5'
+        : 'pb-2 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5';
+      document.getElementById('tabBtnReceiptPaste').className = !isUpload
+        ? 'pb-2 font-bold text-xs border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-1.5'
+        : 'pb-2 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5';
+    }
+
+    function handleReceiptDrop(e) {
+      e.preventDefault();
+      const dropzone = document.getElementById('dropzoneReceipt');
+      if (dropzone) dropzone.classList.remove('border-emerald-500', 'bg-emerald-50');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        processReceiptExcelFile(e.dataTransfer.files[0]);
+      }
+    }
+
+    function handleReceiptFileChange(e) {
+      if (e.target.files && e.target.files.length > 0) {
+        processReceiptExcelFile(e.target.files[0]);
+      }
+    }
+
+    async function processReceiptExcelFile(file) {
+      const label = document.getElementById('receiptSelectedFileName');
+      label.innerHTML = `📁 File đã chọn: <b>${file.name}</b> (${Math.round(file.size / 1024)} KB) - <span class="text-indigo-600"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang đối soát AWB...</span>`;
+      label.classList.remove('hidden');
+
+      const formData = new FormData();
+      formData.append('excelFile', file);
+
+      try {
+        const res = await fetch('/api/finance/receipt-vouchers/upload-excel', {
+          method: 'POST',
+          body: formData
+        });
+        const d = await res.json();
+        if (!d.success && !d.preview) {
+          alert('❌ ' + (d.message || 'Lỗi đọc file Excel'));
+          label.innerHTML = `❌ Lỗi: ${d.message || 'Không thể đọc file'}`;
+          return;
+        }
+        label.innerHTML = `📁 File: <b>${file.name}</b> (${Math.round(file.size / 1024)} KB) - <span class="text-emerald-700 font-bold">✅ Phân tích xong</span>`;
+        renderBatchReceiptPreview(d.preview || d);
+      } catch (err) {
+        alert('Lỗi tải file lên máy chủ: ' + err.message);
+        label.innerHTML = `❌ Lỗi kết nối: ${err.message}`;
+      }
+    }
+
+    function renderBatchReceiptPreview(preview) {
+      const rows = preview.rows || [];
+      parsedReceiptRows = rows;
+      const validRows = rows.filter(r => r.valid);
+      const errorRows = rows.filter(r => !r.valid);
+      const tbody = document.getElementById('tblBatchReceiptPreviewBody');
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Không tìm thấy dữ liệu vận đơn trong file Excel</td></tr>`;
+        document.getElementById('btnSubmitBatchReceipt').disabled = true;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-50 ${r.valid ? '' : 'bg-rose-50/60'}">
+          <td class="p-2.5 font-mono text-slate-500">${r.rowNum || '-'}</td>
+          <td class="p-2.5 font-mono font-bold ${r.valid ? 'text-indigo-700' : 'text-rose-700'}">
+            ${r.awb || r.rawAwb || '—'}
+          </td>
+          <td class="p-2.5">
+            <div class="font-bold text-slate-800">${r.customerName || (r.valid ? 'Khách lẻ / Hãng' : '—')}</div>
+            <div class="text-[10px] text-slate-500 font-mono">${r.customerCode || ''} ${r.carrier ? `• ${r.carrier}` : ''}</div>
+          </td>
+          <td class="p-2.5 text-right font-mono font-bold ${r.valid ? 'text-emerald-700' : 'text-slate-400'}">
+            ${(r.amount || 0).toLocaleString('vi-VN')} đ
+          </td>
+          <td class="p-2.5 font-medium text-slate-700">
+            ${r.channel === 'BANK_TRANSFER' ? '🏦 Chuyển khoản' : '💵 Tiền mặt'}
+          </td>
+          <td class="p-2.5">
+            ${r.valid
+              ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px] inline-flex items-center"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Hợp lệ</span>`
+              : `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold text-[10px] inline-flex items-center" title="${r.error || ''}"><i class="fa-solid fa-circle-xmark mr-1 text-rose-600"></i>${r.error || 'Lỗi AWB'}</span>`
+            }
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('batchReceiptPreviewBox').classList.remove('hidden');
+
+      const stats = document.getElementById('batchReceiptSummaryStats');
+      stats.innerHTML = `
+        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold">✅ Hợp lệ: ${validRows.length}</span>
+        ${errorRows.length > 0 ? `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold">❌ Lỗi: ${errorRows.length}</span>` : ''}
+        <span class="font-extrabold text-emerald-700">Tổng thu: ${(preview.totalAmount || 0).toLocaleString('vi-VN')} đ</span>
+      `;
+
+      document.getElementById('btnSubmitBatchReceipt').disabled = validRows.length === 0;
+    }
+
+    async function parseBatchReceiptPaste() {
       const text = document.getElementById('txtBatchReceiptPaste').value.trim();
       if (!text) {
         alert('Vui lòng dán dữ liệu bảng từ file Excel vào khung');
         return;
       }
-
       const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      parsedBatchReceiptList = [];
-      let totalAmount = 0;
-
-      lines.forEach((line, idx) => {
-        // Hỗ trợ cả Tab (\t) và Dấu phẩy (,)
-        const parts = line.includes('\t') ? line.split('\t') : line.split(',');
-        const code = parts[0]?.trim() || '';
-        const rawAmount = parts[1]?.trim().replace(/[^0-9]/g, '') || '0';
-        const amount = parseFloat(rawAmount) || 0;
-        const channelRaw = parts[2]?.trim().toUpperCase() || 'CASH';
-        const channel = channelRaw.includes('BANK') || channelRaw.includes('CK') ? 'BANK_TRANSFER' : 'CASH';
-        const reason = parts[3]?.trim() || `Thu tiền cước từ file Excel dòng ${idx+1}`;
-
-        if (code && amount > 0) {
-          parsedBatchReceiptList.push({
-            row: idx + 1,
-            code,
-            amount,
-            channel,
-            reason
-          });
-          totalAmount += amount;
-        }
+      const aoa = [
+        ['STT', 'Mã Vận Đơn (AWB)', 'Số Tiền Thu', 'Hình Thức Thanh Toán', 'Người Nộp Tiền', 'Lý Do Thu']
+      ];
+      lines.forEach((l, idx) => {
+        const parts = l.includes('\t') ? l.split('\t') : l.split(',');
+        aoa.push([idx + 1, parts[0]?.trim() || '', parts[1]?.trim() || '', parts[2]?.trim() || 'CASH', parts[3]?.trim() || '', parts[4]?.trim() || '']);
       });
 
-      if (parsedBatchReceiptList.length === 0) {
-        alert('Không tìm thấy dòng dữ liệu hợp lệ nào. Vui lòng kiểm tra lại định dạng cột.');
+      if (typeof XLSX !== 'undefined') {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        XLSX.utils.book_append_sheet(wb, ws, 'Thu_Tien_AWB');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const file = new File([blob], 'Dan_Du_Lieu_Thu_Tien.xlsx');
+        processReceiptExcelFile(file);
+      } else {
+        alert('Đang nạp bộ xử lý Excel, vui lòng thử lại sau 2 giây');
+      }
+    }
+
+    async function executeBatchReceiptFromPreview() {
+      const validRows = parsedReceiptRows.filter(r => r.valid);
+      if (validRows.length === 0) {
+        alert('Không có dòng AWB hợp lệ nào để lập phiếu thu!');
         return;
       }
 
-      // Render Preview
-      const tbody = document.getElementById('tblBatchReceiptPreviewBody');
-      tbody.innerHTML = parsedBatchReceiptList.map(it => `
-        <tr class="hover:bg-slate-50">
-          <td class="p-2 font-mono text-slate-500">${it.row}</td>
-          <td class="p-2 font-mono font-bold text-indigo-700">${it.code}</td>
-          <td class="p-2 text-right font-mono font-bold text-emerald-700">${it.amount.toLocaleString('vi-VN')} đ</td>
-          <td class="p-2 font-bold text-slate-700">${it.channel === 'BANK_TRANSFER' ? '🏦 Ngân hàng' : '💵 Tiền mặt'}</td>
-          <td class="p-2 text-slate-600 truncate max-w-xs">${it.reason}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('batchReceiptPreviewBox').classList.remove('hidden');
-      document.getElementById('batchReceiptValidBadge').textContent = `${parsedBatchReceiptList.length} dòng hợp lệ`;
-      
-      const stats = document.getElementById('batchReceiptSummaryStats');
-      stats.innerHTML = `Tổng dòng: <b>${parsedBatchReceiptList.length}</b> • Tổng tiền: <b class="text-emerald-700">${totalAmount.toLocaleString('vi-VN')} đ</b>`;
-      stats.classList.remove('hidden');
-
-      document.getElementById('btnSubmitBatchReceipt').disabled = false;
-    }
-
-    async function executeBatchReceiptVouchers() {
-      if (parsedBatchReceiptList.length === 0) return;
-
-      const confirmRun = confirm(`Xác nhận phát hành ${parsedBatchReceiptList.length} phiếu thu tự động vào hệ thống?`);
+      const totalAmt = validRows.reduce((sum, r) => sum + (r.amount || 0), 0);
+      const confirmRun = confirm(`Xác nhận lập ${validRows.length} phiếu thu tự động cho các số AWB hợp lệ?\nTổng tiền: ${totalAmt.toLocaleString('vi-VN')} đ`);
       if (!confirmRun) return;
 
+      const btn = document.getElementById('btnSubmitBatchReceipt');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i><span>Đang xử lý phát hành phiếu...</span>`;
+
       try {
-        const payload = parsedBatchReceiptList.map(it => ({
-          code: it.code,
-          amount: it.amount,
-          channel: it.channel,
-          reason: it.reason
+        const batchPayload = validRows.map(r => ({
+          trackingNumber: r.awb,
+          amount: r.amount,
+          paymentChannel: r.channel || 'CASH',
+          payerName: r.payerName || r.customerName,
+          reason: r.reason || `Thu tiền cước AWB ${r.awb} từ file Excel`
         }));
 
         const res = await fetch('/api/finance/receipt-vouchers/batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            vouchers: payload,
+            vouchers: batchPayload,
             operator: currentAdminUser?.username || 'ketoan'
           })
         });
 
         const d = await res.json();
         if (d.success) {
-          alert(`🎉 Đã lập thành công ${d.count} phiếu thu! Tổng tiền: ${(d.totalAmount || 0).toLocaleString('vi-VN')} đ`);
+          alert(`🎉 Đã lập thành công ${d.count} phiếu thu!\nTổng tiền: ${(d.totalAmount || 0).toLocaleString('vi-VN')} đ`);
           closeModalBatchReceiptExcel();
           loadCashBookData();
         } else {
-          alert('❌ Có lỗi: ' + d.message);
+          alert('❌ Có lỗi: ' + (d.message || d.errors?.join('\n')));
         }
       } catch (err) {
-        alert('Lỗi kết nối: ' + err.message);
+        alert('Lỗi hệ thống: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1"></i><span>🚀 Xác Nhận Thu Tiền &amp; Phát Hành Phiếu Hàng Loạt</span>`;
       }
     }
 
-    // 10. Xử lý Chi Tiền Theo Excel (Batch Payments)
+    // 10. Xử lý Chi Tiền Theo Excel (Batch Payments - Chuẩn Upload File Excel)
     function openModalBatchPaymentExcel() {
       document.getElementById('modalBatchPaymentExcel').classList.remove('hidden');
+      switchBatchPaymentTab('upload');
+      document.getElementById('paymentSelectedFileName').classList.add('hidden');
+      document.getElementById('batchPaymentPreviewBox').classList.add('hidden');
+      document.getElementById('btnSubmitBatchPayment').disabled = true;
+      parsedPaymentRows = [];
     }
 
     function closeModalBatchPaymentExcel() {
       document.getElementById('modalBatchPaymentExcel').classList.add('hidden');
     }
 
-    function parseBatchPaymentData() {
+    function switchBatchPaymentTab(mode) {
+      const isUpload = mode === 'upload';
+      document.getElementById('panePaymentUpload').classList.toggle('hidden', !isUpload);
+      document.getElementById('panePaymentPaste').classList.toggle('hidden', isUpload);
+      document.getElementById('tabBtnPaymentUpload').className = isUpload
+        ? 'pb-2 font-bold text-xs border-b-2 border-rose-600 text-rose-700 flex items-center space-x-1.5'
+        : 'pb-2 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5';
+      document.getElementById('tabBtnPaymentPaste').className = !isUpload
+        ? 'pb-2 font-bold text-xs border-b-2 border-rose-600 text-rose-700 flex items-center space-x-1.5'
+        : 'pb-2 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-1.5';
+    }
+
+    function handlePaymentDrop(e) {
+      e.preventDefault();
+      const dropzone = document.getElementById('dropzonePayment');
+      if (dropzone) dropzone.classList.remove('border-rose-500', 'bg-rose-50');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        processPaymentExcelFile(e.dataTransfer.files[0]);
+      }
+    }
+
+    function handlePaymentFileChange(e) {
+      if (e.target.files && e.target.files.length > 0) {
+        processPaymentExcelFile(e.target.files[0]);
+      }
+    }
+
+    async function processPaymentExcelFile(file) {
+      const label = document.getElementById('paymentSelectedFileName');
+      label.innerHTML = `📁 File đã chọn: <b>${file.name}</b> (${Math.round(file.size / 1024)} KB) - <span class="text-indigo-600"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang đối soát AWB...</span>`;
+      label.classList.remove('hidden');
+
+      const formData = new FormData();
+      formData.append('excelFile', file);
+
+      try {
+        const res = await fetch('/api/finance/payment-vouchers/upload-excel', {
+          method: 'POST',
+          body: formData
+        });
+        const d = await res.json();
+        if (!d.success && !d.preview) {
+          alert('❌ ' + (d.message || 'Lỗi đọc file Excel'));
+          label.innerHTML = `❌ Lỗi: ${d.message || 'Không thể đọc file'}`;
+          return;
+        }
+        label.innerHTML = `📁 File: <b>${file.name}</b> (${Math.round(file.size / 1024)} KB) - <span class="text-rose-700 font-bold">✅ Phân tích xong</span>`;
+        renderBatchPaymentPreview(d.preview || d);
+      } catch (err) {
+        alert('Lỗi tải file lên máy chủ: ' + err.message);
+        label.innerHTML = `❌ Lỗi kết nối: ${err.message}`;
+      }
+    }
+
+    function renderBatchPaymentPreview(preview) {
+      const rows = preview.rows || [];
+      parsedPaymentRows = rows;
+      const validRows = rows.filter(r => r.valid);
+      const errorRows = rows.filter(r => !r.valid);
+      const tbody = document.getElementById('tblBatchPaymentPreviewBody');
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Không tìm thấy dữ liệu chi phí trong file Excel</td></tr>`;
+        document.getElementById('btnSubmitBatchPayment').disabled = true;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-50 ${r.valid ? '' : 'bg-rose-50/60'}">
+          <td class="p-2.5 font-mono text-slate-500">${r.rowNum || '-'}</td>
+          <td class="p-2.5 font-mono font-bold ${r.valid ? 'text-indigo-700' : 'text-rose-700'}">
+            ${r.awb || r.rawAwb || '—'}
+          </td>
+          <td class="p-2.5 font-mono text-xs font-bold text-slate-700">
+            ${r.categoryCode || 'EXP_CARRIER_COST'}
+          </td>
+          <td class="p-2.5 font-bold text-slate-800">
+            ${r.recipientName || '—'}
+          </td>
+          <td class="p-2.5 text-right font-mono font-bold ${r.valid ? 'text-rose-700' : 'text-slate-400'}">
+            ${(r.amount || 0).toLocaleString('vi-VN')} đ
+          </td>
+          <td class="p-2.5 font-medium text-slate-700">
+            ${r.method === 'BANK_TRANSFER' ? '🏦 Ngân hàng' : '💵 Tiền mặt'}
+          </td>
+          <td class="p-2.5">
+            ${r.valid
+              ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px] inline-flex items-center"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Hợp lệ</span>`
+              : `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold text-[10px] inline-flex items-center" title="${r.error || ''}"><i class="fa-solid fa-circle-xmark mr-1 text-rose-600"></i>${r.error || 'Lỗi AWB'}</span>`
+            }
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('batchPaymentPreviewBox').classList.remove('hidden');
+
+      const stats = document.getElementById('batchPaymentSummaryStats');
+      stats.innerHTML = `
+        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold">✅ Hợp lệ: ${validRows.length}</span>
+        ${errorRows.length > 0 ? `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold">❌ Lỗi: ${errorRows.length}</span>` : ''}
+        <span class="font-extrabold text-rose-700">Tổng chi: ${(preview.totalAmount || 0).toLocaleString('vi-VN')} đ</span>
+      `;
+
+      document.getElementById('btnSubmitBatchPayment').disabled = validRows.length === 0;
+    }
+
+    async function parseBatchPaymentPaste() {
       const text = document.getElementById('txtBatchPaymentPaste').value.trim();
       if (!text) {
         alert('Vui lòng dán dữ liệu bảng từ file Excel vào khung');
         return;
       }
-
       const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      parsedBatchPaymentList = [];
-      let totalAmount = 0;
-
-      lines.forEach((line, idx) => {
-        const parts = line.includes('\t') ? line.split('\t') : line.split(',');
-        const recipientName = parts[0]?.trim() || '';
-        const rawAmount = parts[1]?.trim().replace(/[^0-9]/g, '') || '0';
-        const amount = parseFloat(rawAmount) || 0;
-        const categoryCode = parts[2]?.trim().toUpperCase() || 'EXP_OTHER';
-        const trackingNumber = parts[3]?.trim() || '';
-        const reason = parts[4]?.trim() || `Chi phí vận hành theo Excel dòng ${idx+1}`;
-
-        if (recipientName && amount > 0) {
-          parsedBatchPaymentList.push({
-            row: idx + 1,
-            recipientName,
-            amount,
-            categoryCode,
-            trackingNumber,
-            reason
-          });
-          totalAmount += amount;
-        }
+      const aoa = [
+        ['STT', 'Mã Vận Đơn (AWB)', 'Mã Khoản Mục Chi', 'Số Tiền Chi', 'Người / Đơn Vị Nhận', 'Hình Thức Chi', 'Lý Do Chi Phí']
+      ];
+      lines.forEach((l, idx) => {
+        const parts = l.includes('\t') ? l.split('\t') : l.split(',');
+        aoa.push([idx + 1, parts[0]?.trim() || '', parts[1]?.trim() || 'EXP_CARRIER_COST', parts[2]?.trim() || '', parts[3]?.trim() || '', parts[4]?.trim() || 'CASH', parts[5]?.trim() || '']);
       });
 
-      if (parsedBatchPaymentList.length === 0) {
-        alert('Không tìm thấy dòng chi phí hợp lệ nào.');
+      if (typeof XLSX !== 'undefined') {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        XLSX.utils.book_append_sheet(wb, ws, 'Chi_Phi_AWB');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const file = new File([blob], 'Dan_Du_Lieu_Chi_Phi.xlsx');
+        processPaymentExcelFile(file);
+      } else {
+        alert('Đang nạp bộ xử lý Excel, vui lòng thử lại sau 2 giây');
+      }
+    }
+
+    async function executeBatchPaymentFromPreview() {
+      const validRows = parsedPaymentRows.filter(r => r.valid);
+      if (validRows.length === 0) {
+        alert('Không có dòng AWB hợp lệ nào để lập phiếu chi!');
         return;
       }
 
-      const tbody = document.getElementById('tblBatchPaymentPreviewBody');
-      tbody.innerHTML = parsedBatchPaymentList.map(it => `
-        <tr class="hover:bg-slate-50">
-          <td class="p-2 font-mono text-slate-500">${it.row}</td>
-          <td class="p-2 font-bold text-slate-800">${it.recipientName}</td>
-          <td class="p-2 text-right font-mono font-bold text-rose-700">${it.amount.toLocaleString('vi-VN')} đ</td>
-          <td class="p-2 font-mono text-xs text-indigo-700">${it.categoryCode}</td>
-          <td class="p-2 font-mono text-xs text-slate-600">${it.trackingNumber || '—'}</td>
-          <td class="p-2 text-slate-600 truncate max-w-xs">${it.reason}</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('batchPaymentPreviewBox').classList.remove('hidden');
-      document.getElementById('batchPaymentValidBadge').textContent = `${parsedBatchPaymentList.length} dòng hợp lệ`;
-
-      const stats = document.getElementById('batchPaymentSummaryStats');
-      stats.innerHTML = `Tổng dòng: <b>${parsedBatchPaymentList.length}</b> • Tổng tiền chi: <b class="text-rose-700">${totalAmount.toLocaleString('vi-VN')} đ</b>`;
-      stats.classList.remove('hidden');
-
-      document.getElementById('btnSubmitBatchPayment').disabled = false;
-    }
-
-    async function executeBatchPaymentVouchers() {
-      if (parsedBatchPaymentList.length === 0) return;
-
-      const confirmRun = confirm(`Xác nhận phát hành ${parsedBatchPaymentList.length} phiếu chi tự động vào hệ thống?`);
+      const totalAmt = validRows.reduce((sum, r) => sum + (r.amount || 0), 0);
+      const confirmRun = confirm(`Xác nhận lập ${validRows.length} phiếu chi tự động cho các số AWB hợp lệ?\nTổng tiền: ${totalAmt.toLocaleString('vi-VN')} đ`);
       if (!confirmRun) return;
 
+      const btn = document.getElementById('btnSubmitBatchPayment');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i><span>Đang xử lý phát hành phiếu...</span>`;
+
       try {
-        const payload = parsedBatchPaymentList.map(it => ({
-          recipientName: it.recipientName,
-          amount: it.amount,
-          categoryCode: it.categoryCode,
-          trackingNumber: it.trackingNumber,
-          reason: it.reason,
-          paymentMethod: 'CASH'
+        const batchPayload = validRows.map(r => ({
+          trackingNumber: r.awb,
+          amount: r.amount,
+          categoryCode: r.categoryCode || 'EXP_CARRIER_COST',
+          recipientName: r.recipientName,
+          paymentMethod: r.method || 'CASH',
+          reason: r.reason || `Chi chi phí theo AWB ${r.awb} từ file Excel`
         }));
 
         const res = await fetch('/api/finance/payment-vouchers/batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            vouchers: payload,
+            vouchers: batchPayload,
             operator: currentAdminUser?.username || 'ketoan'
           })
         });
 
         const d = await res.json();
         if (d.success) {
-          alert(`🎉 Đã lập thành công ${d.count} phiếu chi! Tổng tiền: ${(d.totalAmount || 0).toLocaleString('vi-VN')} đ`);
+          alert(`🎉 Đã lập thành công ${d.count} phiếu chi!\nTổng tiền: ${(d.totalAmount || 0).toLocaleString('vi-VN')} đ`);
           closeModalBatchPaymentExcel();
           loadCashBookData();
         } else {
-          alert('❌ Có lỗi: ' + d.message);
+          alert('❌ Có lỗi: ' + (d.message || d.errors?.join('\n')));
         }
       } catch (err) {
-        alert('Lỗi kết nối: ' + err.message);
+        alert('Lỗi hệ thống: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1"></i><span>🚀 Xác Nhận Chi Tiền &amp; Phát Hành Phiếu Hàng Loạt</span>`;
       }
     }
 

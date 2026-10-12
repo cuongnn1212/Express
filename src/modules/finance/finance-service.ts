@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import * as XLSX from 'xlsx';
 import { AuthService, UserAccount } from '../auth/auth-service.js';
 import { ShipmentRepository } from '../shipment/shipment-repository.js';
 import { CustomerService } from '../customer/customer-service.js';
@@ -1028,8 +1029,18 @@ export class FinanceService {
       return { success: false, message: 'Số tiền thu phải lớn hơn 0 VNĐ' };
     }
 
+    // BẮT BUỘC PHẢI CÓ SỐ AWB: Mọi khoản thu chi đều xoay quanh vận đơn AWB
+    const cleanAwb = (params.trackingNumber || params.shipmentId)?.trim().toUpperCase();
+    if (!cleanAwb) {
+      return { success: false, message: 'Việc thu chi xoay quanh chi phí liên quan đến AWB vì vậy bắt buộc phải có số AWB' };
+    }
+    const s = ShipmentRepository.getById(cleanAwb);
+    if (!s) {
+      return { success: false, message: `Không tìm thấy vận đơn: ${cleanAwb}. Bắt buộc phải có số AWB hợp lệ trong hệ thống.` };
+    }
+
     const op = params.operator || 'ketoan';
-    const hub = params.hub || 'SGN';
+    const hub = (params.hub || s.currentWarehouseHub || s.hub || 'SGN') as ('HAN' | 'SGN' | 'DAD');
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(this.vouchers.length + 1).padStart(4, '0');
@@ -1051,45 +1062,29 @@ export class FinanceService {
     let catCode = params.categoryCode;
     let catName = params.categoryName;
     if (!catCode) {
-      if (params.type === 'SHIPMENT_FEE') catCode = 'REV_AWB_CASH';
-      else if (params.type === 'CUSTOMER_DEBT') catCode = 'REV_CONTRACT_DEBT';
-      else if (params.type === 'WALLET_TOPUP') catCode = 'REV_WALLET_TOPUP';
-      else catCode = 'REV_OTHER';
+      if (s.financialCategory === 'POSTPAID' || params.type === 'CUSTOMER_DEBT') catCode = 'REV_CONTRACT_DEBT';
+      else if (s.financialCategory === 'WALLET' || params.type === 'WALLET_TOPUP') catCode = 'REV_WALLET_TOPUP';
+      else catCode = 'REV_AWB_CASH';
     }
     if (!catName) {
       const foundCat = this.categories.find(c => c.code === catCode);
-      catName = foundCat ? foundCat.name : 'Thu cước vận chuyển';
+      catName = foundCat ? foundCat.name : 'Thu cước vận chuyển AWB';
     }
 
-    // Tra cứu thông tin khách hàng
-    const cust = CustomerService.getById(params.customerCode) || CustomerService.getByCode(params.customerCode);
-    const custName = params.customerName || (cust ? (cust.customerName || (cust as any).name || cust.customerCode) : params.customerCode);
+    // Tra cứu thông tin khách hàng từ AWB
+    const finalCustCode = s.customerCode || params.customerCode || 'PDL-GUEST';
+    const cust = CustomerService.getById(finalCustCode) || CustomerService.getByCode(finalCustCode);
+    const custName = params.customerName || s.customerName || (cust ? (cust.customerName || (cust as any).name) : finalCustCode);
 
-    let updatedShipment: any = null;
+    // Cập nhật trạng thái tài chính vận đơn xoay quanh AWB:
+    let mappedFinCat: 'IMMEDIATE' | 'POSTPAID' | 'WALLET' = s.financialCategory || 'IMMEDIATE';
+    if (params.paymentChannel === 'WALLET') mappedFinCat = 'WALLET';
+    else if (params.paymentChannel === 'POSTPAID_CONTRACT') mappedFinCat = 'POSTPAID';
+    else if (params.paymentChannel === 'CASH' || params.paymentChannel === 'BANK_TRANSFER') mappedFinCat = 'IMMEDIATE';
 
-    // Xử lý theo từng loại phiếu thu:
-    if (params.type === 'SHIPMENT_FEE') {
-      const cleanId = params.shipmentId || params.trackingNumber;
-      if (!cleanId) return { success: false, message: 'Thiếu mã vận đơn (AWB) để lập phiếu thu cước' };
-      const s = ShipmentRepository.getById(cleanId);
-      if (!s) return { success: false, message: `Không tìm thấy vận đơn: ${cleanId}` };
-
-      // Ánh xạ kênh thanh toán sang Phân loại tài chính của vận đơn
-      let mappedFinCat: 'IMMEDIATE' | 'POSTPAID' | 'WALLET' = 'IMMEDIATE';
-      if (params.paymentChannel === 'WALLET') mappedFinCat = 'WALLET';
-      else if (params.paymentChannel === 'POSTPAID_CONTRACT') mappedFinCat = 'POSTPAID';
-      else mappedFinCat = 'IMMEDIATE';
-
-      // Nếu chọn trừ ví điện tử: Thực hiện khấu trừ số dư ví
-      if (params.paymentChannel === 'WALLET') {
-        const deductRes = this.recordCustomerDeduction(params.customerCode, params.amount, s.masterTrackingNumber, op);
-        if (!deductRes.success) {
-          return { success: false, message: `Không thể trừ ví: ${deductRes.message}` };
-        }
-      }
-
-      // Cập nhật trạng thái tài chính vận đơn
-      s.financialCategory = mappedFinCat;
+    // 1. Nếu là đơn trả tiền mặt (CASH / IMMEDIATE) -> Mở khóa xuất kho
+    if (mappedFinCat === 'IMMEDIATE' || s.financialCategory === 'IMMEDIATE' || params.type === 'SHIPMENT_FEE') {
+      s.financialCategory = 'IMMEDIATE';
       s.paymentStatus = 'PAID';
       s.financialStatus = {
         ...s.financialStatus,
@@ -1107,30 +1102,51 @@ export class FinanceService {
         receiptVoucherCode: voucherCode
       };
 
-      // Đơn hàng đủ điều kiện -> chuyển sang Kho Chờ Xuất nếu đang ở trạng thái nhập kho
       if (s.status === 'INBOUND_RECEIVED' || s.status === 'PRINTED' || s.status === 'WAITING_FINANCE_DISPATCH') {
         s.status = 'WAITING_FINANCE_DISPATCH';
       }
-
-      ShipmentRepository.save(s, `Lập phiếu thu ${voucherCode} qua kênh ${channelName}`);
-      updatedShipment = s;
-    } else if (params.type === 'CUSTOMER_DEBT') {
-      // Thu công nợ hợp đồng khách hàng trả sau
-      CustomerService.recordDebtPayment(params.customerCode, params.amount, `${voucherCode}: ${params.reason || 'Thu công nợ khách hàng'}`, op);
-    } else if (params.type === 'WALLET_TOPUP') {
-      // Nạp tiền ví trả trước
-      this.recordCustomerTopup(params.customerCode, params.amount, channelName, params.referenceCode || voucherCode, params.reason || 'Nạp ví ký quỹ', op);
     }
+
+    // 2. Nếu là khách hàng hợp đồng (POSTPAID) -> Giảm trừ công nợ & gạch nợ AWB
+    if (s.financialCategory === 'POSTPAID' || params.type === 'CUSTOMER_DEBT') {
+      s.customerSettled = true;
+      s.customerSettledAt = now.toISOString();
+      s.customerSettlementRef = voucherCode;
+      s.paymentStatus = 'PAID';
+      s.financialStatus = {
+        ...s.financialStatus,
+        isPaid: true,
+        paidAt: now.toISOString(),
+        receiptVoucherCode: voucherCode
+      };
+      CustomerService.recordDebtPayment(finalCustCode, params.amount, `Thu cước AWB ${s.masterTrackingNumber} theo phiếu thu ${voucherCode}`, op);
+    }
+
+    // 3. Nếu là trừ ví đại lý
+    if (params.paymentChannel === 'WALLET' || s.financialCategory === 'WALLET') {
+      const deductRes = this.recordCustomerDeduction(finalCustCode, params.amount, s.masterTrackingNumber, op);
+      if (!deductRes.success) {
+        return { success: false, message: `Không thể trừ ví đại lý: ${deductRes.message}` };
+      }
+      s.paymentStatus = 'PAID';
+      s.financialStatus = {
+        ...s.financialStatus,
+        isPaid: true,
+        receiptVoucherCode: voucherCode
+      };
+    }
+
+    ShipmentRepository.save(s, `Lập phiếu thu ${voucherCode} cho AWB qua kênh ${channelName}`);
 
     const voucher: ReceiptVoucher = {
       id: `vch_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       voucherCode,
-      type: params.type,
+      type: params.type || (s.financialCategory === 'POSTPAID' ? 'CUSTOMER_DEBT' : 'SHIPMENT_FEE'),
       categoryCode: catCode,
       categoryName: catName,
-      shipmentId: params.shipmentId || updatedShipment?.shipmentId,
-      trackingNumber: params.trackingNumber || updatedShipment?.masterTrackingNumber,
-      customerCode: params.customerCode,
+      shipmentId: s.shipmentId,
+      trackingNumber: s.masterTrackingNumber,
+      customerCode: finalCustCode,
       customerName: custName,
       amount: params.amount,
       paymentChannel: params.paymentChannel,
@@ -1139,7 +1155,7 @@ export class FinanceService {
       referenceCode: params.referenceCode,
       payerName: params.payerName || custName,
       payerPhone: params.payerPhone,
-      reason: params.reason || (params.type === 'SHIPMENT_FEE' ? `Thu tiền cước vận chuyển đơn hàng ${params.trackingNumber || params.shipmentId}` : 'Thu tiền công nợ khách hàng'),
+      reason: params.reason || `Thu tiền cước AWB ${s.masterTrackingNumber} (${s.carrier} - ${s.destinationCountry || ''})`,
       attachedDocCount: params.attachedDocCount || 1,
       hub,
       createdAt: now.toISOString(),
@@ -1156,20 +1172,21 @@ export class FinanceService {
       userRole: 'ACCOUNTANT',
       action: 'CREATE_RECEIPT_VOUCHER',
       targetId: voucherCode,
-      details: `Lập phiếu thu ${voucherCode} số tiền ${params.amount.toLocaleString('vi-VN')} đ cho ${custName} qua kênh [${channelName}]`,
+      details: `Lập phiếu thu ${voucherCode} số tiền ${params.amount.toLocaleString('vi-VN')} đ cho AWB ${s.masterTrackingNumber} (${custName}) qua kênh [${channelName}]`,
       hub
     });
 
     return {
       success: true,
-      message: `🎉 Đã lập thành công Phiếu Thu ${voucherCode} (${params.amount.toLocaleString('vi-VN')} đ) qua kênh [${channelName}]!`,
+      message: `🎉 Đã lập thành công Phiếu Thu ${voucherCode} (${params.amount.toLocaleString('vi-VN')} đ) cho AWB ${s.masterTrackingNumber}!`,
       voucher,
-      shipment: updatedShipment
+      shipment: s
     };
   }
 
   /**
    * 8.1 Thu tiền hàng loạt theo danh sách / file Excel (Batch Receipts)
+   * Yêu cầu bắt buộc: Mỗi dòng phải có số AWB hợp lệ trong hệ thống
    */
   static createBatchReceiptVouchers(
     items: BatchReceiptItem[],
@@ -1186,67 +1203,48 @@ export class FinanceService {
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
       const rowIdx = i + 1;
-      if (!it.awbOrCust || !it.amount || it.amount <= 0) {
-        errors.push(`Dòng ${rowIdx}: Thiếu mã AWB/Khách hàng hoặc số tiền <= 0`);
+      const cleanAwb = (it.awbOrCust || (it as any).awb || (it as any).trackingNumber)?.trim().toUpperCase();
+
+      if (!cleanAwb) {
+        errors.push(`Dòng ${rowIdx}: Thiếu số AWB. Việc thu chi bắt buộc phải có số AWB.`);
         continue;
       }
 
-      const cleanCode = it.awbOrCust.trim().toUpperCase();
-      // Kiểm tra xem là AWB hay là Mã Khách Hàng
-      const foundShipment = ShipmentRepository.getById(cleanCode);
+      const foundShipment = ShipmentRepository.getById(cleanAwb);
+      if (!foundShipment) {
+        errors.push(`Dòng ${rowIdx}: Vận đơn AWB [${cleanAwb}] không tồn tại trên hệ thống.`);
+        continue;
+      }
 
-      if (foundShipment) {
-        // Thu theo AWB
-        const res = this.createReceiptVoucher({
-          type: 'SHIPMENT_FEE',
-          shipmentId: foundShipment.shipmentId,
-          trackingNumber: foundShipment.masterTrackingNumber,
-          customerCode: foundShipment.customerCode || 'PDL-GUEST',
-          customerName: foundShipment.customerName,
-          amount: it.amount,
-          paymentChannel: it.channel || 'CASH',
-          paymentChannelName: it.channelName,
-          categoryCode: it.categoryCode || 'REV_AWB_CASH',
-          bankAccount: it.bankAccount,
-          referenceCode: it.referenceCode,
-          payerName: it.payerName || foundShipment.customerName,
-          payerPhone: it.payerPhone,
-          reason: it.reason || `Thu tiền cước AWB ${foundShipment.masterTrackingNumber} từ file Excel`,
-          hub: (foundShipment.currentWarehouseHub || foundShipment.hub || 'SGN') as any,
-          operator
-        });
+      let amount = it.amount;
+      if (!amount || amount <= 0) {
+        amount = foundShipment.sellPrice || (foundShipment.chargeableWeightKg ? Math.round(foundShipment.chargeableWeightKg * 275000) : 275000);
+      }
 
-        if (res.success && res.voucher) {
-          createdVouchers.push(res.voucher);
-          totalAmt += it.amount;
-        } else {
-          errors.push(`Dòng ${rowIdx} (${cleanCode}): ${res.message}`);
-        }
+      const res = this.createReceiptVoucher({
+        type: foundShipment.financialCategory === 'POSTPAID' ? 'CUSTOMER_DEBT' : 'SHIPMENT_FEE',
+        shipmentId: foundShipment.shipmentId,
+        trackingNumber: foundShipment.masterTrackingNumber,
+        customerCode: foundShipment.customerCode || 'PDL-GUEST',
+        customerName: foundShipment.customerName,
+        amount,
+        paymentChannel: it.channel || 'CASH',
+        paymentChannelName: it.channelName,
+        categoryCode: it.categoryCode,
+        bankAccount: it.bankAccount,
+        referenceCode: it.referenceCode,
+        payerName: it.payerName || foundShipment.customerName,
+        payerPhone: it.payerPhone,
+        reason: it.reason || `Thu tiền cước AWB ${foundShipment.masterTrackingNumber} từ file Excel`,
+        hub: (foundShipment.currentWarehouseHub || foundShipment.hub || 'SGN') as any,
+        operator
+      });
+
+      if (res.success && res.voucher) {
+        createdVouchers.push(res.voucher);
+        totalAmt += amount;
       } else {
-        // Thu theo Khách Hàng hoặc Thu Khác
-        const foundCust = CustomerService.getById(cleanCode) || CustomerService.getByCode(cleanCode);
-        const res = this.createReceiptVoucher({
-          type: foundCust ? 'CUSTOMER_DEBT' : 'GENERAL_REVENUE',
-          customerCode: cleanCode,
-          customerName: foundCust ? (foundCust.customerName || (foundCust as any).name) : cleanCode,
-          amount: it.amount,
-          paymentChannel: it.channel || 'CASH',
-          paymentChannelName: it.channelName,
-          categoryCode: it.categoryCode || (foundCust ? 'REV_CONTRACT_DEBT' : 'REV_OTHER'),
-          bankAccount: it.bankAccount,
-          referenceCode: it.referenceCode,
-          payerName: it.payerName || cleanCode,
-          payerPhone: it.payerPhone,
-          reason: it.reason || `Thu tiền từ danh sách file Excel`,
-          operator
-        });
-
-        if (res.success && res.voucher) {
-          createdVouchers.push(res.voucher);
-          totalAmt += it.amount;
-        } else {
-          errors.push(`Dòng ${rowIdx} (${cleanCode}): ${res.message}`);
-        }
+        errors.push(`Dòng ${rowIdx} (${cleanAwb}): ${res.message}`);
       }
     }
 
@@ -1257,6 +1255,305 @@ export class FinanceService {
       vouchers: createdVouchers,
       errors
     };
+  }
+
+  /**
+   * Tạo File Mẫu Excel Thu Tiền Vận Đơn AWB (.xlsx)
+   */
+  static generateReceiptExcelTemplate(): Buffer {
+    const wb = XLSX.utils.book_new();
+    const data = [
+      ['STT', 'Mã Vận Đơn (AWB) *', 'Số Tiền Thu (VNĐ) *', 'Hình Thức Thanh Toán', 'Người Nộp Tiền', 'Lý Do Thu / Ghi Chú'],
+      [1, '1Z861R320493609873', 4785000, 'TIEN_MAT', 'Công ty TNHH XNK Đông Dương', 'Thu tiền cước AWB tiền mặt tại quầy'],
+      [2, '1Z999AA10123456784', 5200000, 'CHUYEN_KHOAN', 'Đại Lý An Nam Logistics', 'Thu tiền cước AWB khách hợp đồng'],
+      [3, '1Z84Y8200443069921', 3150000, 'TIEN_MAT', 'Nguyễn Văn An', 'Thu tiền cước vận chuyển bưu cục']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [
+      { wch: 6 },
+      { wch: 26 },
+      { wch: 20 },
+      { wch: 22 },
+      { wch: 32 },
+      { wch: 40 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Thu_Tien_AWB');
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  }
+
+  /**
+   * Tạo File Mẫu Excel Chi Phí Vận Đơn AWB (.xlsx)
+   */
+  static generatePaymentExcelTemplate(): Buffer {
+    const wb = XLSX.utils.book_new();
+    const data = [
+      ['STT', 'Mã Vận Đơn (AWB) *', 'Mã Khoản Mục Chi *', 'Số Tiền Chi (VNĐ) *', 'Người / Đơn Vị Nhận *', 'Hình Thức Chi', 'Lý Do Chi Phí'],
+      [1, '1Z861R320493609873', 'EXP_CARRIER_COST', 3740000, 'UPS Express Worldwide', 'CHUYEN_KHOAN', 'Chi cước gốc mua hãng bay'],
+      [2, '1Z861R320493609873', 'EXP_CUSTOMS_CLEARANCE', 450000, 'Hải Quan Nội Bài', 'TIEN_MAT', 'Phí kiểm hóa và thông quan hải quan'],
+      [3, '1Z999AA10123456784', 'EXP_FIRST_MILE_TRUCKING', 250000, 'Đội Xe Tải PandaLex', 'TIEN_MAT', 'Phí xe tải lấy hàng từ kho đại lý'],
+      [4, '1Z84Y8200443069921', 'EXP_PACKAGING_SUPPLIES', 120000, 'Công ty Bao Bì Nam Long', 'TIEN_MAT', 'Mua thùng carton 5 lớp và màng PE']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [
+      { wch: 6 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 20 },
+      { wch: 32 },
+      { wch: 18 },
+      { wch: 40 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Chi_Phi_AWB');
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  }
+
+  /**
+   * Đọc và phân tích file Excel Thu Tiền AWB
+   */
+  static parseExcelFileForReceipts(buffer: Buffer): {
+    success: boolean;
+    rows: any[];
+    validCount: number;
+    errorCount: number;
+    totalAmount: number;
+    errors: string[];
+  } {
+    try {
+      const wb = XLSX.read(buffer, { type: 'buffer' });
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rawRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
+      if (!rawRows || rawRows.length < 2) {
+        return { success: false, rows: [], validCount: 0, errorCount: 0, totalAmount: 0, errors: ['File Excel rỗng hoặc không có dữ liệu'] };
+      }
+
+      let headerIdx = -1;
+      let colAwb = -1;
+      let colAmount = -1;
+      let colChannel = -1;
+      let colPayer = -1;
+      let colReason = -1;
+
+      for (let r = 0; r < Math.min(rawRows.length, 5); r++) {
+        const row = rawRows[r].map(c => String(c).toLowerCase().trim());
+        const awbIdx = row.findIndex(c => c.includes('awb') || c.includes('vận đơn') || c.includes('tracking'));
+        if (awbIdx !== -1) {
+          headerIdx = r;
+          colAwb = awbIdx;
+          colAmount = row.findIndex(c => c.includes('tiền') || c.includes('cước') || c.includes('amount'));
+          colChannel = row.findIndex(c => c.includes('kênh') || c.includes('hình thức') || c.includes('channel') || c.includes('method'));
+          colPayer = row.findIndex(c => c.includes('người nộp') || c.includes('khách') || c.includes('payer'));
+          colReason = row.findIndex(c => c.includes('lý do') || c.includes('ghi chú') || c.includes('reason') || c.includes('note'));
+          break;
+        }
+      }
+
+      if (headerIdx === -1 || colAwb === -1) {
+        headerIdx = 0;
+        colAwb = 1;
+        colAmount = 2;
+        colChannel = 3;
+        colPayer = 4;
+        colReason = 5;
+      }
+
+      const rows: any[] = [];
+      const errors: string[] = [];
+      let totalAmount = 0;
+      let validCount = 0;
+
+      for (let r = headerIdx + 1; r < rawRows.length; r++) {
+        const row = rawRows[r];
+        if (!row || row.every((c: any) => !String(c).trim())) continue;
+
+        const rowNum = r + 1;
+        const rawAwb = String(row[colAwb] || '').trim().toUpperCase();
+        if (!rawAwb) {
+          errors.push(`Dòng ${rowNum}: Bắt buộc phải có mã vận đơn AWB.`);
+          rows.push({ rowNum, rawAwb: '', valid: false, error: 'Thiếu mã vận đơn AWB' });
+          continue;
+        }
+
+        const shipment = ShipmentRepository.getById(rawAwb);
+        if (!shipment) {
+          errors.push(`Dòng ${rowNum}: Vận đơn AWB [${rawAwb}] không tồn tại trên hệ thống.`);
+          rows.push({ rowNum, rawAwb, valid: false, error: `AWB [${rawAwb}] không tồn tại trên hệ thống` });
+          continue;
+        }
+
+        let amount = 0;
+        if (colAmount !== -1 && row[colAmount]) {
+          amount = parseFloat(String(row[colAmount]).replace(/[^0-9.]/g, '')) || 0;
+        }
+        if (amount <= 0) {
+          amount = shipment.sellPrice || (shipment.chargeableWeightKg ? Math.round(shipment.chargeableWeightKg * 275000) : 275000);
+        }
+
+        const channelRaw = colChannel !== -1 ? String(row[colChannel] || '').toUpperCase() : '';
+        const channel = (channelRaw.includes('BANK') || channelRaw.includes('CHUYEN_KHOAN') || channelRaw.includes('CK')) ? 'BANK_TRANSFER' : 'CASH';
+        const payerName = (colPayer !== -1 && row[colPayer]) ? String(row[colPayer]).trim() : (shipment.customerName || shipment.customerCode || 'Khách hàng');
+        const reason = (colReason !== -1 && row[colReason]) ? String(row[colReason]).trim() : `Thu tiền cước AWB ${shipment.masterTrackingNumber} từ file Excel`;
+
+        totalAmount += amount;
+        validCount++;
+        rows.push({
+          rowNum,
+          awb: shipment.masterTrackingNumber,
+          shipmentId: shipment.shipmentId,
+          customerCode: shipment.customerCode || 'PDL-GUEST',
+          customerName: shipment.customerName,
+          carrier: shipment.carrier,
+          financialCategory: shipment.financialCategory,
+          amount,
+          channel,
+          payerName,
+          reason,
+          valid: true
+        });
+      }
+
+      return {
+        success: validCount > 0,
+        rows,
+        validCount,
+        errorCount: errors.length,
+        totalAmount,
+        errors
+      };
+    } catch (err: any) {
+      return { success: false, rows: [], validCount: 0, errorCount: 0, totalAmount: 0, errors: ['Lỗi phân tích file Excel: ' + err.message] };
+    }
+  }
+
+  /**
+   * Đọc và phân tích file Excel Chi Phí AWB
+   */
+  static parseExcelFileForPayments(buffer: Buffer): {
+    success: boolean;
+    rows: any[];
+    validCount: number;
+    errorCount: number;
+    totalAmount: number;
+    errors: string[];
+  } {
+    try {
+      const wb = XLSX.read(buffer, { type: 'buffer' });
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rawRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
+      if (!rawRows || rawRows.length < 2) {
+        return { success: false, rows: [], validCount: 0, errorCount: 0, totalAmount: 0, errors: ['File Excel rỗng hoặc không có dữ liệu'] };
+      }
+
+      let headerIdx = -1;
+      let colAwb = -1;
+      let colCategory = -1;
+      let colAmount = -1;
+      let colRecipient = -1;
+      let colMethod = -1;
+      let colReason = -1;
+
+      for (let r = 0; r < Math.min(rawRows.length, 5); r++) {
+        const row = rawRows[r].map(c => String(c).toLowerCase().trim());
+        const awbIdx = row.findIndex(c => c.includes('awb') || c.includes('vận đơn') || c.includes('tracking'));
+        if (awbIdx !== -1) {
+          headerIdx = r;
+          colAwb = awbIdx;
+          colCategory = row.findIndex(c => c.includes('khoản mục') || c.includes('mục') || c.includes('danh mục') || c.includes('category'));
+          colAmount = row.findIndex(c => c.includes('tiền') || c.includes('chi') || c.includes('amount'));
+          colRecipient = row.findIndex(c => c.includes('người nhận') || c.includes('đơn vị') || c.includes('recipient'));
+          colMethod = row.findIndex(c => c.includes('hình thức') || c.includes('phương thức') || c.includes('kênh'));
+          colReason = row.findIndex(c => c.includes('lý do') || c.includes('ghi chú') || c.includes('reason') || c.includes('note'));
+          break;
+        }
+      }
+
+      if (headerIdx === -1 || colAwb === -1) {
+        headerIdx = 0;
+        colAwb = 1;
+        colCategory = 2;
+        colAmount = 3;
+        colRecipient = 4;
+        colMethod = 5;
+        colReason = 6;
+      }
+
+      const rows: any[] = [];
+      const errors: string[] = [];
+      let totalAmount = 0;
+      let validCount = 0;
+
+      for (let r = headerIdx + 1; r < rawRows.length; r++) {
+        const row = rawRows[r];
+        if (!row || row.every((c: any) => !String(c).trim())) continue;
+
+        const rowNum = r + 1;
+        const rawAwb = String(row[colAwb] || '').trim().toUpperCase();
+        if (!rawAwb) {
+          errors.push(`Dòng ${rowNum}: Bắt buộc phải có mã vận đơn AWB.`);
+          rows.push({ rowNum, rawAwb: '', valid: false, error: 'Thiếu mã vận đơn AWB' });
+          continue;
+        }
+
+        const shipment = ShipmentRepository.getById(rawAwb);
+        if (!shipment) {
+          errors.push(`Dòng ${rowNum}: Vận đơn AWB [${rawAwb}] không tồn tại trên hệ thống.`);
+          rows.push({ rowNum, rawAwb, valid: false, error: `AWB [${rawAwb}] không tồn tại trên hệ thống` });
+          continue;
+        }
+
+        let catCode = colCategory !== -1 ? String(row[colCategory] || '').trim().toUpperCase() : 'EXP_CARRIER_COST';
+        if (!catCode || catCode === 'EXP_OTHER') catCode = 'EXP_CARRIER_COST';
+        if (catCode.includes('CUOC') || catCode.includes('HANG')) catCode = 'EXP_CARRIER_COST';
+        else if (catCode.includes('HAI_QUAN') || catCode.includes('HQ')) catCode = 'EXP_CUSTOMS_CLEARANCE';
+        else if (catCode.includes('XE') || catCode.includes('TRUCK')) catCode = 'EXP_FIRST_MILE_TRUCKING';
+        else if (catCode.includes('BAO_BI') || catCode.includes('CARTON')) catCode = 'EXP_PACKAGING_SUPPLIES';
+        else if (catCode.includes('BOI_THUONG')) catCode = 'EXP_SHIPMENT_COMPENSATION';
+
+        let amount = 0;
+        if (colAmount !== -1 && row[colAmount]) {
+          amount = parseFloat(String(row[colAmount]).replace(/[^0-9.]/g, '')) || 0;
+        }
+        if (amount <= 0) {
+          amount = shipment.costPrice || Math.round((shipment.sellPrice || 275000) * 0.75);
+        }
+
+        let recipientName = colRecipient !== -1 ? String(row[colRecipient] || '').trim() : '';
+        if (!recipientName) {
+          recipientName = shipment.carrier === 'FEDEX' ? 'FedEx Express VN' : 'UPS Express Worldwide';
+        }
+
+        const methodRaw = colMethod !== -1 ? String(row[colMethod] || '').toUpperCase() : '';
+        const method = (methodRaw.includes('BANK') || methodRaw.includes('CHUYEN_KHOAN') || methodRaw.includes('CK')) ? 'BANK_TRANSFER' : 'CASH';
+        const reason = colReason !== -1 && row[colReason] ? String(row[colReason]).trim() : `Chi phí ${catCode} theo AWB ${shipment.masterTrackingNumber} từ file Excel`;
+
+        totalAmount += amount;
+        validCount++;
+        rows.push({
+          rowNum,
+          awb: shipment.masterTrackingNumber,
+          shipmentId: shipment.shipmentId,
+          carrier: shipment.carrier,
+          categoryCode: catCode,
+          amount,
+          recipientName,
+          method,
+          reason,
+          valid: true
+        });
+      }
+
+      return {
+        success: validCount > 0,
+        rows,
+        validCount,
+        errorCount: errors.length,
+        totalAmount,
+        errors
+      };
+    } catch (err: any) {
+      return { success: false, rows: [], validCount: 0, errorCount: 0, totalAmount: 0, errors: ['Lỗi phân tích file Excel: ' + err.message] };
+    }
   }
 
   static getAllReceiptVouchers(filter?: {
@@ -1347,19 +1644,29 @@ export class FinanceService {
       return { success: false, message: 'Vui lòng nhập họ tên hoặc đơn vị nhận tiền' };
     }
 
+    // BẮT BUỘC PHẢI CÓ SỐ AWB: Mọi khoản thu chi đều xoay quanh vận đơn AWB
+    const cleanAwb = (params.trackingNumber || params.shipmentId)?.trim().toUpperCase();
+    if (!cleanAwb) {
+      return { success: false, message: 'Việc thu chi xoay quanh chi phí liên quan đến AWB vì vậy bắt buộc phải có số AWB' };
+    }
+    const linkedShipment = ShipmentRepository.getById(cleanAwb);
+    if (!linkedShipment) {
+      return { success: false, message: `Không tìm thấy vận đơn: ${cleanAwb}. Bắt buộc phải có số AWB hợp lệ trong hệ thống.` };
+    }
+
     const op = params.operator || 'ketoan';
-    const hub = params.hub || 'SGN';
+    const hub = (params.hub || linkedShipment.currentWarehouseHub || linkedShipment.hub || 'SGN') as ('HAN' | 'SGN' | 'DAD');
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(this.paymentVouchers.length + 1).padStart(4, '0');
     const voucherCode = `PC-${dateStr}-${seq}`;
 
     // Tên danh mục chi
-    const catCode = params.categoryCode || 'EXP_OTHER';
+    const catCode = params.categoryCode || 'EXP_CARRIER_COST';
     let catName = params.categoryName;
     if (!catName) {
       const foundCat = this.categories.find(c => c.code === catCode);
-      catName = foundCat ? foundCat.name : 'Chi phí vận hành khác';
+      catName = foundCat ? foundCat.name : 'Chi phí theo AWB';
     }
 
     // Tên phương thức chi
@@ -1372,37 +1679,37 @@ export class FinanceService {
       }
     }
 
-    let linkedShipment: any = null;
+    // Ghi nhận trực tiếp vào lịch sử chi phí của vận đơn AWB
+    if (!linkedShipment.expenseHistory) linkedShipment.expenseHistory = [];
+    linkedShipment.expenseHistory.push({
+      voucherCode,
+      categoryCode: catCode,
+      categoryName: catName,
+      amount: params.amount,
+      recipientName: params.recipientName.trim(),
+      paidAt: now.toISOString(),
+      operator: op,
+      reason: params.reason || `Chi phí ${catName} theo AWB ${cleanAwb}`
+    });
 
-    // Nếu chi theo AWB: liên kết vận đơn và lưu nhật ký chi phí
-    if (params.trackingNumber || params.shipmentId) {
-      const cleanAwb = (params.trackingNumber || params.shipmentId)!.trim().toUpperCase();
-      linkedShipment = ShipmentRepository.getById(cleanAwb);
-      if (linkedShipment) {
-        if (!linkedShipment.expenseHistory) linkedShipment.expenseHistory = [];
-        linkedShipment.expenseHistory.push({
-          voucherCode,
-          categoryCode: catCode,
-          categoryName: catName,
-          amount: params.amount,
-          recipientName: params.recipientName,
-          paidAt: now.toISOString(),
-          operator: op,
-          reason: params.reason || `Chi phí theo AWB ${cleanAwb}`
-        });
-        ShipmentRepository.save(linkedShipment, `Ghi nhận phiếu chi ${voucherCode} cho vận đơn`);
-      }
+    // Nếu chi cước gốc Hãng bay (EXP_CARRIER_COST) -> Đánh dấu quyết toán nợ hãng
+    if (catCode === 'EXP_CARRIER_COST') {
+      linkedShipment.vendorSettled = true;
+      linkedShipment.vendorSettledAt = now.toISOString();
+      linkedShipment.vendorSettlementRef = voucherCode;
     }
+
+    ShipmentRepository.save(linkedShipment, `Ghi nhận phiếu chi ${voucherCode} (${params.amount.toLocaleString('vi-VN')} đ) cho AWB`);
 
     const voucher: PaymentVoucher = {
       id: `pc_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       voucherCode,
-      type: params.type || (params.trackingNumber ? 'AWB_EXPENSE' : 'GENERAL_EXPENSE'),
+      type: params.type || 'AWB_EXPENSE',
       categoryCode: catCode,
       categoryName: catName,
-      shipmentId: params.shipmentId || linkedShipment?.shipmentId,
-      trackingNumber: params.trackingNumber || linkedShipment?.masterTrackingNumber,
-      vendorCode: params.vendorCode,
+      shipmentId: linkedShipment.shipmentId,
+      trackingNumber: linkedShipment.masterTrackingNumber,
+      vendorCode: params.vendorCode || linkedShipment.carrier,
       recipientName: params.recipientName.trim(),
       recipientPhone: params.recipientPhone,
       amount: params.amount,
@@ -1410,7 +1717,7 @@ export class FinanceService {
       paymentMethodName: methodName,
       bankAccount: params.bankAccount,
       referenceCode: params.referenceCode,
-      reason: params.reason || (params.trackingNumber ? `Chi phí vận hành theo AWB ${params.trackingNumber}` : 'Chi phí hoạt động doanh nghiệp'),
+      reason: params.reason || `Chi phí ${catName} theo AWB ${linkedShipment.masterTrackingNumber}`,
       attachedDocCount: params.attachedDocCount || 1,
       hub,
       createdAt: now.toISOString(),
@@ -1427,13 +1734,13 @@ export class FinanceService {
       userRole: 'ACCOUNTANT',
       action: 'CREATE_PAYMENT_VOUCHER',
       targetId: voucherCode,
-      details: `Lập phiếu chi ${voucherCode} số tiền ${params.amount.toLocaleString('vi-VN')} đ cho ${params.recipientName} (${catName})`,
+      details: `Lập phiếu chi ${voucherCode} số tiền ${params.amount.toLocaleString('vi-VN')} đ cho AWB ${cleanAwb} (${params.recipientName} - ${catName})`,
       hub
     });
 
     return {
       success: true,
-      message: `🎉 Đã lập thành công Phiếu Chi ${voucherCode} (${params.amount.toLocaleString('vi-VN')} đ)!`,
+      message: `🎉 Đã lập thành công Phiếu Chi ${voucherCode} (${params.amount.toLocaleString('vi-VN')} đ) cho AWB ${cleanAwb}!`,
       voucher,
       shipment: linkedShipment
     };
@@ -1441,6 +1748,7 @@ export class FinanceService {
 
   /**
    * 9.1 Chi tiền hàng loạt theo danh sách / file Excel (Batch Payments)
+   * Yêu cầu bắt buộc: Mỗi dòng phải có số AWB hợp lệ trong hệ thống
    */
   static createBatchPaymentVouchers(
     items: BatchPaymentItem[],
@@ -1457,31 +1765,51 @@ export class FinanceService {
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
       const rowIdx = i + 1;
-      if (!it.recipientName || !it.amount || it.amount <= 0) {
-        errors.push(`Dòng ${rowIdx}: Thiếu người nhận hoặc số tiền chi <= 0`);
+      const cleanAwb = (it.awb || (it as any).trackingNumber)?.trim().toUpperCase();
+
+      if (!cleanAwb) {
+        errors.push(`Dòng ${rowIdx}: Thiếu số AWB. Việc thu chi bắt buộc phải có số AWB.`);
         continue;
       }
 
+      const foundShipment = ShipmentRepository.getById(cleanAwb);
+      if (!foundShipment) {
+        errors.push(`Dòng ${rowIdx}: Vận đơn AWB [${cleanAwb}] không tồn tại trên hệ thống.`);
+        continue;
+      }
+
+      let recipient = it.recipientName ? it.recipientName.trim() : '';
+      if (!recipient) {
+        recipient = foundShipment.carrier === 'FEDEX' ? 'FedEx Express VN' : 'UPS Express Worldwide';
+      }
+
+      let amount = it.amount;
+      if (!amount || amount <= 0) {
+        amount = foundShipment.costPrice || Math.round((foundShipment.sellPrice || 275000) * 0.75);
+      }
+
       const res = this.createPaymentVoucher({
-        type: it.awb ? 'AWB_EXPENSE' : 'GENERAL_EXPENSE',
-        categoryCode: it.categoryCode || 'EXP_OTHER',
-        trackingNumber: it.awb?.trim().toUpperCase(),
-        recipientName: it.recipientName.trim(),
+        type: 'AWB_EXPENSE',
+        categoryCode: it.categoryCode || 'EXP_CARRIER_COST',
+        trackingNumber: foundShipment.masterTrackingNumber,
+        shipmentId: foundShipment.shipmentId,
+        recipientName: recipient,
         recipientPhone: it.recipientPhone,
-        amount: it.amount,
+        amount,
         paymentMethod: it.method || 'CASH',
         paymentMethodName: it.methodName,
         bankAccount: it.bankAccount,
         referenceCode: it.referenceCode,
-        reason: it.reason || (it.awb ? `Chi chi phí theo AWB ${it.awb} từ Excel` : 'Chi chi phí từ file Excel'),
+        reason: it.reason || `Chi chi phí theo AWB ${foundShipment.masterTrackingNumber} từ file Excel`,
+        hub: (foundShipment.currentWarehouseHub || foundShipment.hub || 'SGN') as any,
         operator
       });
 
       if (res.success && res.voucher) {
         createdVouchers.push(res.voucher);
-        totalAmt += it.amount;
+        totalAmt += amount;
       } else {
-        errors.push(`Dòng ${rowIdx}: ${res.message}`);
+        errors.push(`Dòng ${rowIdx} (${cleanAwb}): ${res.message}`);
       }
     }
 

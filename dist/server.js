@@ -2306,6 +2306,58 @@ app.post('/api/finance/receipt-vouchers/batch', (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 });
+// 4c. Tải file mẫu Excel Thu Tiền Vận Đơn AWB (.xlsx)
+app.get('/api/finance/templates/receipt-excel', (req, res) => {
+    try {
+        const buffer = FinanceService.generateReceiptExcelTemplate();
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="PandaLex_Mau_Thu_Tien_AWB.xlsx"');
+        res.send(buffer);
+    }
+    catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+// 4d. Tải lên và phân tích / thực thi File Excel Thu Tiền Vận Đơn AWB
+app.post('/api/finance/receipt-vouchers/upload-excel', upload.single('excelFile'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Vui lòng đính kèm file Excel (.xlsx, .xls, .csv)' });
+        }
+        const fileBuffer = fs.readFileSync(req.file.path);
+        try {
+            fs.unlinkSync(req.file.path);
+        }
+        catch (_) { }
+        const parseResult = FinanceService.parseExcelFileForReceipts(fileBuffer);
+        const shouldExecute = req.query.execute === 'true' || req.body.execute === 'true' || req.body.execute === true;
+        if (shouldExecute) {
+            if (parseResult.validCount === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Không có dòng AWB hợp lệ nào để lập phiếu thu',
+                    errors: parseResult.errors
+                });
+            }
+            const operator = (req.body.operator || req.query.operator || 'ketoan');
+            const executeResult = FinanceService.createBatchReceiptVouchers(parseResult.rows.filter(r => r.valid), operator);
+            return res.json({
+                success: executeResult.success,
+                executed: true,
+                preview: parseResult,
+                result: executeResult
+            });
+        }
+        res.json({
+            success: true,
+            executed: false,
+            preview: parseResult
+        });
+    }
+    catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
 // 5. Danh sách Sổ Quỹ & Phiếu Thu
 app.get('/api/finance/receipt-vouchers', (req, res) => {
     const { customerCode, type, channel, hub, keyword, fromDate, toDate } = req.query;
@@ -2369,6 +2421,58 @@ app.post('/api/finance/payment-vouchers/batch', (req, res) => {
         }
         const result = FinanceService.createBatchPaymentVouchers(vouchers, operator || 'ketoan');
         res.json(result);
+    }
+    catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+// 7c. Tải file mẫu Excel Chi Phí Vận Đơn AWB (.xlsx)
+app.get('/api/finance/templates/payment-excel', (req, res) => {
+    try {
+        const buffer = FinanceService.generatePaymentExcelTemplate();
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="PandaLex_Mau_Chi_Phi_AWB.xlsx"');
+        res.send(buffer);
+    }
+    catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+// 7d. Tải lên và phân tích / thực thi File Excel Chi Phí Vận Đơn AWB
+app.post('/api/finance/payment-vouchers/upload-excel', upload.single('excelFile'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Vui lòng đính kèm file Excel (.xlsx, .xls, .csv)' });
+        }
+        const fileBuffer = fs.readFileSync(req.file.path);
+        try {
+            fs.unlinkSync(req.file.path);
+        }
+        catch (_) { }
+        const parseResult = FinanceService.parseExcelFileForPayments(fileBuffer);
+        const shouldExecute = req.query.execute === 'true' || req.body.execute === 'true' || req.body.execute === true;
+        if (shouldExecute) {
+            if (parseResult.validCount === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Không có dòng AWB hợp lệ nào để lập phiếu chi',
+                    errors: parseResult.errors
+                });
+            }
+            const operator = (req.body.operator || req.query.operator || 'ketoan');
+            const executeResult = FinanceService.createBatchPaymentVouchers(parseResult.rows.filter(r => r.valid), operator);
+            return res.json({
+                success: executeResult.success,
+                executed: true,
+                preview: parseResult,
+                result: executeResult
+            });
+        }
+        res.json({
+            success: true,
+            executed: false,
+            preview: parseResult
+        });
     }
     catch (err) {
         res.status(500).json({ success: false, message: err.message });
