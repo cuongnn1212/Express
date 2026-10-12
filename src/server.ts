@@ -44,16 +44,16 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Trang chủ chuẩn quốc tế (UPS Style) cho Khách hàng & Giao tiếp CSKH
 app.get('/', (req, res) => {
-  res.sendFile(path.resolve('public', 'home.html'));
+  res.sendFile(path.resolve('public', 'index.html'));
 });
 app.get('/home', (req, res) => {
-  res.sendFile(path.resolve('public', 'home.html'));
+  res.sendFile(path.resolve('public', 'index.html'));
 });
 app.get('/calculator', (req, res) => {
-  res.sendFile(path.resolve('public', 'index.html'));
+  res.sendFile(path.resolve('public', 'calculator.html'));
 });
 app.get('/quote', (req, res) => {
-  res.sendFile(path.resolve('public', 'index.html'));
+  res.sendFile(path.resolve('public', 'calculator.html'));
 });
 
 app.use(express.static('public'));
