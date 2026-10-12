@@ -2899,7 +2899,7 @@
               </p>
             </div>
             <div class="flex items-center space-x-2">
-              <button onclick="openVendorDepositModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow transition">
+              <button type="button" id="btnOpenVendorDepositCarrier" onclick="openVendorDepositModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow transition">
                 <i class="fa-solid fa-plus"></i>
                 <span>+ LẬP PHIẾU NẠP KÝ QUỸ HÃNG</span>
               </button>
@@ -5517,11 +5517,15 @@
       try {
         const res = await fetch('/api/admin/stats');
         const d = await res.json();
-        if (d.success) {
-          document.getElementById('statRateTables').textContent = d.data.activeRateTables + ' / ' + d.data.totalRateTables;
-          document.getElementById('statUpsFuel').textContent = d.data.fuelSurcharge.upsPercent + '%';
-          document.getElementById('statFedexFuel').textContent = d.data.fuelSurcharge.fedexPercent + '%';
-          document.getElementById('statCustomers').textContent = d.data.totalCustomers;
+        if (d.success && d.data) {
+          const elTables = document.getElementById('statRateTables');
+          if (elTables) elTables.textContent = (d.data.activeRateTables || 0) + ' / ' + (d.data.totalRateTables || 0);
+          const elUps = document.getElementById('statUpsFuel');
+          if (elUps) elUps.textContent = (d.data.fuelSurcharge?.upsPercent ?? '-') + '%';
+          const elFdx = document.getElementById('statFedexFuel');
+          if (elFdx) elFdx.textContent = (d.data.fuelSurcharge?.fedexPercent ?? '-') + '%';
+          const elCust = document.getElementById('statCustomers');
+          if (elCust) elCust.textContent = d.data.totalCustomers || 0;
         }
       } catch (e) { console.error(e); }
     }
@@ -5759,7 +5763,7 @@
       document.getElementById('btnCancelEditFuel').classList.add('hidden');
     }
 
-    document.getElementById('formWeeklyFuel').addEventListener('submit', async (e) => {
+    document.getElementById('formWeeklyFuel')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fuelId = document.getElementById('wFuelId').value;
       const payload = {
@@ -6505,11 +6509,13 @@
     }
 
     // Upload Rate form
-    document.getElementById('adminUploadForm').addEventListener('submit', async (e) => {
+    document.getElementById('adminUploadForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnAdminUploadSubmit');
-      btn.disabled = true;
-      btn.textContent = 'Đang bóc tách file...';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Đang bóc tách file...';
+      }
 
       const formData = new FormData(e.target);
       try {
@@ -6520,7 +6526,7 @@
         const d = await res.json();
         if (d.success) {
           alert(`✅ ${d.message} (${d.data.supportedCountries} nước)`);
-          document.getElementById('modalUpload').classList.add('hidden');
+          document.getElementById('modalUpload')?.classList.add('hidden');
           e.target.reset();
           loadAdminRateTables();
           loadAdminStats();
@@ -6529,8 +6535,10 @@
         }
       } catch (err) { alert(err.message); }
       finally {
-        btn.disabled = false;
-        btn.textContent = 'NẠP VÀO HỆ THỐNG';
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'NẠP VÀO HỆ THỐNG';
+        }
       }
     });
 
@@ -6555,7 +6563,7 @@
       }
     }
 
-    document.getElementById('trackingConfigForm').addEventListener('submit', async (e) => {
+    document.getElementById('trackingConfigForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnSaveTrackConfig');
       const feedback = document.getElementById('trackConfigFeedback');
@@ -8331,12 +8339,12 @@
       } catch (e) { console.error(e); }
     }
 
-    document.getElementById('formScanInbound').addEventListener('submit', async (e) => {
+    document.getElementById('formScanInbound')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const trackingNumber = document.getElementById('inpScanInbound').value.trim();
-      const hub = document.getElementById('selWarehouseHub').value;
+      const trackingNumber = document.getElementById('inpScanInbound')?.value?.trim();
+      const hub = document.getElementById('selWarehouseHub')?.value || 'HAN_HUB';
       const fb = document.getElementById('scanInboundFeedback');
-      fb.classList.remove('hidden');
+      if (fb) fb.classList.remove('hidden');
 
       try {
         const res = await fetch('/api/warehouse/scan-inbound', {
@@ -8346,27 +8354,32 @@
         });
         const d = await res.json();
         if (d.success) {
-          fb.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
-          fb.innerHTML = d.message;
-          document.getElementById('inpScanInbound').value = '';
+          if (fb) {
+            fb.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
+            fb.innerHTML = d.message;
+          }
+          const inp = document.getElementById('inpScanInbound');
+          if (inp) inp.value = '';
           loadAdminShipments();
         } else {
-          fb.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200';
-          fb.innerHTML = '❌ ' + d.message;
+          if (fb) {
+            fb.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200';
+            fb.innerHTML = '❌ ' + d.message;
+          }
         }
-      } catch (err) { fb.className = 'p-3 rounded-xl text-xs bg-rose-50 text-rose-800'; fb.textContent = err.message; }
+      } catch (err) { if (fb) { fb.className = 'p-3 rounded-xl text-xs bg-rose-50 text-rose-800'; fb.textContent = err.message; } }
     });
 
-    document.getElementById('formReweigh').addEventListener('submit', async (e) => {
+    document.getElementById('formReweigh')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const trackingNumber = document.getElementById('inpReweighTracking').value.trim();
-      const actualWeightKg = document.getElementById('inpReweighWeight').value;
-      const length = document.getElementById('inpReweighL').value || 0;
-      const width = document.getElementById('inpReweighW').value || 0;
-      const height = document.getElementById('inpReweighH').value || 0;
-      const hub = document.getElementById('selWarehouseHub').value;
+      const trackingNumber = document.getElementById('inpReweighTracking')?.value?.trim();
+      const actualWeightKg = document.getElementById('inpReweighWeight')?.value;
+      const length = document.getElementById('inpReweighL')?.value || 0;
+      const width = document.getElementById('inpReweighW')?.value || 0;
+      const height = document.getElementById('inpReweighH')?.value || 0;
+      const hub = document.getElementById('selWarehouseHub')?.value || 'HAN_HUB';
       const fb = document.getElementById('reweighFeedback');
-      fb.classList.remove('hidden');
+      if (fb) fb.classList.remove('hidden');
 
       try {
         const res = await fetch('/api/warehouse/reweigh', {
@@ -8376,17 +8389,21 @@
         });
         const d = await res.json();
         if (d.success) {
-          fb.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
-          fb.innerHTML = `✅ ${d.message}`;
+          if (fb) {
+            fb.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
+            fb.innerHTML = `✅ ${d.message}`;
+          }
           loadAdminShipments();
         } else {
-          fb.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200';
-          fb.innerHTML = '❌ ' + d.message;
+          if (fb) {
+            fb.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200';
+            fb.innerHTML = '❌ ' + d.message;
+          }
         }
-      } catch (err) { fb.textContent = err.message; }
+      } catch (err) { if (fb) fb.textContent = err.message; }
     });
 
-    document.getElementById('formAddBag').addEventListener('submit', async (e) => {
+    document.getElementById('formAddBag')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const carrier = document.getElementById('selBagCarrier').value;
       const dest = document.getElementById('inpBagDest').value.trim().toUpperCase();
@@ -8686,13 +8703,13 @@
       } catch (e) { console.error('Lỗi tải tài chính:', e); }
     }
 
-    document.getElementById('formTopupWallet').addEventListener('submit', async (e) => {
+    document.getElementById('formTopupWallet')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const userId = document.getElementById('selTopupUser').value;
-      const amount = document.getElementById('inpTopupAmount').value;
-      const note = document.getElementById('inpTopupNote').value;
+      const userId = document.getElementById('selTopupUser')?.value;
+      const amount = document.getElementById('inpTopupAmount')?.value;
+      const note = document.getElementById('inpTopupNote')?.value;
       const fb = document.getElementById('topupFeedback');
-      fb.classList.remove('hidden');
+      if (fb) fb.classList.remove('hidden');
 
       try {
         const res = await fetch('/api/finance/wallet/topup', {
@@ -9474,7 +9491,7 @@
       try {
         const res = await fetch('/api/finance/vendors/accounts');
         const d = await res.json();
-        if (d.success && d.data) {
+        if (d.success && Array.isArray(d.data)) {
           allVendorAccounts = d.data;
 
           // Cập nhật 4 thẻ KPI
@@ -9572,7 +9589,7 @@
         const res = await fetch(url);
         const d = await res.json();
         const tbody = document.getElementById('tblVendorDepositHistoryBody');
-        if (d.success && d.data && tbody) {
+        if (d.success && Array.isArray(d.data) && tbody) {
           allVendorDeposits = d.data;
           if (allVendorDeposits.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400 font-medium">Chưa có phiếu nạp tiền ký quỹ nào cho Hãng.</td></tr>';
