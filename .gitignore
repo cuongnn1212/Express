@@ -3,7 +3,6 @@ node_modules/
 .npm/
 
 # Build Output
-dist/
 tmp_export/
 
 # Uploads & Temporary files
