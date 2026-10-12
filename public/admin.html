@@ -1716,19 +1716,25 @@
               </p>
             </div>
 
-            <!-- Sub Tabs Switcher -->
-            <div class="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 text-xs font-bold">
-              <button type="button" onclick="switchReconTab('vendor')" id="btnReconTabVendor" class="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-black shadow-sm transition">
-                🏢 Gạch Nợ Nhà Cung Cấp / Hãng
-              </button>
-              <button type="button" onclick="switchReconTab('customer')" id="btnReconTabCustomer" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-bold transition">
-                🤝 Gạch Nợ Đại Lý / Trả Sau
-              </button>
-              <button type="button" onclick="switchReconTab('history')" id="btnReconTabHistory" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-bold transition">
-                📜 Lịch Sử Chứng Từ Quyết Toán
-              </button>
-              <button type="button" onclick="switchReconTab('vouchers')" id="btnReconTabVouchers" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-bold transition">
-                🧾 Sổ Quỹ &amp; Phiếu Thu
+            <!-- Sub Tabs Switcher & Actions -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 text-xs font-bold">
+                <button type="button" onclick="switchReconTab('vendor')" id="btnReconTabVendor" class="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-black shadow-sm transition">
+                  🏢 Gạch Nợ Nhà Cung Cấp / Hãng
+                </button>
+                <button type="button" onclick="switchReconTab('customer')" id="btnReconTabCustomer" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-bold transition">
+                  🤝 Gạch Nợ Đại Lý / Trả Sau
+                </button>
+                <button type="button" onclick="switchReconTab('history')" id="btnReconTabHistory" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-bold transition">
+                  📜 Lịch Sử Chứng Từ Quyết Toán
+                </button>
+                <button type="button" onclick="switchReconTab('vouchers')" id="btnReconTabVouchers" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 font-bold transition">
+                  🧾 Sổ Quỹ &amp; Phiếu Thu
+                </button>
+              </div>
+              <button type="button" onclick="openVendorDepositModal()" class="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-black text-xs transition shadow flex items-center space-x-1.5">
+                <i class="fa-solid fa-building-columns"></i>
+                <span>+ Ký Quỹ Hãng</span>
               </button>
             </div>
           </div>
@@ -2190,10 +2196,16 @@
               </h3>
               <p class="text-xs text-slate-500">Kiểm soát dòng tiền trả trước, nạp tiền ví đại lý và đối soát chênh lệch giá vốn - giá bán</p>
             </div>
-            <button onclick="loadFinanceData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition">
-              <i class="fa-solid fa-rotate-right"></i>
-              <span>Cập Nhật Báo Cáo</span>
-            </button>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="openVendorDepositModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow transition">
+                <i class="fa-solid fa-building-columns"></i>
+                <span>+ Lập Phiếu Ký Quỹ Hãng (NCC)</span>
+              </button>
+              <button onclick="loadFinanceData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Cập Nhật Báo Cáo</span>
+              </button>
+            </div>
           </div>
 
           <!-- 4 Card Tài chính KPI -->
@@ -4077,12 +4089,12 @@
             <span>Lập Phiếu Nạp Tiền Ký Quỹ Cho Hãng (Nhà Cung Cấp)</span>
           </h3>
         </div>
-        <button onclick="document.getElementById('modalVendorDeposit').classList.add('hidden')" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+        <button type="button" onclick="closeVendorDepositModal()" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <form id="formVendorDeposit" onsubmit="handleVendorDepositSubmit(event)" class="p-6 space-y-4 text-xs">
+      <form id="formVendorDeposit" class="p-6 space-y-4 text-xs">
         <div>
           <label class="block font-bold text-slate-700 mb-1">Nhà Cung Cấp / Hãng Vận Chuyển Nhận Ký Quỹ <span class="text-red-500">*</span></label>
           <select id="vDepVendorCode" required onchange="onVendorDepositChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
@@ -4099,7 +4111,7 @@
 
         <div>
           <label class="block font-bold text-slate-700 mb-1">Số Tiền PandaLex Nạp Ký Quỹ (VNĐ) <span class="text-red-500">*</span></label>
-          <input type="number" step="1000000" id="vDepAmount" required placeholder="VD: 100000000" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono font-black text-teal-700 text-sm">
+          <input type="number" step="any" min="1000" id="vDepAmount" required placeholder="VD: 100000000" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono font-black text-teal-700 text-sm">
           <div class="flex flex-wrap gap-1.5 mt-2">
             <button type="button" onclick="setVendorDepositAmount(50000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700">50 Tr</button>
             <button type="button" onclick="setVendorDepositAmount(100000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700">100 Tr</button>
@@ -4140,8 +4152,8 @@
         </div>
 
         <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
-          <button type="button" onclick="document.getElementById('modalVendorDeposit').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-slate-700">Hủy</button>
-          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 font-bold text-white rounded-xl shadow flex items-center space-x-1.5">
+          <button type="button" onclick="closeVendorDepositModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-slate-700">Hủy</button>
+          <button type="submit" id="btnSubmitVendorDeposit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 font-bold text-white rounded-xl shadow flex items-center space-x-1.5 transition">
             <i class="fa-solid fa-check-double"></i>
             <span>XÁC NHẬN NẠP KÝ QUỸ HÃNG</span>
           </button>
@@ -9601,19 +9613,40 @@
     }
 
     function openVendorDepositModal(vendorCode) {
+      const modal = document.getElementById('modalVendorDeposit');
+      if (!modal) return;
+      if (!allVendorAccounts || allVendorAccounts.length === 0) {
+        if (typeof loadCarrierPartnersData === 'function') {
+          loadCarrierPartnersData().catch(console.error);
+        }
+      }
       if (vendorCode) {
         const sel = document.getElementById('vDepVendorCode');
         if (sel) sel.value = vendorCode;
       }
       onVendorDepositChange();
-      document.getElementById('vDepAmount').value = 100000000;
-      document.getElementById('vDepReferenceCode').value = `UNC-VCB-${Math.floor(100000 + Math.random() * 900000)}`;
-      document.getElementById('modalVendorDeposit').classList.remove('hidden');
+      const amtEl = document.getElementById('vDepAmount');
+      if (amtEl && (!amtEl.value || parseFloat(amtEl.value) <= 0)) {
+        amtEl.value = 100000000;
+      }
+      const refEl = document.getElementById('vDepReferenceCode');
+      if (refEl && !refEl.value) {
+        refEl.value = `UNC-VCB-${Math.floor(100000 + Math.random() * 900000)}`;
+      }
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+
+    function closeVendorDepositModal() {
+      const modal = document.getElementById('modalVendorDeposit');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
     }
 
     function onVendorDepositChange() {
       const vCode = document.getElementById('vDepVendorCode')?.value;
-      const acc = allVendorAccounts.find(a => a.vendorCode === vCode);
+      const acc = (allVendorAccounts || []).find(a => a.vendorCode === vCode);
       const balEl = document.getElementById('vDepCurrentBalance');
       const limitEl = document.getElementById('vDepCreditLimitBadge');
       if (acc) {
@@ -9629,14 +9662,38 @@
       if (el) el.value = amt;
     }
 
-    async function handleVendorDepositSubmit(event) {
+    document.getElementById('formVendorDeposit')?.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const vendorCode = document.getElementById('vDepVendorCode').value;
-      const amount = parseFloat(document.getElementById('vDepAmount').value);
-      const paymentMethod = document.getElementById('vDepPaymentMethod').value;
-      const referenceCode = document.getElementById('vDepReferenceCode').value.trim();
-      const depositPurpose = document.getElementById('vDepPurpose').value;
-      const notes = document.getElementById('vDepNotes').value.trim();
+      const btn = document.getElementById('btnSubmitVendorDeposit');
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang nạp ký quỹ...';
+      }
+
+      const vendorCode = document.getElementById('vDepVendorCode')?.value;
+      const amountVal = document.getElementById('vDepAmount')?.value;
+      const amount = parseFloat(amountVal || '0');
+      const paymentMethod = document.getElementById('vDepPaymentMethod')?.value || 'Ủy nhiệm chi Vietcombank';
+      const referenceCode = document.getElementById('vDepReferenceCode')?.value?.trim() || '';
+      const depositPurpose = document.getElementById('vDepPurpose')?.value || 'Duy trì số dư ký quỹ tài khoản cước quốc tế';
+      const notes = document.getElementById('vDepNotes')?.value?.trim() || '';
+
+      if (!vendorCode) {
+        alert('⚠️ Vui lòng chọn Nhà Cung Cấp / Hãng bay!');
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+        return;
+      }
+      if (!amount || amount <= 0) {
+        alert('⚠️ Vui lòng nhập số tiền nạp ký quỹ hợp lệ (> 0 VNĐ)!');
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+        return;
+      }
+      if (!referenceCode) {
+        alert('⚠️ Vui lòng nhập số lệnh Ủy nhiệm chi / Mã giao dịch ngân hàng!');
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+        return;
+      }
 
       try {
         const res = await fetch('/api/finance/vendors/deposit', {
@@ -9654,16 +9711,30 @@
         });
         const d = await res.json();
         if (d.success) {
-          alert('✅ ' + d.message);
-          document.getElementById('modalVendorDeposit').classList.add('hidden');
+          alert('✅ ' + (d.message || 'Lập phiếu nạp tiền ký quỹ Hãng thành công!'));
+          closeVendorDepositModal();
           await loadCarrierPartnersData();
+          if (typeof loadFinanceData === 'function') {
+            loadFinanceData().catch(() => {});
+          }
         } else {
-          alert('❌ ' + d.message);
+          alert('❌ Lỗi: ' + (d.message || 'Không thể lập phiếu ký quỹ.'));
         }
       } catch (err) {
-        alert('Lỗi nạp ký quỹ: ' + err.message);
+        console.error('Lỗi khi nạp ký quỹ:', err);
+        alert('❌ Lỗi kết nối hệ thống: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
       }
-    }
+    });
+
+    window.openVendorDepositModal = openVendorDepositModal;
+    window.closeVendorDepositModal = closeVendorDepositModal;
+    window.setVendorDepositAmount = setVendorDepositAmount;
+    window.onVendorDepositChange = onVendorDepositChange;
 
     // ========================================================
     // 4.1. QUẢN LÝ KHÁCH HÀNG HỢP ĐỒNG
