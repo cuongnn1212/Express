@@ -2354,7 +2354,12 @@ app.put('/api/freight/sea/shipments/:id/status', (req, res) => {
   res.json({ success: true, message: `Đã cập nhật trạng thái lô hàng thành công: ${req.body.status}`, data: s });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 PandaLex Express Universal Gateway running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 PandaLex Express Universal Gateway running on http://localhost:${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  });
+}
+
+export default app;
+export { app };
