@@ -10,6 +10,8 @@ uploads/awb_pdfs/*
 !uploads/awb_pdfs/.gitkeep
 
 # Environment variables
+.env
+.env.*
 .env.local
 
 # OS generated files
