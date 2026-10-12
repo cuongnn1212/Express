@@ -1,3 +1,4 @@
+import { ROOT_DIR } from './bootstrap.js';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -81,37 +82,52 @@ const uploadStorage = multer.diskStorage({
 });
 const upload = multer({ storage: uploadStorage });
 
-// Khởi tạo Universal Pricing Engine & nạp cả 2 biểu cước thực tế ban đầu: UPS & FedEx
-const upsExcelPath = '/Users/macbookprom2pin100/Desktop/Logistic/QUOTATION 1.2026_ UPS.xlsx';
-const fedexExcelPath = '/Users/macbookprom2pin100/Desktop/Logistic/FEDEX EXP UPDATE 01 JUL 2026 - SELL.xlsx';
+// Biểu cước mặc định được đóng gói trong thư mục rates/ của dự án (không phụ thuộc máy tính cá nhân)
+const upsExcelPath = path.join(ROOT_DIR, 'rates', 'UPS_QUOTATION_2026.xlsx');
+const fedexExcelPath = path.join(ROOT_DIR, 'rates', 'FEDEX_SELL_JUL_2026.xlsx');
 
-console.log('📦 Đang nạp biểu cước UPS khởi điểm...');
-const upsRateTable = ExcelRateImporter.parseUpsRateFile(upsExcelPath);
-RateRegistryService.registerTable(upsRateTable, {
-  id: 'ups_default_2026',
-  carrier: 'UPS',
-  contractName: upsRateTable.contractName,
-  serviceName: upsRateTable.serviceName,
-  fileName: 'QUOTATION 1.2026_ UPS.xlsx',
-  filePath: upsExcelPath,
-  uploadedAt: new Date().toISOString(),
-  isActive: true
-});
+// Nạp an toàn: nếu thiếu/lỗi file biểu cước thì ghi log và tiếp tục chạy, không làm sập server
+function safeLoad<T>(label: string, loader: () => T): T | undefined {
+  try {
+    console.log(`📦 Đang nạp biểu cước ${label} khởi điểm...`);
+    return loader();
+  } catch (err: any) {
+    console.error(`⚠️ Không nạp được biểu cước ${label}: ${err?.message || err}. Có thể tải lên lại trong trang Admin.`);
+    return undefined;
+  }
+}
 
-console.log('📦 Đang nạp biểu cước FedEx khởi điểm...');
-const fedexRateTable = FedExRateImporter.parseFedExRateFile(fedexExcelPath, 'IP');
-RateRegistryService.registerTable(fedexRateTable, {
-  id: 'fedex_default_2026',
-  carrier: 'FEDEX',
-  contractName: fedexRateTable.contractName,
-  serviceName: fedexRateTable.serviceName,
-  fileName: 'FEDEX EXP UPDATE 01 JUL 2026 - SELL.xlsx',
-  filePath: fedexExcelPath,
-  uploadedAt: new Date().toISOString(),
-  isActive: true
-});
+const upsRateTable = safeLoad('UPS', () => ExcelRateImporter.parseUpsRateFile(upsExcelPath));
+if (upsRateTable) {
+  RateRegistryService.registerTable(upsRateTable, {
+    id: 'ups_default_2026',
+    carrier: 'UPS',
+    contractName: upsRateTable.contractName,
+    serviceName: upsRateTable.serviceName,
+    fileName: 'QUOTATION 1.2026_ UPS.xlsx',
+    filePath: upsExcelPath,
+    uploadedAt: new Date().toISOString(),
+    isActive: true
+  });
+}
 
-const universalEngine = new UniversalPricingEngine([upsRateTable, fedexRateTable]);
+const fedexRateTable = safeLoad('FedEx', () => FedExRateImporter.parseFedExRateFile(fedexExcelPath, 'IP'));
+if (fedexRateTable) {
+  RateRegistryService.registerTable(fedexRateTable, {
+    id: 'fedex_default_2026',
+    carrier: 'FEDEX',
+    contractName: fedexRateTable.contractName,
+    serviceName: fedexRateTable.serviceName,
+    fileName: 'FEDEX EXP UPDATE 01 JUL 2026 - SELL.xlsx',
+    filePath: fedexExcelPath,
+    uploadedAt: new Date().toISOString(),
+    isActive: true
+  });
+}
+
+const universalEngine = new UniversalPricingEngine(
+  [upsRateTable, fedexRateTable].filter((t): t is NonNullable<typeof t> => !!t)
+);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -539,8 +555,8 @@ app.get('/api/admin/stats', (req, res) => {
       activeRateTables: metas.filter(m => m.isActive).length,
       totalCustomers: CustomerPolicyService.getAll().length,
       supportedCountries: {
-        ups: Object.keys(upsRateTable.zones).length,
-        fedex: Object.keys(fedexRateTable.zones).length
+        ups: Object.keys(upsRateTable?.zones || {}).length,
+        fedex: Object.keys(fedexRateTable?.zones || {}).length
       },
       fuelSurcharge: SurchargeConfigService.get().fuelSurcharge
     }
