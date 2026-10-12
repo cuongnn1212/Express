@@ -6,8 +6,10 @@ import { CustomerService } from '../customer/customer-service.js';
 export class FinanceService {
     static txFile = path.join(process.cwd(), 'data', 'wallet_transactions.json');
     static voucherFile = path.join(process.cwd(), 'data', 'receipt_vouchers.json');
+    static vendorDepositFile = path.join(process.cwd(), 'data', 'vendor_deposits.json');
     static transactions = [];
     static vouchers = [];
+    static vendorDeposits = [];
     static init() {
         try {
             const dir = path.dirname(this.txFile);
@@ -61,6 +63,57 @@ export class FinanceService {
                 ];
                 this.persistVouchers();
             }
+            // Khởi tạo danh sách nạp tiền ký quỹ Nhà Cung Cấp (PandaLex nạp vào Hãng)
+            if (fs.existsSync(this.vendorDepositFile)) {
+                this.vendorDeposits = JSON.parse(fs.readFileSync(this.vendorDepositFile, 'utf-8'));
+            }
+            else {
+                this.vendorDeposits = [
+                    {
+                        id: 'vd_init_ups',
+                        depositCode: 'VD-20261001-0001',
+                        vendorCode: 'UPS',
+                        vendorName: 'UPS Express Worldwide',
+                        amount: 200000000,
+                        paymentMethod: 'Ủy nhiệm chi Vietcombank',
+                        referenceCode: 'UNC-VCB-992182',
+                        depositPurpose: 'PandaLex nạp ký quỹ duy trì tài khoản cước UPS đầu tháng 10/2026',
+                        balanceAfter: 200000000,
+                        operator: 'ketoan',
+                        createdAt: '2026-10-01T08:30:00.000Z',
+                        notes: 'Hợp đồng PDL-UPS-849102'
+                    },
+                    {
+                        id: 'vd_init_fdx',
+                        depositCode: 'VD-20261001-0002',
+                        vendorCode: 'FEDEX',
+                        vendorName: 'FedEx Express',
+                        amount: 150000000,
+                        paymentMethod: 'Ủy nhiệm chi Techcombank',
+                        referenceCode: 'UNC-TCB-551029',
+                        depositPurpose: 'PandaLex nạp ký quỹ cước bay FedEx International Priority',
+                        balanceAfter: 150000000,
+                        operator: 'ketoan',
+                        createdAt: '2026-10-02T09:15:00.000Z',
+                        notes: 'Hợp đồng PDL-FDX-774201'
+                    },
+                    {
+                        id: 'vd_init_dhl',
+                        depositCode: 'VD-20261001-0003',
+                        vendorCode: 'DHL',
+                        vendorName: 'DHL Express',
+                        amount: 100000000,
+                        paymentMethod: 'Ủy nhiệm chi Vietcombank',
+                        referenceCode: 'UNC-VCB-331049',
+                        depositPurpose: 'PandaLex nạp ký quỹ duy trì code DHL Express',
+                        balanceAfter: 100000000,
+                        operator: 'ketoan',
+                        createdAt: '2026-10-03T10:00:00.000Z',
+                        notes: 'Hợp đồng PDL-DHL-552190'
+                    }
+                ];
+                this.persistVendorDeposits();
+            }
         }
         catch (e) {
             console.error('Lỗi khởi tạo FinanceService:', e);
@@ -71,6 +124,212 @@ export class FinanceService {
     }
     static persistVouchers() {
         fs.writeFileSync(this.voucherFile, JSON.stringify(this.vouchers, null, 2), 'utf-8');
+    }
+    static persistVendorDeposits() {
+        fs.writeFileSync(this.vendorDepositFile, JSON.stringify(this.vendorDeposits, null, 2), 'utf-8');
+    }
+    // =========================================================================
+    // 🏢 PHÂN HỆ 1: NHÀ CUNG CẤP (NCC / CARRIERS - UPS, FEDEX, DHL...)
+    // Đơn vị cung cấp giá gốc (Cost). PandaLex nạp tiền ký quỹ để cùng theo dõi với Hãng.
+    // =========================================================================
+    /**
+     * Lấy danh sách tài khoản Nhà Cung Cấp kèm số dư ký quỹ thời gian thực
+     */
+    static getVendorAccounts() {
+        const allShipments = ShipmentRepository.getAll();
+        const vendorsConfig = [
+            {
+                code: 'UPS',
+                name: 'UPS Express Worldwide',
+                contract: 'PDL-UPS-849102',
+                accountNumber: 'A849102',
+                serviceType: 'UPS Express Saver / Expedited',
+                creditLimit: 500000000,
+                creditTermDays: 30,
+                safeThreshold: 50000000
+            },
+            {
+                code: 'FEDEX',
+                name: 'FedEx Express',
+                contract: 'PDL-FDX-774201',
+                accountNumber: 'FX774201',
+                serviceType: 'FedEx International Priority / Economy',
+                creditLimit: 400000000,
+                creditTermDays: 30,
+                safeThreshold: 40000000
+            },
+            {
+                code: 'DHL',
+                name: 'DHL Express',
+                contract: 'PDL-DHL-552190',
+                accountNumber: 'DH552190',
+                serviceType: 'DHL Express Worldwide',
+                creditLimit: 300000000,
+                creditTermDays: 30,
+                safeThreshold: 30000000
+            },
+            {
+                code: 'SF_EXPRESS',
+                name: 'SF Express International',
+                contract: 'PDL-SF-119283',
+                accountNumber: 'SF119283',
+                serviceType: 'SF International Standard',
+                creditLimit: 200000000,
+                creditTermDays: 15,
+                safeThreshold: 20000000
+            }
+        ];
+        return vendorsConfig.map(cfg => {
+            // 1. Tổng tiền PandaLex đã nạp ký quỹ cho Hãng
+            const deposits = this.vendorDeposits.filter(d => d.vendorCode.toUpperCase() === cfg.code);
+            const totalDeposited = deposits.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+            const lastDeposit = deposits[0];
+            // 2. Tổng chi phí cước gốc (Cost) phát sinh thực tế từ các đơn xuất qua Hãng
+            let totalCostIncurred = 0;
+            let settledAmount = 0;
+            allShipments.forEach(s => {
+                const isDispatched = s.status === 'OUTBOUND_DISPATCHED' || s.status === 'DELIVERED';
+                if (!isDispatched)
+                    return;
+                const carrierCode = (s.carrier || 'UPS').toUpperCase();
+                if (carrierCode === cfg.code) {
+                    const cost = Number(s.costPrice) || Math.round((s.sellPrice || 0) * 0.75);
+                    totalCostIncurred += cost;
+                    if (s.vendorSettled) {
+                        settledAmount += cost;
+                    }
+                }
+            });
+            // Số dư ký quỹ khả dụng hiện tại với Hãng = Tiền nạp - (Cost đã bay - Cost đã quyết toán gạch nợ)
+            const unsettledCost = Math.max(0, totalCostIncurred - settledAmount);
+            const availableDeposit = Math.max(0, totalDeposited - unsettledCost);
+            const isDepositLow = availableDeposit < cfg.safeThreshold;
+            return {
+                vendorCode: cfg.code,
+                vendorName: cfg.name,
+                contractCode: cfg.contract,
+                accountNumber: cfg.accountNumber,
+                serviceType: cfg.serviceType,
+                creditLimit: cfg.creditLimit,
+                creditTermDays: cfg.creditTermDays,
+                totalDeposited,
+                totalCostIncurred,
+                settledAmount,
+                availableDeposit,
+                safeDepositThreshold: cfg.safeThreshold,
+                isDepositLow,
+                lastDepositAt: lastDeposit?.createdAt
+            };
+        });
+    }
+    /**
+     * Ghi nhận phiếu PandaLex nạp tiền ký quỹ vào Nhà Cung Cấp (Hãng)
+     */
+    static recordVendorDeposit(params) {
+        if (!params.vendorCode)
+            return { success: false, message: 'Thiếu mã Nhà Cung Cấp / Hãng' };
+        if (!params.amount || params.amount <= 0)
+            return { success: false, message: 'Số tiền nạp ký quỹ phải lớn hơn 0' };
+        const vendorUpper = params.vendorCode.toUpperCase();
+        const vendorNames = {
+            'UPS': 'UPS Express Worldwide',
+            'FEDEX': 'FedEx Express',
+            'DHL': 'DHL Express',
+            'SF_EXPRESS': 'SF Express International'
+        };
+        const vName = vendorNames[vendorUpper] || `Nhà cung cấp ${vendorUpper}`;
+        // Tính số dư khả dụng mới
+        const currentAccounts = this.getVendorAccounts();
+        const currentAcc = currentAccounts.find(a => a.vendorCode === vendorUpper);
+        const balanceAfter = (currentAcc?.availableDeposit || 0) + params.amount;
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        const depositCode = `VD-${dateStr}-${randomSuffix}`;
+        const tx = {
+            id: `vd_${Date.now()}`,
+            depositCode,
+            vendorCode: vendorUpper,
+            vendorName: vName,
+            amount: params.amount,
+            paymentMethod: params.paymentMethod || 'Ủy nhiệm chi ngân hàng',
+            referenceCode: params.referenceCode || `UNC-${Date.now().toString().slice(-6)}`,
+            depositPurpose: params.depositPurpose || `PandaLex nạp ký quỹ cước Hãng ${vName}`,
+            balanceAfter,
+            operator: params.operator,
+            createdAt: now.toISOString(),
+            notes: params.notes
+        };
+        this.vendorDeposits.unshift(tx);
+        this.persistVendorDeposits();
+        AuthService.logAction({
+            userId: params.operator,
+            username: params.operator,
+            userRole: 'ACCOUNTANT',
+            action: 'RECORD_VENDOR_DEPOSIT',
+            targetId: depositCode,
+            details: `Đã nạp ký quỹ ${params.amount.toLocaleString('vi-VN')} đ cho NCC ${vName} (Số UNC: ${tx.referenceCode})`
+        });
+        return {
+            success: true,
+            message: `✅ Đã ghi nhận nạp ký quỹ ${params.amount.toLocaleString('vi-VN')} đ cho ${vName}! Mã phiếu: ${depositCode}`,
+            tx
+        };
+    }
+    /**
+     * Lấy lịch sử nạp tiền ký quỹ Nhà Cung Cấp
+     */
+    static getVendorDepositHistory(vendorCode) {
+        if (vendorCode && vendorCode !== 'ALL') {
+            return this.vendorDeposits.filter(d => d.vendorCode.toUpperCase() === vendorCode.toUpperCase());
+        }
+        return [...this.vendorDeposits];
+    }
+    // =========================================================================
+    // 🤝 PHÂN HỆ 2: ĐẠI LÝ (AGENTS / CLIENTS)
+    // Khách hàng mua dịch vụ từ PandaLex. Đại lý nạp tiền (Top-up) vào ví để TRỪ DẦN.
+    // =========================================================================
+    /**
+     * Lấy danh sách ví Đại lý kèm số dư Top-Up và cảnh báo cạn ví
+     */
+    static getAgentWalletSummaries() {
+        const allCustomers = CustomerService.getAll();
+        const allShipments = ShipmentRepository.getAll();
+        // Lọc các khách hàng là Đại lý hoặc dùng ví trả trước
+        const agentList = allCustomers.filter(c => c.customerType === 'AGENT' ||
+            c.customerType === 'VIP' ||
+            c.financialCategory === 'PREPAID_WALLET' ||
+            (c.walletBalance && c.walletBalance > 0));
+        return agentList.map(cust => {
+            // Tính tổng tiền nạp và tổng tiền đã trừ theo bill
+            const custTxs = this.transactions.filter(t => t.customerCode === cust.customerCode);
+            const totalTopup = custTxs
+                .filter(t => t.type === 'TOPUP')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+            const totalDeducted = custTxs
+                .filter(t => t.type === 'DEDUCT_SHIPMENT')
+                .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+            const custShipments = allShipments.filter(s => s.customerCode === cust.customerCode);
+            const safeThreshold = 5000000; // Ngưỡng an toàn 5.000.000 VNĐ
+            const balance = cust.walletBalance || 0;
+            const isLow = balance < safeThreshold;
+            const lastTopup = custTxs.find(t => t.type === 'TOPUP');
+            return {
+                customerCode: cust.customerCode,
+                customerName: cust.customerName,
+                representative: cust.representative,
+                phone: cust.phone,
+                customerType: cust.customerType,
+                walletBalance: balance,
+                creditLimit: cust.creditLimit || 0,
+                totalTopupAmount: totalTopup,
+                totalDeductedAmount: totalDeducted,
+                shipmentCount: custShipments.length,
+                safeWalletThreshold: safeThreshold,
+                isWalletLow: isLow,
+                lastTopupAt: lastTopup?.createdAt
+            };
+        });
     }
     /**
      * 1. Nạp tiền ví đại lý (Kế toán thao tác)

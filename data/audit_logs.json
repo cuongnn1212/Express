@@ -1,5 +1,15 @@
 [
   {
+    "id": "log_1791798353415_745",
+    "timestamp": "2026-10-12T09:45:53.415Z",
+    "userId": "ketoan",
+    "username": "ketoan",
+    "userRole": "ACCOUNTANT",
+    "action": "RECORD_VENDOR_DEPOSIT",
+    "targetId": "VD-20261012-9511",
+    "details": "Đã nạp ký quỹ 50.000.000 đ cho NCC SF Express International (Số UNC: UNC-VCB-772911)"
+  },
+  {
     "id": "log_1791795687413_745",
     "timestamp": "2026-10-12T09:01:27.413Z",
     "userId": "usr_admin",

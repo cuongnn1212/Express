@@ -2389,6 +2389,82 @@ app.post('/api/finance/wallet/topup', (req, res) => {
   res.json(result);
 });
 
+// 🏢 PHÂN HỆ 1: NHÀ CUNG CẤP (NCC / CARRIER PARTNERS - UPS, FEDEX, DHL, SF EXPRESS)
+// 1.1 Danh sách tài khoản NCC kèm số dư Ký Quỹ và cước gốc phát sinh
+app.get('/api/finance/vendors/accounts', (req, res) => {
+  try {
+    const data = FinanceService.getVendorAccounts();
+    res.json({ success: true, count: data.length, data });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 1.2 PandaLex nạp tiền Ký Quỹ vào Nhà Cung Cấp (Vendor Deposit) để cùng theo dõi với Hãng
+app.post('/api/finance/vendors/deposit', (req, res) => {
+  try {
+    const { vendorCode, amount, paymentMethod, referenceCode, depositPurpose, notes, operator } = req.body;
+    if (!vendorCode || !amount) {
+      return res.status(400).json({ success: false, message: 'Thiếu mã Nhà Cung Cấp hoặc số tiền ký quỹ' });
+    }
+    const result = FinanceService.recordVendorDeposit({
+      vendorCode,
+      amount: parseFloat(amount),
+      paymentMethod,
+      referenceCode,
+      depositPurpose,
+      notes,
+      operator: operator || 'ketoan'
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 1.3 Lịch sử nạp tiền Ký Quỹ Nhà Cung Cấp
+app.get('/api/finance/vendors/deposit-history', (req, res) => {
+  try {
+    const vendor = req.query.vendor as string | undefined;
+    const data = FinanceService.getVendorDepositHistory(vendor);
+    res.json({ success: true, count: data.length, data });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 🤝 PHÂN HỆ 2: ĐẠI LÝ (AGENTS / DOWNSTREAM CLIENTS)
+// 2.1 Danh sách ví Đại Lý: số dư ví, tổng Top-up, tổng trừ dần theo AWB, cảnh báo cạn ví
+app.get('/api/finance/agents/wallets', (req, res) => {
+  try {
+    const data = FinanceService.getAgentWalletSummaries();
+    res.json({ success: true, count: data.length, data });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 2.2 Đại Lý nạp tiền vào ví (TOP-UP) để TRỪ DẦN cước vận đơn khi bay
+app.post('/api/finance/agents/topup', (req, res) => {
+  try {
+    const { customerCode, amount, paymentMethod, reference, note, operator } = req.body;
+    if (!customerCode || !amount) {
+      return res.status(400).json({ success: false, message: 'Thiếu mã Đại Lý hoặc số tiền Top-up' });
+    }
+    const result = FinanceService.recordCustomerTopup(
+      customerCode,
+      parseFloat(amount),
+      paymentMethod || 'Chuyển khoản VCB',
+      reference || '',
+      note || '',
+      operator || 'ketoan'
+    );
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // 4. Lập Phiếu Thu Tiền (Receipt Voucher) - Kế toán chọn kênh thanh toán & phát hành phiếu thu
 app.post('/api/finance/receipt-vouchers', (req, res) => {
   try {

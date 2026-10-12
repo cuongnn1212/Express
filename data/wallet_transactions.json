@@ -1,5 +1,19 @@
 [
   {
+    "id": "tx_1791798365344",
+    "userId": "usr_agent_annam",
+    "username": "daily_annam",
+    "customerCode": "AG-002",
+    "type": "TOPUP",
+    "amount": 10000000,
+    "balanceAfter": 25500000,
+    "paymentMethod": "Chuyển khoản Vietcombank",
+    "reference": "FT2610129988",
+    "note": "Top-up ví đại lý An Nam để trừ dần cước bay",
+    "createdAt": "2026-10-12T09:46:05.344Z",
+    "createdBy": "ketoan"
+  },
+  {
     "id": "tx_1791634473646",
     "userId": "usr_agent_crossborder",
     "username": "fba_seller",

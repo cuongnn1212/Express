@@ -198,7 +198,7 @@
             </button>
             <button id="menuCarrierPartners" onclick="switchAdminSection('carrierPartners')" class="w-full flex items-center space-x-2.5 px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition text-xs text-left">
               <i class="fa-solid fa-truck-plane w-4 text-center text-teal-400 text-xs"></i>
-              <span>3.4 Quản Lý Đối Tác Hãng Cước</span>
+              <span>3.4 Nhà Cung Cấp & Sổ Ký Quỹ Hãng</span>
             </button>
             <button id="menuFinance" onclick="switchAdminSection('finance')" class="w-full flex items-center space-x-2.5 px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition text-xs text-left">
               <i class="fa-solid fa-file-invoice-dollar w-4 text-center text-emerald-400 text-xs"></i>
@@ -206,11 +206,11 @@
             </button>
             <button id="menuWalletTopup" onclick="switchAdminSection('walletTopup')" class="w-full flex items-center space-x-2.5 px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition text-xs text-left">
               <i class="fa-solid fa-money-bill-transfer w-4 text-center text-indigo-400 text-xs"></i>
-              <span>3.6 Quản Lý Ví & Nạp Ký Quỹ</span>
+              <span>3.6 Quản Lý Top-Up Ví Đại Lý</span>
             </button>
             <button id="menuReconciliation" onclick="switchAdminSection('reconciliation')" class="w-full flex items-center space-x-2.5 px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition text-xs text-left">
               <i class="fa-solid fa-receipt w-4 text-center text-rose-400 text-xs"></i>
-              <span>3.7 Đối Soát & Gạch Nợ (NCC & Đại Lý)</span>
+              <span>3.7 Đối Soát Hai Chiều (AR vs AP)</span>
             </button>
           </div>
         </div>
@@ -969,29 +969,31 @@
           </div>
         </section>
 
-        <!-- SECTION 2.5: PHÂN HỆ NẠP TIỀN & QUẢN LÝ VÍ KHÁCH HÀNG (WALLET TOP-UP & DEPOSIT) -->
+        <!-- SECTION 3.6: QUẢN LÝ TOP-UP VÍ ĐẠI LÝ (AGENT TOP-UP & TRỪ DẦN CƯỚC) -->
         <section id="secWalletTopup" class="space-y-6 hidden">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div class="flex items-center space-x-2">
-                <span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">Phân Hệ 2.5</span>
-                <h3 class="text-lg font-black text-slate-900">Phân Hệ Nạp Tiền &amp; Quản Lý Ví Trả Trước (Top-Up)</h3>
+                <span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">Phân Hệ 3.6</span>
+                <h3 class="text-lg font-black text-slate-900">3.6 Quản Lý Top-Up Ví Đại Lý (Agent Top-Up &amp; Trừ Dần Cước)</h3>
               </div>
-              <p class="text-xs text-slate-500 mt-0.5">Tiếp nhận ký quỹ trả trước, ghi nhận phiếu thu nạp ví và đối soát khấu trừ tiền cước vận đơn tự động</p>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Đại lý là khách hàng sử dụng dịch vụ của PandaLex. Đại lý nạp tiền (<strong>Top-Up</strong>) vào ví để hệ thống tự động <strong>trừ dần</strong> cước từng vận đơn AWB khi xuất kho.
+              </p>
             </div>
             <button onclick="openTopupModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow transition">
               <i class="fa-solid fa-plus"></i>
-              <span>+ LẬP PHIẾU NẠP TIỀN VÍ MỚI</span>
+              <span>+ LẬP PHIẾU TOP-UP VÍ ĐẠI LÝ</span>
             </button>
           </div>
 
-          <!-- 3 Thẻ thống kê tài chính ví -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- 4 Thẻ thống kê tài chính ví Đại Lý -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng Số Dư Ví Ký Quỹ</p>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng Số Dư Ví Đại Lý</p>
                 <h3 id="statTotalWalletBalance" class="text-2xl font-black text-emerald-600 mt-1">0 đ</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Đang lưu giữ của khách</p>
+                <p class="text-[11px] text-slate-500 mt-1">Khả dụng để trừ cước bill</p>
               </div>
               <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl">
                 <i class="fa-solid fa-wallet"></i>
@@ -1000,38 +1002,91 @@
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Khách Dùng Ví Trả Trước</p>
-                <h3 id="statPrepaidCustomerCount" class="text-2xl font-black text-blue-600 mt-1">0</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Tài khoản trả trước active</p>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng Tiền Đã Top-Up</p>
+                <h3 id="statTotalAgentTopup" class="text-2xl font-black text-blue-600 mt-1">0 đ</h3>
+                <p class="text-[11px] text-slate-500 mt-1">Tích lũy Đại lý đã nạp</p>
               </div>
               <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
-                <i class="fa-solid fa-user-check"></i>
+                <i class="fa-solid fa-arrow-down-to-bracket"></i>
               </div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng Lượt Giao Dịch Ví</p>
-                <h3 id="statWalletTxCount" class="text-2xl font-black text-purple-600 mt-1">0</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Nạp tiền & Khấu trừ cước</p>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng Cước Đã Trừ Dần</p>
+                <h3 id="statTotalAgentDeducted" class="text-2xl font-black text-rose-600 mt-1">0 đ</h3>
+                <p class="text-[11px] text-slate-500 mt-1">Khấu trừ theo từng AWB</p>
               </div>
-              <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-xl">
+              <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-xl">
                 <i class="fa-solid fa-receipt"></i>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Cảnh Báo Cạn Ví (&lt; 5 Tr)</p>
+                <h3 id="statLowWalletCount" class="text-2xl font-black text-amber-600 mt-1">0 Đại Lý</h3>
+                <p class="text-[11px] text-amber-700 font-bold mt-1">Cần nhắc Top-up thêm</p>
+              </div>
+              <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
               </div>
             </div>
           </div>
 
-          <!-- Lịch sử giao dịch ví -->
+          <!-- BẢNG 1: DANH SÁCH ĐẠI LÝ & SỐ DƯ VÍ TOP-UP -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50">
-              <h4 class="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
-                <i class="fa-solid fa-list-check text-emerald-600"></i>
-                <span>Sổ Nhật Ký Biến Động Ví &amp; Lịch Sử Nạp Tiền (Audit Log)</span>
-              </h4>
+              <div>
+                <h4 class="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                  <i class="fa-solid fa-users text-emerald-600"></i>
+                  <span>Danh Sách Đại Lý &amp; Số Dư Ví Trả Trước (Agent Wallets Summary)</span>
+                </h4>
+                <p class="text-[11px] text-slate-500">Quản lý số dư, theo dõi mức tiêu hao cước và thực hiện Top-Up bổ sung khi số dư dưới ngưỡng</p>
+              </div>
+              <button onclick="loadAgentWalletsTable()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Tải Lại Bảng Đại Lý</span>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200 tracking-wider">
+                  <tr>
+                    <th class="px-4 py-3">Mã Đại Lý</th>
+                    <th class="px-4 py-3">Tên Đại Lý / Doanh Nghiệp</th>
+                    <th class="px-4 py-3">Đại Diện &amp; Liên Hệ</th>
+                    <th class="px-4 py-3 text-right">Số Dư Ví Hiện Tại</th>
+                    <th class="px-4 py-3 text-right">Tổng Top-Up Đã Nạp</th>
+                    <th class="px-4 py-3 text-right">Đã Trừ Theo Bill</th>
+                    <th class="px-4 py-3 text-center">Đơn Đã Bay</th>
+                    <th class="px-4 py-3 text-center">Trạng Thái Ví</th>
+                    <th class="px-4 py-3 text-center">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody id="tblAgentWalletsBody" class="divide-y divide-slate-100 font-medium">
+                  <tr>
+                    <td colspan="9" class="text-center py-8 text-slate-400">Đang tải danh sách ví đại lý...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- BẢNG 2: SỔ NHẬT KÝ BIẾN ĐỘNG VÍ ĐẠI LÝ -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50">
+              <div>
+                <h4 class="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                  <i class="fa-solid fa-list-check text-indigo-600"></i>
+                  <span>Sổ Nhật Ký Biến Động Ví (Audit Log: Top-Up Nạp Vào vs Khấu Trừ Vận Đơn)</span>
+                </h4>
+                <p class="text-[11px] text-slate-500">Chi tiết từng giao dịch Top-Up và từng lần trừ cước theo mã vận đơn AWB của Đại lý</p>
+              </div>
               <div class="flex items-center space-x-2">
-                <button onclick="loadWalletTransactions()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 flex items-center space-x-1.5">
+                <button onclick="loadWalletTransactions()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 flex items-center space-x-1.5 shadow-sm">
                   <i class="fa-solid fa-rotate-right"></i>
-                  <span>Làm mới</span>
+                  <span>Làm mới nhật ký</span>
                 </button>
               </div>
             </div>
@@ -1041,12 +1096,12 @@
                   <tr>
                     <th class="px-4 py-3">Thời Gian</th>
                     <th class="px-4 py-3">Mã GD</th>
-                    <th class="px-4 py-3">Khách Hàng (Mã KH)</th>
+                    <th class="px-4 py-3">Đại Lý (Mã ĐL)</th>
                     <th class="px-4 py-3">Loại Biến Động</th>
-                    <th class="px-4 py-3">Số Tiền (VNĐ)</th>
-                    <th class="px-4 py-3">Số Dư Sau GD</th>
+                    <th class="px-4 py-3 text-right">Số Tiền (VNĐ)</th>
+                    <th class="px-4 py-3 text-right">Số Dư Sau GD</th>
                     <th class="px-4 py-3">Phương Thức &amp; Tham Chiếu</th>
-                    <th class="px-4 py-3">Nội Dung / Ghi Chú</th>
+                    <th class="px-4 py-3">Nội Dung / Vận Đơn AWB</th>
                     <th class="px-4 py-3">Người Thao Tác</th>
                   </tr>
                 </thead>
@@ -2810,158 +2865,160 @@
         </section>
 
         <!-- ============================================== -->
-        <!-- 💰 PHẦN 3.4: QUẢN LÝ ĐỐI TÁC HÃNG CƯỚC -->
+        <!-- 💰 PHẦN 3.4: NHÀ CUNG CẤP & SỔ KÝ QUỸ HÃNG -->
         <!-- ============================================== -->
         <section id="secCarrierPartners" class="space-y-6 hidden">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h3 class="text-lg font-black text-slate-900 flex items-center space-x-2">
-                <i class="fa-solid fa-truck-plane text-teal-500"></i>
-                <span>3.4 Quản Lý Đối Tác Hãng Cước & Nhà Vận Chuyển Quốc Tế</span>
-              </h3>
-              <p class="text-xs text-slate-500">Tài khoản hợp đồng trực tiếp (Direct Carrier Accounts: UPS, FedEx, DHL, Direct Line)</p>
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 rounded-lg bg-teal-100 text-teal-800 text-[10px] font-black uppercase tracking-wider">Phân Hệ 3.4</span>
+                <h3 class="text-lg font-black text-slate-900 flex items-center space-x-2">
+                  <i class="fa-solid fa-truck-plane text-teal-500"></i>
+                  <span>3.4 Nhà Cung Cấp &amp; Sổ Ký Quỹ Hãng (Vendor Deposit &amp; Cost Tracking)</span>
+                </h3>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Nhà Cung Cấp (<strong>UPS, FedEx, DHL, SF Express</strong>) là bên cung cấp <strong>Giá Gốc (Cost / Giá Code)</strong>. PandaLex nạp tiền <strong>Ký Quỹ (Vendor Deposit)</strong> vào tài khoản Hãng để cùng theo dõi số dư &amp; đối soát cước bay.
+              </p>
             </div>
-            <span class="text-xs bg-teal-50 text-teal-700 border border-teal-200 font-bold px-3 py-1.5 rounded-xl">
-              Tier 4 VIP Discount Hãng
-            </span>
+            <div class="flex items-center space-x-2">
+              <button onclick="openVendorDepositModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow transition">
+                <i class="fa-solid fa-plus"></i>
+                <span>+ LẬP PHIẾU NẠP KÝ QUỸ HÃNG</span>
+              </button>
+            </div>
           </div>
 
-          <!-- 4 Thẻ Đối tác Hãng Cước -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- UPS Card -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 hover:shadow-md transition">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-12 h-12 rounded-xl bg-amber-900/10 border border-amber-900/20 flex items-center justify-center font-black text-amber-900 text-lg">
-                    UPS
-                  </div>
-                  <div>
-                    <h4 class="font-extrabold text-sm text-slate-900">UPS Express Worldwide</h4>
-                    <p class="text-[11px] text-slate-500 font-mono">Mã HĐ: PDL-UPS-849102 (Hạng Tier 4)</p>
-                  </div>
-                </div>
-                <span class="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">KẾT NỐI API TRỰC TIẾP</span>
+          <!-- 4 Thẻ Thống Kê Ký Quỹ & Cước Hãng -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng Đã Nạp Ký Quỹ Hãng</p>
+                <h3 id="statVendorTotalDeposited" class="text-2xl font-black text-teal-600 mt-1">0 đ</h3>
+                <p class="text-[11px] text-slate-500 mt-1">PandaLex nạp vào các Hãng</p>
               </div>
-              <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl text-xs">
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Chiết khấu Hãng</span>
-                  <span class="font-extrabold text-amber-700">62.5% Off Published</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Hạn mức Tín dụng</span>
-                  <span class="font-extrabold text-slate-800">500.000.000 đ</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Chu kỳ công nợ</span>
-                  <span class="font-extrabold text-slate-800">30 Ngày (Net 30)</span>
-                </div>
-              </div>
-              <div class="text-[11px] text-slate-600 flex items-center justify-between border-t border-slate-100 pt-3">
-                <span>Dịch vụ chính: <strong>UPS Express Saver, Expedited</strong></span>
-                <span class="text-emerald-600 font-bold">Cổng bay: SGN / HAN</span>
+              <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-building-columns"></i>
               </div>
             </div>
 
-            <!-- FedEx Card -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 hover:shadow-md transition">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-12 h-12 rounded-xl bg-purple-900/10 border border-purple-900/20 flex items-center justify-center font-black text-purple-900 text-lg">
-                    FDX
-                  </div>
-                  <div>
-                    <h4 class="font-extrabold text-sm text-slate-900">FedEx CrossBorder / IP & IE</h4>
-                    <p class="text-[11px] text-slate-500 font-mono">Mã HĐ: FDX-VN-339182 (Hạng Tier 3)</p>
-                  </div>
-                </div>
-                <span class="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">KẾT NỐI API TRỰC TIẾP</span>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng Cước Gốc Đã Bay (Cost)</p>
+                <h3 id="statVendorTotalCost" class="text-2xl font-black text-slate-800 mt-1">0 đ</h3>
+                <p class="text-[11px] text-slate-500 mt-1">Cước vốn phát sinh thực tế</p>
               </div>
-              <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl text-xs">
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Chiết khấu Hãng</span>
-                  <span class="font-extrabold text-purple-700">58.0% Off Published</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Hạn mức Tín dụng</span>
-                  <span class="font-extrabold text-slate-800">400.000.000 đ</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Chu kỳ công nợ</span>
-                  <span class="font-extrabold text-slate-800">30 Ngày (Net 30)</span>
-                </div>
-              </div>
-              <div class="text-[11px] text-slate-600 flex items-center justify-between border-t border-slate-100 pt-3">
-                <span>Dịch vụ chính: <strong>FedEx International Priority (IP), Economy (IE)</strong></span>
-                <span class="text-purple-600 font-bold">Cổng bay: SGN / HAN</span>
+              <div class="w-12 h-12 bg-slate-100 text-slate-700 rounded-2xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-plane-departure"></i>
               </div>
             </div>
 
-            <!-- DHL Express Card -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 hover:shadow-md transition">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center font-black text-yellow-600 text-lg">
-                    DHL
-                  </div>
-                  <div>
-                    <h4 class="font-extrabold text-sm text-slate-900">DHL Express (Tùy chọn)</h4>
-                    <p class="text-[11px] text-slate-500 font-mono">Mã HĐ: DHL-VN-962011</p>
-                  </div>
-                </div>
-                <span class="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">KẾT NỐI TÍCH HỢP</span>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Số Dư Ký Quỹ Khả Dụng</p>
+                <h3 id="statVendorAvailableDeposit" class="text-2xl font-black text-emerald-600 mt-1">0 đ</h3>
+                <p class="text-[11px] text-slate-500 mt-1">Số dư cọc an toàn tại Hãng</p>
               </div>
-              <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl text-xs">
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Chiết khấu Hãng</span>
-                  <span class="font-extrabold text-yellow-700">55.0% Off Published</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Hạn mức Tín dụng</span>
-                  <span class="font-extrabold text-slate-800">300.000.000 đ</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Chu kỳ công nợ</span>
-                  <span class="font-extrabold text-slate-800">15 Ngày (Net 15)</span>
-                </div>
-              </div>
-              <div class="text-[11px] text-slate-600 flex items-center justify-between border-t border-slate-100 pt-3">
-                <span>Dịch vụ chính: <strong>DHL Express Worldwide</strong></span>
-                <span class="text-yellow-600 font-bold">Cổng bay: SGN / HAN</span>
+              <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-shield-halved"></i>
               </div>
             </div>
 
-            <!-- Direct Line Chuyên Tuyến Card -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 hover:shadow-md transition">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center font-black text-sky-600 text-lg">
-                    DIR
-                  </div>
-                  <div>
-                    <h4 class="font-extrabold text-sm text-slate-900">Chuyên Tuyến Direct Line (US/AU/CA)</h4>
-                    <p class="text-[11px] text-slate-500 font-mono">Bao tải hàng không bay thẳng định kỳ</p>
-                  </div>
-                </div>
-                <span class="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">BAO CHUYẾN RIÊNG</span>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Cảnh Báo Cạn Cọc Hãng</p>
+                <h3 id="statVendorLowCount" class="text-2xl font-black text-amber-600 mt-1">0 Tài Khoản</h3>
+                <p class="text-[11px] text-amber-700 font-bold mt-1">Dưới ngưỡng an toàn</p>
               </div>
-              <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl text-xs">
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Lợi thế giá</span>
-                  <span class="font-extrabold text-emerald-700">Bao trọn thuế DDP</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Tần suất bay</span>
-                  <span class="font-extrabold text-slate-800">5 Chuyến / Tuần</span>
-                </div>
-                <div>
-                  <span class="text-[10px] text-slate-500 block">Last Mile Delivery</span>
-                  <span class="font-extrabold text-slate-800">USPS / AusPost</span>
-                </div>
+              <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
               </div>
-              <div class="text-[11px] text-slate-600 flex items-center justify-between border-t border-slate-100 pt-3">
-                <span>Thích hợp: <strong>Hàng TMĐT, Bưu kiện nhỏ, Thực phẩm khô</strong></span>
-                <span class="text-sky-600 font-bold">Tối ưu chi phí</span>
+            </div>
+          </div>
+
+          <!-- BẢNG 1: BẢNG THEO DÕI TÀI KHOẢN KÝ QUỸ NHÀ CUNG CẤP -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50">
+              <div>
+                <h4 class="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                  <i class="fa-solid fa-handshake text-teal-600"></i>
+                  <span>Danh Sách Tài Khoản Hợp Đồng &amp; Sổ Ký Quỹ Nhà Cung Cấp (Vendor Accounts)</span>
+                </h4>
+                <p class="text-[11px] text-slate-500">Giám sát số dư cọc khả dụng, cước gốc phát sinh và hạn mức tín dụng với từng Hãng bay</p>
               </div>
+              <button onclick="loadCarrierPartnersData()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Tải Lại Bảng Hãng</span>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200 tracking-wider">
+                  <tr>
+                    <th class="px-4 py-3">Nhà Cung Cấp / Hãng</th>
+                    <th class="px-4 py-3">Hợp Đồng &amp; Mã TK PandaLex</th>
+                    <th class="px-4 py-3">Loại Dịch Vụ</th>
+                    <th class="px-4 py-3 text-right">Tổng Đã Nạp Ký Quỹ</th>
+                    <th class="px-4 py-3 text-right">Cước Gốc Phát Sinh (Cost)</th>
+                    <th class="px-4 py-3 text-right">Đã Gạch Nợ</th>
+                    <th class="px-4 py-3 text-right">Số Dư Ký Quỹ Khả Dụng</th>
+                    <th class="px-4 py-3 text-center">Trạng Thái Cọc</th>
+                    <th class="px-4 py-3 text-center">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody id="tblVendorAccountsBody" class="divide-y divide-slate-100 font-medium">
+                  <tr>
+                    <td colspan="9" class="text-center py-8 text-slate-400">Đang tải dữ liệu ký quỹ nhà cung cấp...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- BẢNG 2: SỔ NHẬT KÝ LỊCH SỬ PHIẾU NẠP KÝ QUỸ CHO HÃNG -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50">
+              <div>
+                <h4 class="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                  <i class="fa-solid fa-receipt text-teal-600"></i>
+                  <span>Lịch Sử Phiếu Nạp Tiền Ký Quỹ Hãng (Vendor Deposit History)</span>
+                </h4>
+                <p class="text-[11px] text-slate-500">Toàn bộ chứng từ PandaLex nạp cọc duy trì tài khoản cước quốc tế (Số UNC, Ngân hàng, Người duyệt)</p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <select id="selFilterVendorDepositHistory" onchange="filterVendorDepositHistory(this.value)" class="text-xs font-bold bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700">
+                  <option value="ALL">Tất Cả Hãng</option>
+                  <option value="UPS">UPS Express</option>
+                  <option value="FEDEX">FedEx Express</option>
+                  <option value="DHL">DHL Express</option>
+                  <option value="SF_EXPRESS">SF Express</option>
+                </select>
+                <button onclick="loadVendorDepositHistory()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 flex items-center space-x-1.5 shadow-sm">
+                  <i class="fa-solid fa-rotate-right"></i>
+                  <span>Làm Mới</span>
+                </button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200 tracking-wider">
+                  <tr>
+                    <th class="px-4 py-3">Thời Gian</th>
+                    <th class="px-4 py-3">Mã Phiếu Ký Quỹ</th>
+                    <th class="px-4 py-3">Nhà Cung Cấp (Hãng)</th>
+                    <th class="px-4 py-3 text-right">Số Tiền Nạp (VNĐ)</th>
+                    <th class="px-4 py-3">Phương Thức &amp; Số UNC</th>
+                    <th class="px-4 py-3 text-right">Số Dư Sau Nạp</th>
+                    <th class="px-4 py-3">Mục Đích Ký Quỹ / Ghi Chú</th>
+                    <th class="px-4 py-3">Kế Toán Lập</th>
+                  </tr>
+                </thead>
+                <tbody id="tblVendorDepositHistoryBody" class="divide-y divide-slate-100 font-medium">
+                  <tr>
+                    <td colspan="8" class="text-center py-8 text-slate-400">Đang tải lịch sử phiếu nạp ký quỹ hãng...</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -4004,14 +4061,101 @@
     </div>
   </div>
 
-  <!-- MODAL: LẬP PHIẾU NẠP TIỀN VÍ KHÁCH HÀNG (WALLET TOP-UP) -->
+  <!-- MODAL: LẬP PHIẾU NẠP TIỀN KÝ QUỸ CHO HÃNG / NHÀ CUNG CẤP (VENDOR DEPOSIT) -->
+  <div id="modalVendorDeposit" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden">
+      <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-teal-50">
+        <div>
+          <span class="text-[10px] font-black px-2 py-0.5 rounded bg-teal-200 text-teal-900 uppercase">Vendor Deposit Voucher</span>
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-2 mt-1">
+            <i class="fa-solid fa-building-columns text-teal-600"></i>
+            <span>Lập Phiếu Nạp Tiền Ký Quỹ Cho Hãng (Nhà Cung Cấp)</span>
+          </h3>
+        </div>
+        <button onclick="document.getElementById('modalVendorDeposit').classList.add('hidden')" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="formVendorDeposit" onsubmit="handleVendorDepositSubmit(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nhà Cung Cấp / Hãng Vận Chuyển Nhận Ký Quỹ <span class="text-red-500">*</span></label>
+          <select id="vDepVendorCode" required onchange="onVendorDepositChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
+            <option value="UPS">UPS Express Worldwide (Mã HĐ: PDL-UPS-849102 - TK: A849102)</option>
+            <option value="FEDEX">FedEx Express (Mã HĐ: PDL-FDX-774201 - TK: FX774201)</option>
+            <option value="DHL">DHL Express Worldwide (Mã HĐ: PDL-DHL-552190 - TK: DH552190)</option>
+            <option value="SF_EXPRESS">SF Express International (Mã HĐ: PDL-SF-119283 - TK: SF119283)</option>
+          </select>
+          <div id="vDepVendorInfoBadge" class="mt-2 p-2.5 rounded-xl bg-teal-50/60 border border-teal-100 text-teal-900 text-[11px] flex justify-between items-center">
+            <span>Số dư cọc khả dụng hiện tại: <strong id="vDepCurrentBalance" class="text-teal-700 font-mono text-xs">0 đ</strong></span>
+            <span id="vDepCreditLimitBadge" class="font-bold text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded">Hạn mức Net 30</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Số Tiền PandaLex Nạp Ký Quỹ (VNĐ) <span class="text-red-500">*</span></label>
+          <input type="number" step="1000000" id="vDepAmount" required placeholder="VD: 100000000" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono font-black text-teal-700 text-sm">
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <button type="button" onclick="setVendorDepositAmount(50000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700">50 Tr</button>
+            <button type="button" onclick="setVendorDepositAmount(100000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700">100 Tr</button>
+            <button type="button" onclick="setVendorDepositAmount(200000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700">200 Tr</button>
+            <button type="button" onclick="setVendorDepositAmount(500000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700">500 Tr</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Hình Thức Nạp Ký Quỹ</label>
+            <select id="vDepPaymentMethod" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
+              <option value="Ủy nhiệm chi Vietcombank (PandaLex Corporate)">Ủy nhiệm chi Vietcombank</option>
+              <option value="Ủy nhiệm chi Techcombank (PandaLex Corporate)">Ủy nhiệm chi Techcombank</option>
+              <option value="Chuyển khoản điện tử Wire Transfer">Chuyển khoản Wire Transfer</option>
+              <option value="Bảo lãnh ngân hàng (Bank Guarantee)">Bảo lãnh ngân hàng</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Số Lệnh UNC / Mã GD Ngân Hàng <span class="text-red-500">*</span></label>
+            <input type="text" id="vDepReferenceCode" required placeholder="VD: UNC-VCB-992182" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono font-bold text-slate-800">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mục Đích Nạp Ký Quỹ</label>
+          <select id="vDepPurpose" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-800">
+            <option value="Duy trì số dư ký quỹ tài khoản cước quốc tế đầu tháng">Duy trì số dư ký quỹ tài khoản cước quốc tế đầu tháng</option>
+            <option value="Nạp bổ sung ký quỹ do tăng sản lượng bưu gửi AWB">Nạp bổ sung ký quỹ do tăng sản lượng bưu gửi AWB</option>
+            <option value="Ký quỹ bảo lãnh mở thêm tuyến bay / sub-account mới">Ký quỹ bảo lãnh mở thêm tuyến bay / sub-account mới</option>
+            <option value="Quyết toán gạch nợ chi phí theo đối soát kỳ">Quyết toán gạch nợ chi phí theo đối soát kỳ</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ghi Chú Hợp Đồng / Kế Toán</label>
+          <input type="text" id="vDepNotes" placeholder="VD: Nạp cọc tài khoản UPS A849102 theo phụ lục HĐ số 02/2026" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-700">
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+          <button type="button" onclick="document.getElementById('modalVendorDeposit').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-slate-700">Hủy</button>
+          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 font-bold text-white rounded-xl shadow flex items-center space-x-1.5">
+            <i class="fa-solid fa-check-double"></i>
+            <span>XÁC NHẬN NẠP KÝ QUỸ HÃNG</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: LẬP PHIẾU TOP-UP VÍ ĐẠI LÝ (ĐẠI LÝ NẠP TIỀN TRỪ DẦN CƯỚC) -->
   <div id="modalTopupWallet" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
       <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-emerald-50">
-        <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
-          <i class="fa-solid fa-wallet text-emerald-600"></i>
-          <span>Lập Phiếu Nạp Tiền &amp; Ký Quỹ Ví Trả Trước</span>
-        </h3>
+        <div>
+          <span class="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 uppercase">Agent Top-Up Voucher</span>
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-2 mt-1">
+            <i class="fa-solid fa-wallet text-emerald-600"></i>
+            <span>Lập Phiếu Top-Up Ví Đại Lý (Trừ Dần Cước)</span>
+          </h3>
+        </div>
         <button onclick="document.getElementById('modalTopupWallet').classList.add('hidden')" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
@@ -5125,7 +5269,7 @@
       } else if (sec === 'carrierPartners') {
         document.getElementById('secCarrierPartners').classList.remove('hidden');
         document.getElementById('menuCarrierPartners').classList.add('sidebar-active');
-        document.getElementById('topBarTitle').textContent = '3.4 Quản Lý Đối Tác Hãng Cước & Nhà Vận Chuyển Quốc Tế';
+        document.getElementById('topBarTitle').textContent = '3.4 Nhà Cung Cấp & Sổ Ký Quỹ Hãng (Vendor Deposit & Cost Tracking)';
         loadCarrierPartnersData();
       } else if (sec === 'finance') {
         document.getElementById('secFinance').classList.remove('hidden');
@@ -5135,12 +5279,12 @@
       } else if (sec === 'walletTopup') {
         document.getElementById('secWalletTopup').classList.remove('hidden');
         document.getElementById('menuWalletTopup').classList.add('sidebar-active');
-        document.getElementById('topBarTitle').textContent = '3.6 Quản Lý Ví & Nạp Ký Quỹ Trả Trước (Top-Up)';
+        document.getElementById('topBarTitle').textContent = '3.6 Quản Lý Top-Up Ví Đại Lý (Agent Top-Up & Trừ Dần Cước)';
         loadWalletTopupData();
       } else if (sec === 'reconciliation') {
         document.getElementById('secReconciliation').classList.remove('hidden');
         document.getElementById('menuReconciliation').classList.add('sidebar-active');
-        document.getElementById('topBarTitle').textContent = '3.7 Đối Soát & Gạch Nợ Nhà Cung Cấp & Đại Lý (Reconciliation)';
+        document.getElementById('topBarTitle').textContent = '3.7 Đối Soát Hai Chiều (Phải Thu Đại Lý AR vs Phải Trả Hãng AP)';
         loadReconciliationData();
       } else if (sec === 'contracts') {
         document.getElementById('secContracts').classList.remove('hidden');
@@ -6069,9 +6213,10 @@
     });
 
     // ==========================================
-    // 2.4 PHÂN HỆ NẠP TIỀN & QUẢN LÝ VÍ TRẢ TRƯỚC
+    // 3.6 QUẢN LÝ TOP-UP VÍ ĐẠI LÝ (AGENT TOP-UP & TRỪ DẦN CƯỚC)
     // ==========================================
     let allWalletTxList = [];
+    let allAgentWalletsList = [];
 
     async function loadWalletTopupData() {
       await loadAdminCustomers();
@@ -6079,19 +6224,92 @@
       const sel = document.getElementById('topupCustCode');
       if (sel && allAdminCustomers) {
         sel.innerHTML = allAdminCustomers.map(c => {
-          const typeText = c.financialCategory === 'PREPAID_WALLET' ? 'Trả trước (Ví)' : (c.financialCategory === 'POSTPAID_CONTRACT' ? 'Hợp đồng' : 'Tiền ngay');
+          const typeText = c.financialCategory === 'PREPAID_WALLET' ? 'Ví Trả Trước' : (c.financialCategory === 'POSTPAID_CONTRACT' ? 'Hợp đồng' : 'Tiền ngay');
           return `<option value="${c.customerCode}">[${c.customerCode}] ${c.customerName || c.name} (${typeText})</option>`;
         }).join('');
       }
 
-      // Calculate stats
-      const totalBalance = allAdminCustomers.reduce((s, c) => s + (c.walletBalance || 0), 0);
-      const prepaidCount = allAdminCustomers.filter(c => c.financialCategory === 'PREPAID_WALLET' || (c.walletBalance && c.walletBalance > 0)).length;
-      document.getElementById('statTotalWalletBalance').textContent = totalBalance.toLocaleString('vi-VN') + ' đ';
-      document.getElementById('statPrepaidCustomerCount').textContent = prepaidCount;
-
       onTopupCustomerChange();
+      await loadAgentWalletsTable();
       await loadWalletTransactions();
+    }
+
+    async function loadAgentWalletsTable() {
+      try {
+        const res = await fetch('/api/finance/agents/wallets');
+        const d = await res.json();
+        const tbody = document.getElementById('tblAgentWalletsBody');
+        if (d.success && d.data) {
+          allAgentWalletsList = d.data;
+          
+          // Thống kê KPI Đại lý
+          const totalBalance = allAgentWalletsList.reduce((s, a) => s + (a.walletBalance || 0), 0);
+          const totalTopup = allAgentWalletsList.reduce((s, a) => s + (a.totalTopupAmount || 0), 0);
+          const totalDeducted = allAgentWalletsList.reduce((s, a) => s + (a.totalDeductedAmount || 0), 0);
+          const lowCount = allAgentWalletsList.filter(a => a.isWalletLow).length;
+
+          const statBal = document.getElementById('statTotalWalletBalance');
+          if (statBal) statBal.textContent = totalBalance.toLocaleString('vi-VN') + ' đ';
+          const statTop = document.getElementById('statTotalAgentTopup');
+          if (statTop) statTop.textContent = totalTopup.toLocaleString('vi-VN') + ' đ';
+          const statDed = document.getElementById('statTotalAgentDeducted');
+          if (statDed) statDed.textContent = totalDeducted.toLocaleString('vi-VN') + ' đ';
+          const statLow = document.getElementById('statLowWalletCount');
+          if (statLow) statLow.textContent = lowCount + ' Đại Lý';
+
+          if (tbody) {
+            if (allAgentWalletsList.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400 font-medium">Chưa có đại lý nào sử dụng ví trả trước.</td></tr>';
+              return;
+            }
+
+            tbody.innerHTML = allAgentWalletsList.map(a => {
+              const isLow = a.isWalletLow;
+              const statusBadge = isLow
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                    <i class="fa-solid fa-triangle-exclamation mr-1 text-amber-600"></i> Cạn ví (&lt; 5 Tr)
+                  </span>`
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> An toàn
+                  </span>`;
+
+              return `
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="px-4 py-3 font-mono font-bold text-blue-700 text-xs">${a.customerCode}</td>
+                  <td class="px-4 py-3 font-bold text-slate-800 text-xs">${a.customerName}</td>
+                  <td class="px-4 py-3 text-xs text-slate-600">
+                    <div>${a.representative || '-'}</div>
+                    <div class="text-[10px] font-mono text-slate-400">${a.phone || ''}</div>
+                  </td>
+                  <td class="px-4 py-3 font-mono font-black text-right text-xs ${isLow ? 'text-amber-700' : 'text-emerald-700'}">
+                    ${(a.walletBalance || 0).toLocaleString('vi-VN')} đ
+                  </td>
+                  <td class="px-4 py-3 font-mono font-bold text-blue-700 text-right text-xs">
+                    ${(a.totalTopupAmount || 0).toLocaleString('vi-VN')} đ
+                  </td>
+                  <td class="px-4 py-3 font-mono font-bold text-rose-600 text-right text-xs">
+                    ${(a.totalDeductedAmount || 0).toLocaleString('vi-VN')} đ
+                  </td>
+                  <td class="px-4 py-3 font-mono font-bold text-center text-xs text-slate-700">
+                    ${a.shipmentCount || 0}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    ${statusBadge}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <button type="button" onclick="openTopupModalForCustomer('${a.customerCode}')" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] shadow transition flex items-center space-x-1 mx-auto">
+                      <i class="fa-solid fa-plus"></i>
+                      <span>Top-Up Nhanh</span>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi tải danh sách ví đại lý:', err);
+      }
     }
 
     async function loadWalletTransactions() {
@@ -6101,45 +6319,46 @@
         const tbody = document.getElementById('tblWalletTxBody');
         if (d.success && d.data) {
           allWalletTxList = d.data;
-          document.getElementById('statWalletTxCount').textContent = allWalletTxList.length;
 
-          if (allWalletTxList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400 font-medium">Chưa có giao dịch biến động ví nào.</td></tr>';
-            return;
+          if (tbody) {
+            if (allWalletTxList.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400 font-medium">Chưa có giao dịch biến động ví nào.</td></tr>';
+              return;
+            }
+
+            tbody.innerHTML = allWalletTxList.map(tx => {
+              const dt = new Date(tx.createdAt);
+              const timeStr = dt.toLocaleDateString('vi-VN') + ' ' + dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+              const isTopup = tx.type === 'TOPUP';
+              const typeBadge = isTopup
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <i class="fa-solid fa-plus-circle mr-1 text-emerald-600"></i> Top-Up Nạp Ví
+                  </span>`
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">
+                    <i class="fa-solid fa-minus-circle mr-1 text-rose-600"></i> Trừ Dần Cước AWB
+                  </span>`;
+
+              const amtClass = isTopup ? 'text-emerald-700 font-black' : 'text-rose-700 font-black';
+              const amtPrefix = isTopup ? '+' : '-';
+
+              return `
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="px-4 py-3 text-[11px] text-slate-500 whitespace-nowrap">${timeStr}</td>
+                  <td class="px-4 py-3 font-mono font-bold text-slate-700 text-xs">${tx.id}</td>
+                  <td class="px-4 py-3 font-mono font-black text-blue-700 text-xs">[${tx.customerCode || tx.username}]</td>
+                  <td class="px-4 py-3">${typeBadge}</td>
+                  <td class="px-4 py-3 ${amtClass} font-mono text-right text-xs">${amtPrefix}${Math.abs(tx.amount || 0).toLocaleString('vi-VN')} đ</td>
+                  <td class="px-4 py-3 font-mono font-extrabold text-slate-800 text-right text-xs">${(tx.balanceAfter || 0).toLocaleString('vi-VN')} đ</td>
+                  <td class="px-4 py-3 text-xs">
+                    <div class="font-bold text-slate-800">${tx.paymentMethod || 'Hệ thống'}</div>
+                    ${tx.reference ? `<div class="text-[10px] text-slate-500 font-mono">Ref: ${tx.reference}</div>` : ''}
+                  </td>
+                  <td class="px-4 py-3 text-xs text-slate-700 font-medium">${tx.note || (tx.shipmentTracking ? `Trừ cước AWB: ${tx.shipmentTracking}` : '-')}</td>
+                  <td class="px-4 py-3 text-xs font-bold text-slate-600">${tx.createdBy || 'ketoan'}</td>
+                </tr>
+              `;
+            }).join('');
           }
-
-          tbody.innerHTML = allWalletTxList.map(tx => {
-            const dt = new Date(tx.createdAt);
-            const timeStr = dt.toLocaleDateString('vi-VN') + ' ' + dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            const isTopup = tx.type === 'TOPUP';
-            const typeBadge = isTopup
-              ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  <i class="fa-solid fa-plus-circle mr-1 text-emerald-600"></i> Nạp Ví (Ký quỹ)
-                </span>`
-              : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">
-                  <i class="fa-solid fa-minus-circle mr-1 text-rose-600"></i> Trừ Cước Đơn
-                </span>`;
-
-            const amtClass = isTopup ? 'text-emerald-700 font-black' : 'text-rose-700 font-black';
-            const amtPrefix = isTopup ? '+' : '';
-
-            return `
-              <tr class="hover:bg-slate-50 transition">
-                <td class="px-4 py-3 text-[11px] text-slate-500 whitespace-nowrap">${timeStr}</td>
-                <td class="px-4 py-3 font-mono font-bold text-slate-700 text-xs">${tx.id}</td>
-                <td class="px-4 py-3 font-mono font-black text-blue-700 text-xs">[${tx.customerCode || tx.username}]</td>
-                <td class="px-4 py-3">${typeBadge}</td>
-                <td class="px-4 py-3 ${amtClass} font-mono text-xs">${amtPrefix}${(tx.amount || 0).toLocaleString('vi-VN')} đ</td>
-                <td class="px-4 py-3 font-mono font-extrabold text-slate-800 text-xs">${(tx.balanceAfter || 0).toLocaleString('vi-VN')} đ</td>
-                <td class="px-4 py-3 text-xs">
-                  <div class="font-bold text-slate-800">${tx.paymentMethod || 'Hệ thống'}</div>
-                  ${tx.reference ? `<div class="text-[10px] text-slate-500 font-mono">Ref: ${tx.reference}</div>` : ''}
-                </td>
-                <td class="px-4 py-3 text-xs text-slate-700 font-medium">${tx.note || '-'}</td>
-                <td class="px-4 py-3 text-xs font-bold text-slate-600">${tx.createdBy || 'ketoan'}</td>
-              </tr>
-            `;
-          }).join('');
         }
       } catch (err) {
         console.error('Lỗi tải giao dịch ví:', err);
@@ -6150,7 +6369,7 @@
       const sel = document.getElementById('topupCustCode');
       if (sel && allAdminCustomers && allAdminCustomers.length > 0) {
         sel.innerHTML = allAdminCustomers.map(c => {
-          const typeText = c.financialCategory === 'PREPAID_WALLET' ? 'Trả trước (Ví)' : (c.financialCategory === 'POSTPAID_CONTRACT' ? 'Hợp đồng' : 'Tiền ngay');
+          const typeText = c.financialCategory === 'PREPAID_WALLET' ? 'Ví Trả Trước' : (c.financialCategory === 'POSTPAID_CONTRACT' ? 'Hợp đồng' : 'Tiền ngay');
           return `<option value="${c.customerCode}">[${c.customerCode}] ${c.customerName || c.name} (${typeText})</option>`;
         }).join('');
       }
@@ -6174,15 +6393,17 @@
       if (cust) {
         document.getElementById('topupCurrentBalance').textContent = (cust.walletBalance || 0).toLocaleString('vi-VN') + ' đ';
         const typeBadge = document.getElementById('topupCustTypeBadge');
-        if (cust.financialCategory === 'PREPAID_WALLET') {
-          typeBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800';
-          typeBadge.textContent = 'Khách Trả Trước (Ví)';
-        } else if (cust.financialCategory === 'POSTPAID_CONTRACT') {
-          typeBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800';
-          typeBadge.textContent = 'Hợp Đồng Trả Sau';
-        } else {
-          typeBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800';
-          typeBadge.textContent = 'Khách Tiền Ngay';
+        if (typeBadge) {
+          if (cust.financialCategory === 'PREPAID_WALLET' || cust.customerType === 'AGENT') {
+            typeBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800';
+            typeBadge.textContent = 'Đại Lý Trả Trước (Ví)';
+          } else if (cust.financialCategory === 'POSTPAID_CONTRACT') {
+            typeBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800';
+            typeBadge.textContent = 'Hợp Đồng Trả Sau';
+          } else {
+            typeBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800';
+            typeBadge.textContent = 'Khách Tiền Ngay';
+          }
         }
       }
     }
@@ -6200,7 +6421,7 @@
       const note = document.getElementById('topupNote').value.trim();
 
       try {
-        const res = await fetch('/api/customers/topup', {
+        const res = await fetch('/api/finance/agents/topup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -6216,8 +6437,8 @@
         if (d.success) {
           alert('✅ ' + d.message);
           document.getElementById('modalTopupWallet').classList.add('hidden');
-          loadWalletTopupData();
-          loadAdminCustomers();
+          await loadWalletTopupData();
+          await loadAdminCustomers();
         } else {
           alert('❌ ' + d.message);
         }
@@ -9227,10 +9448,216 @@
     }
 
     // ========================================================
-    // 3.4. QUẢN LÝ ĐỐI TÁC HÃNG CƯỚC
+    // 3.4. NHÀ CUNG CẤP & SỔ KÝ QUỸ HÃNG (VENDOR DEPOSIT & COST)
     // ========================================================
-    function loadCarrierPartnersData() {
-      // Direct carrier accounts data
+    let allVendorAccounts = [];
+    let allVendorDeposits = [];
+
+    async function loadCarrierPartnersData() {
+      try {
+        const res = await fetch('/api/finance/vendors/accounts');
+        const d = await res.json();
+        if (d.success && d.data) {
+          allVendorAccounts = d.data;
+
+          // Cập nhật 4 thẻ KPI
+          const totalDeposited = allVendorAccounts.reduce((s, v) => s + (v.totalDeposited || 0), 0);
+          const totalCost = allVendorAccounts.reduce((s, v) => s + (v.totalCostIncurred || 0), 0);
+          const availableDeposit = allVendorAccounts.reduce((s, v) => s + (v.availableDeposit || 0), 0);
+          const lowCount = allVendorAccounts.filter(v => v.isDepositLow).length;
+
+          const elDep = document.getElementById('statVendorTotalDeposited');
+          if (elDep) elDep.textContent = totalDeposited.toLocaleString('vi-VN') + ' đ';
+          const elCost = document.getElementById('statVendorTotalCost');
+          if (elCost) elCost.textContent = totalCost.toLocaleString('vi-VN') + ' đ';
+          const elAvail = document.getElementById('statVendorAvailableDeposit');
+          if (elAvail) elAvail.textContent = availableDeposit.toLocaleString('vi-VN') + ' đ';
+          const elLow = document.getElementById('statVendorLowCount');
+          if (elLow) elLow.textContent = lowCount + ' Hãng';
+
+          // Bảng 1: Danh sách tài khoản Hãng
+          const tbody = document.getElementById('tblVendorAccountsBody');
+          if (tbody) {
+            tbody.innerHTML = allVendorAccounts.map(v => {
+              const carrierTheme = {
+                'UPS': { bg: 'bg-amber-900/10 text-amber-900 border-amber-900/20', icon: 'UPS' },
+                'FEDEX': { bg: 'bg-purple-900/10 text-purple-900 border-purple-900/20', icon: 'FDX' },
+                'DHL': { bg: 'bg-yellow-500/15 text-yellow-800 border-yellow-500/30', icon: 'DHL' },
+                'SF_EXPRESS': { bg: 'bg-red-900/10 text-red-900 border-red-900/20', icon: 'SF' }
+              }[v.vendorCode] || { bg: 'bg-slate-100 text-slate-800 border-slate-200', icon: v.vendorCode };
+
+              const statusBadge = v.isDepositLow
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                    <i class="fa-solid fa-triangle-exclamation mr-1 text-amber-600"></i> Cạn cọc (&lt; ${(v.safeDepositThreshold / 1e6)}Tr)
+                  </span>`
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> An toàn
+                  </span>`;
+
+              return `
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center space-x-2.5">
+                      <div class="w-8 h-8 rounded-lg font-black text-xs flex items-center justify-center border ${carrierTheme.bg}">
+                        ${carrierTheme.icon}
+                      </div>
+                      <div>
+                        <div class="font-bold text-slate-900 text-xs">${v.vendorName}</div>
+                        <div class="text-[10px] font-mono text-slate-400">Net ${v.creditTermDays} ngày</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 font-mono text-xs text-slate-700">
+                    <div class="font-bold text-teal-800">${v.contractCode}</div>
+                    <div class="text-[10px] text-slate-500">TK: ${v.accountNumber}</div>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-slate-600 font-medium">
+                    ${v.serviceType}
+                  </td>
+                  <td class="px-4 py-3 font-mono font-bold text-teal-700 text-right text-xs">
+                    ${(v.totalDeposited || 0).toLocaleString('vi-VN')} đ
+                  </td>
+                  <td class="px-4 py-3 font-mono font-bold text-slate-800 text-right text-xs">
+                    ${(v.totalCostIncurred || 0).toLocaleString('vi-VN')} đ
+                  </td>
+                  <td class="px-4 py-3 font-mono font-bold text-slate-500 text-right text-xs">
+                    ${(v.settledAmount || 0).toLocaleString('vi-VN')} đ
+                  </td>
+                  <td class="px-4 py-3 font-mono font-black text-right text-xs ${v.isDepositLow ? 'text-amber-700' : 'text-emerald-700'}">
+                    ${(v.availableDeposit || 0).toLocaleString('vi-VN')} đ
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    ${statusBadge}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <button type="button" onclick="openVendorDepositModal('${v.vendorCode}')" class="px-3 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-[11px] shadow transition flex items-center space-x-1 mx-auto">
+                      <i class="fa-solid fa-plus"></i>
+                      <span>Nạp Ký Quỹ</span>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Lỗi tải danh sách tài khoản NCC:', e);
+      }
+
+      await loadVendorDepositHistory();
+    }
+
+    async function loadVendorDepositHistory(vendorCode = 'ALL') {
+      try {
+        const url = vendorCode && vendorCode !== 'ALL' 
+          ? `/api/finance/vendors/deposit-history?vendor=${vendorCode}`
+          : '/api/finance/vendors/deposit-history';
+        const res = await fetch(url);
+        const d = await res.json();
+        const tbody = document.getElementById('tblVendorDepositHistoryBody');
+        if (d.success && d.data && tbody) {
+          allVendorDeposits = d.data;
+          if (allVendorDeposits.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400 font-medium">Chưa có phiếu nạp tiền ký quỹ nào cho Hãng.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = allVendorDeposits.map(tx => {
+            const dt = new Date(tx.createdAt);
+            const timeStr = dt.toLocaleDateString('vi-VN') + ' ' + dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+            return `
+              <tr class="hover:bg-slate-50 transition">
+                <td class="px-4 py-3 text-[11px] text-slate-500 whitespace-nowrap">${timeStr}</td>
+                <td class="px-4 py-3 font-mono font-bold text-teal-800 text-xs">${tx.depositCode}</td>
+                <td class="px-4 py-3 font-bold text-slate-800 text-xs">${tx.vendorName}</td>
+                <td class="px-4 py-3 font-mono font-black text-teal-700 text-right text-xs">+${(tx.amount || 0).toLocaleString('vi-VN')} đ</td>
+                <td class="px-4 py-3 text-xs">
+                  <div class="font-bold text-slate-800">${tx.paymentMethod}</div>
+                  <div class="text-[10px] text-slate-500 font-mono">UNC: ${tx.referenceCode}</div>
+                </td>
+                <td class="px-4 py-3 font-mono font-extrabold text-slate-800 text-right text-xs">${(tx.balanceAfter || 0).toLocaleString('vi-VN')} đ</td>
+                <td class="px-4 py-3 text-xs text-slate-700 font-medium">
+                  <div>${tx.depositPurpose}</div>
+                  ${tx.notes ? `<div class="text-[10px] text-slate-400 italic">${tx.notes}</div>` : ''}
+                </td>
+                <td class="px-4 py-3 text-xs font-bold text-slate-600">${tx.operator || 'ketoan'}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error('Lỗi tải lịch sử ký quỹ hãng:', e);
+      }
+    }
+
+    function filterVendorDepositHistory(vendorCode) {
+      loadVendorDepositHistory(vendorCode);
+    }
+
+    function openVendorDepositModal(vendorCode) {
+      if (vendorCode) {
+        const sel = document.getElementById('vDepVendorCode');
+        if (sel) sel.value = vendorCode;
+      }
+      onVendorDepositChange();
+      document.getElementById('vDepAmount').value = 100000000;
+      document.getElementById('vDepReferenceCode').value = `UNC-VCB-${Math.floor(100000 + Math.random() * 900000)}`;
+      document.getElementById('modalVendorDeposit').classList.remove('hidden');
+    }
+
+    function onVendorDepositChange() {
+      const vCode = document.getElementById('vDepVendorCode')?.value;
+      const acc = allVendorAccounts.find(a => a.vendorCode === vCode);
+      const balEl = document.getElementById('vDepCurrentBalance');
+      const limitEl = document.getElementById('vDepCreditLimitBadge');
+      if (acc) {
+        if (balEl) balEl.textContent = (acc.availableDeposit || 0).toLocaleString('vi-VN') + ' đ';
+        if (limitEl) limitEl.textContent = `Hạn mức: ${(acc.creditLimit / 1e6)} Tr (Net ${acc.creditTermDays} ngày)`;
+      } else {
+        if (balEl) balEl.textContent = '0 đ';
+      }
+    }
+
+    function setVendorDepositAmount(amt) {
+      const el = document.getElementById('vDepAmount');
+      if (el) el.value = amt;
+    }
+
+    async function handleVendorDepositSubmit(event) {
+      event.preventDefault();
+      const vendorCode = document.getElementById('vDepVendorCode').value;
+      const amount = parseFloat(document.getElementById('vDepAmount').value);
+      const paymentMethod = document.getElementById('vDepPaymentMethod').value;
+      const referenceCode = document.getElementById('vDepReferenceCode').value.trim();
+      const depositPurpose = document.getElementById('vDepPurpose').value;
+      const notes = document.getElementById('vDepNotes').value.trim();
+
+      try {
+        const res = await fetch('/api/finance/vendors/deposit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendorCode,
+            amount,
+            paymentMethod,
+            referenceCode,
+            depositPurpose,
+            notes,
+            operator: 'ketoan_admin'
+          })
+        });
+        const d = await res.json();
+        if (d.success) {
+          alert('✅ ' + d.message);
+          document.getElementById('modalVendorDeposit').classList.add('hidden');
+          await loadCarrierPartnersData();
+        } else {
+          alert('❌ ' + d.message);
+        }
+      } catch (err) {
+        alert('Lỗi nạp ký quỹ: ' + err.message);
+      }
     }
 
     // ========================================================
