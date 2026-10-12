@@ -38,7 +38,9 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-app.use(compression());
+app.use(compression({
+  threshold: 1024
+}));
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
@@ -91,7 +93,10 @@ app.get(['/admin', '/admin.html', '/permissions', '/permissions.html'], (req, re
   next();
 });
 
-app.use(express.static('public'));
+app.use(express.static('public', {
+  maxAge: '1h',
+  etag: true
+}));
 app.use('/uploads', express.static(path.resolve('uploads')));
 
 // Khởi tạo thư mục upload

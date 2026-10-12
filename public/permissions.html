@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PandaLex Express - Trình Quản Trị & Phân Quyền Chức Vụ (PermissionPage)</title>
+  <!-- ⚡ DNS Preconnect tăng tốc kết nối CDN -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <!-- 🛡️ HEAD AUTH GUARD: Kiểm tra token trước khi trình duyệt tải bất kỳ DOM nào -->
   <script>
     (function() {
@@ -17,12 +23,11 @@
       }
     })();
   </script>
-  <style id="authCloak">body { display: none !important; }</style>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+    body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
     .role-row.selected {
       background-color: #f3e8ff !important;
       border-color: #9333ea !important;
@@ -514,10 +519,6 @@
           document.getElementById('selTopbarUser').value = currentLoggedUser.username;
           document.getElementById('badgeActiveRoleHub').textContent = `${currentLoggedUser.role} • ${currentLoggedUser.hub} Hub`;
 
-          // Gỡ bỏ lớp che giao diện khi đã xác thực thành công
-          const cloak = document.getElementById('authCloak');
-          if (cloak) cloak.remove();
-
           // Ẩn Switcher nếu không phải SUPER_ADMIN
           const wrapperTopbar = document.getElementById('wrapperTopbarUser');
           if (wrapperTopbar) {
@@ -927,7 +928,24 @@
       resetIdleTimer();
     })();
 
-    // On start
+    // On start: Áp dụng dữ liệu người dùng đệm tức thì (0.01s)
+    try {
+      const cached = localStorage.getItem('pandalex_user');
+      if (cached) {
+        currentLoggedUser = JSON.parse(cached);
+        document.getElementById('selTopbarUser').value = currentLoggedUser.username;
+        document.getElementById('badgeActiveRoleHub').textContent = `${currentLoggedUser.role} • ${currentLoggedUser.hub} Hub`;
+        const wrapperTopbar = document.getElementById('wrapperTopbarUser');
+        if (wrapperTopbar) {
+          if (currentLoggedUser.role === 'SUPER_ADMIN') {
+            wrapperTopbar.classList.remove('hidden');
+          } else {
+            wrapperTopbar.classList.add('hidden');
+          }
+        }
+      }
+    } catch (_) {}
+
     loadMatrixData();
   </script>
 </body>
