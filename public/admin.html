@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PandaLex Express - Trung Tâm Quản Trị Hệ Thống (Admin Console)</title>
+  <!-- 🛡️ HEAD AUTH GUARD: Kiểm tra token trước khi trình duyệt tải bất kỳ DOM nào -->
+  <script>
+    (function() {
+      var token = localStorage.getItem('pandalex_token');
+      if (!token) {
+        var match = document.cookie.match(/(?:^|;\s*)pandalex_token=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1]);
+      }
+      if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+        window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+      }
+    })();
+  </script>
+  <style id="authCloak">body { display: none !important; }</style>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -8823,8 +8837,15 @@
 
     // 12. Kiểm tra và tải người dùng hiện tại khi load trang
     async function checkAndLoadCurrentUser() {
-      const token = localStorage.getItem('pandalex_token');
+      let token = localStorage.getItem('pandalex_token');
       if (!token) {
+        const match = document.cookie.match(/(?:^|;\s*)pandalex_token=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1]);
+      }
+      if (!token || token === 'null' || token === 'undefined') {
+        document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        localStorage.removeItem('pandalex_token');
+        localStorage.removeItem('pandalex_user');
         window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
         return;
       }
@@ -8835,6 +8856,7 @@
           }
         });
         if (res.status === 401) {
+          document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
           localStorage.removeItem('pandalex_token');
           localStorage.removeItem('pandalex_user');
           window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
@@ -8843,7 +8865,11 @@
         const d = await res.json();
         if (d.success && d.data) {
           applyUserRolePermissions(d.data);
+          // Gỡ bỏ lớp che giao diện khi đã xác thực thành công
+          const cloak = document.getElementById('authCloak');
+          if (cloak) cloak.remove();
         } else {
+          document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
           localStorage.removeItem('pandalex_token');
           localStorage.removeItem('pandalex_user');
           window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
@@ -8866,6 +8892,7 @@
       } catch (e) {
         console.error('Lỗi đăng xuất:', e);
       } finally {
+        document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
         localStorage.removeItem('pandalex_token');
         localStorage.removeItem('pandalex_user');
         window.location.replace('/login.html');

@@ -443,6 +443,18 @@ export class AuthService {
             return { success: false, user: this.users[0], message: `Không tìm thấy tài khoản ${username}` };
         }
         this.currentUsername = user.username;
+        // Cấp token phiên mới cho tài khoản chuyển đổi
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+        this.sessions.set(token, {
+            token,
+            userId: user.id,
+            username: user.username,
+            role: user.role,
+            hub: user.hub,
+            createdAt: new Date().toISOString(),
+            expiresAt
+        });
         this.logAction({
             userId: user.id,
             username: user.username,
@@ -452,7 +464,7 @@ export class AuthService {
             details: `Chuyển phiên làm việc sang tài khoản ${user.fullName} (${user.role} @ Hub ${user.hub})`,
             hub: user.hub
         });
-        return { success: true, user, message: `Đã chuyển sang tài khoản ${user.fullName} (${user.role})` };
+        return { success: true, token, user, message: `Đã chuyển sang tài khoản ${user.fullName} (${user.role})` };
     }
     static login(username, password) {
         const user = this.getUserById(username);

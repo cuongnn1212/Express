@@ -234,9 +234,10 @@
         const data = await res.json();
 
         if (data.success && data.token) {
-          // Lưu token và thông tin người dùng vào localStorage
+          // Lưu token và thông tin người dùng vào localStorage và Cookie
           localStorage.setItem('pandalex_token', data.token);
           localStorage.setItem('pandalex_user', JSON.stringify(data.data));
+          document.cookie = 'pandalex_token=' + encodeURIComponent(data.token) + '; Path=/; Max-Age=86400; SameSite=Lax';
 
           // Chuyển hướng theo query param redirect (nếu có), mặc định vào /admin.html
           const urlParams = new URLSearchParams(window.location.search);
@@ -254,24 +255,6 @@
         btn.innerHTML = originalBtnHtml;
       }
     }
-
-    // Tự động kiểm tra nếu đã đăng nhập rồi thì cho vào thẳng admin
-    (async function checkExistingLogin() {
-      const token = localStorage.getItem('pandalex_token');
-      if (token) {
-        try {
-          const res = await fetch('/api/auth/current-user', {
-            headers: { 'Authorization': 'Bearer ' + token }
-          });
-          const d = await res.json();
-          if (d.success && d.authenticated) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectTarget = urlParams.get('redirect') || '/admin.html';
-            window.location.href = redirectTarget;
-          }
-        } catch (_) {}
-      }
-    })();
   </script>
 </body>
 </html>

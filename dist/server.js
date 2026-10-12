@@ -56,6 +56,33 @@ app.get('/login', (req, res) => {
 app.get('/login.html', (req, res) => {
     res.sendFile(path.resolve('public', 'login.html'));
 });
+// Hàm trích xuất Auth Token từ Authorization Header, Cookie, hoặc Query
+export function extractRequestToken(req) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authHeader.substring(7).trim();
+    }
+    const cookieHeader = req.headers.cookie;
+    if (cookieHeader) {
+        const match = cookieHeader.match(/(?:^|;\s*)pandalex_token=([^;]+)/);
+        if (match)
+            return decodeURIComponent(match[1]).trim();
+    }
+    if (typeof req.query.token === 'string') {
+        return req.query.token.trim();
+    }
+    return undefined;
+}
+// 🛡️ SERVER-SIDE AUTH GUARD: Chặn hoàn toàn truy cập trang Quản Trị & Phân Quyền từ phía máy chủ nếu chưa đăng nhập
+app.get(['/admin', '/admin.html', '/permissions', '/permissions.html'], (req, res, next) => {
+    const token = extractRequestToken(req);
+    const user = token ? AuthService.getUserByToken(token) : null;
+    if (!user) {
+        const redirectUrl = req.originalUrl || '/admin.html';
+        return res.redirect(`/login.html?redirect=${encodeURIComponent(redirectUrl)}`);
+    }
+    next();
+});
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.resolve('uploads')));
 // Khởi tạo thư mục upload
@@ -1633,6 +1660,8 @@ app.post('/api/auth/login', (req, res) => {
         return res.status(401).json(result);
     }
     const permissions = AuthService.getPermissionsByRole(result.user.role);
+    // Thiết lập Cookie phiên cho trình duyệt
+    res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=86400`);
     res.json({
         success: true,
         token: result.token,
@@ -1644,16 +1673,16 @@ app.post('/api/auth/login', (req, res) => {
     });
 });
 app.post('/api/auth/logout', (req, res) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : (req.body?.token || undefined);
+    const token = extractRequestToken(req) || req.body?.token;
     if (token) {
         AuthService.logout(token);
     }
+    // Xóa cookie phiên trên trình duyệt
+    res.setHeader('Set-Cookie', 'pandalex_token=; Path=/; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
     res.json({ success: true, message: 'Đã đăng xuất thành công khỏi hệ thống' });
 });
 app.post('/api/auth/change-password', (req, res) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+    const token = extractRequestToken(req);
     const user = token ? AuthService.getUserByToken(token) : null;
     if (!user) {
         return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập để đổi mật khẩu' });
@@ -1663,8 +1692,7 @@ app.post('/api/auth/change-password', (req, res) => {
     res.json(result);
 });
 app.get('/api/auth/current-user', (req, res) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || undefined);
+    const token = extractRequestToken(req);
     const user = token ? AuthService.getUserByToken(token) : null;
     if (!user) {
         return res.status(401).json({
@@ -1684,8 +1712,7 @@ app.get('/api/auth/current-user', (req, res) => {
     });
 });
 app.post('/api/auth/switch-user', (req, res) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+    const token = extractRequestToken(req);
     const currentUser = token ? AuthService.getUserByToken(token) : null;
     // Chỉ SUPER_ADMIN mới có quyền chuyển đổi tài khoản
     if (!currentUser || currentUser.role !== 'SUPER_ADMIN') {
@@ -1700,6 +1727,9 @@ app.post('/api/auth/switch-user', (req, res) => {
         return res.status(404).json(result);
     }
     const permissions = AuthService.getPermissionsByRole(result.user.role);
+    if (result.token) {
+        res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=86400`);
+    }
     res.json({
         success: true,
         data: {

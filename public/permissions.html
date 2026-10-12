@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PandaLex Express - Trình Quản Trị & Phân Quyền Chức Vụ (PermissionPage)</title>
+  <!-- 🛡️ HEAD AUTH GUARD: Kiểm tra token trước khi trình duyệt tải bất kỳ DOM nào -->
+  <script>
+    (function() {
+      var token = localStorage.getItem('pandalex_token');
+      if (!token) {
+        var match = document.cookie.match(/(?:^|;\s*)pandalex_token=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1]);
+      }
+      if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+        window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+      }
+    })();
+  </script>
+  <style id="authCloak">body { display: none !important; }</style>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -454,8 +468,15 @@
 
     // Load initial data
     async function loadMatrixData() {
-      const token = localStorage.getItem('pandalex_token');
+      let token = localStorage.getItem('pandalex_token');
       if (!token) {
+        const match = document.cookie.match(/(?:^|;\s*)pandalex_token=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1]);
+      }
+      if (!token || token === 'null' || token === 'undefined') {
+        document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        localStorage.removeItem('pandalex_token');
+        localStorage.removeItem('pandalex_user');
         window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
         return;
       }
@@ -467,6 +488,7 @@
           fetch('/api/auth/role-permissions', { headers }).then(r => r.json()),
           fetch('/api/auth/current-user', { headers }).then(async r => {
             if (r.status === 401) {
+              document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
               localStorage.removeItem('pandalex_token');
               localStorage.removeItem('pandalex_user');
               window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
@@ -491,6 +513,10 @@
           currentLoggedUser = resCurr.data;
           document.getElementById('selTopbarUser').value = currentLoggedUser.username;
           document.getElementById('badgeActiveRoleHub').textContent = `${currentLoggedUser.role} • ${currentLoggedUser.hub} Hub`;
+
+          // Gỡ bỏ lớp che giao diện khi đã xác thực thành công
+          const cloak = document.getElementById('authCloak');
+          if (cloak) cloak.remove();
 
           // Ẩn Switcher nếu không phải SUPER_ADMIN
           const wrapperTopbar = document.getElementById('wrapperTopbarUser');
@@ -872,6 +898,7 @@
       } catch (e) {
         console.error('Logout error:', e);
       } finally {
+        document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
         localStorage.removeItem('pandalex_token');
         localStorage.removeItem('pandalex_user');
         window.location.replace('/login.html');
