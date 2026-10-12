@@ -35,7 +35,7 @@ import compression from 'compression';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(compression());
 app.use(cors());
@@ -2355,9 +2355,9 @@ app.put('/api/freight/sea/shipments/:id/status', (req, res) => {
 });
 
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`🚀 PandaLex Express Universal Gateway running on http://localhost:${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 PandaLex Express Universal Gateway running on port ${PORT}`);
+    console.log(`📊 Health check: http://0.0.0.0:${PORT}/api/health`);
   });
 }
 
