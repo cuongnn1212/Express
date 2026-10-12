@@ -56,6 +56,12 @@ app.get('/calculator', (req, res) => {
 app.get('/quote', (req, res) => {
   res.sendFile(path.resolve('public', 'calculator.html'));
 });
+app.get('/login', (req, res) => {
+  res.sendFile(path.resolve('public', 'login.html'));
+});
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.resolve('public', 'login.html'));
+});
 
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.resolve('uploads')));
@@ -1760,19 +1766,82 @@ app.post('/api/auth/role-permissions/bulk-update', (req, res) => {
   res.json(result);
 });
 
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ tên đăng nhập và mật khẩu' });
+  }
+  const result = AuthService.login(username, password);
+  if (!result.success) {
+    return res.status(401).json(result);
+  }
+  const permissions = AuthService.getPermissionsByRole(result.user!.role);
+  res.json({
+    success: true,
+    token: result.token,
+    data: {
+      ...result.user,
+      permissions
+    },
+    message: result.message
+  });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : (req.body?.token || undefined);
+  if (token) {
+    AuthService.logout(token);
+  }
+  res.json({ success: true, message: 'Đã đăng xuất thành công khỏi hệ thống' });
+});
+
+app.post('/api/auth/change-password', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+  const user = token ? AuthService.getUserByToken(token) : null;
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập để đổi mật khẩu' });
+  }
+  const { oldPassword, newPassword } = req.body;
+  const result = AuthService.changePassword(user.username, oldPassword, newPassword);
+  res.json(result);
+});
+
 app.get('/api/auth/current-user', (req, res) => {
-  const user = AuthService.getCurrentUser();
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token as string || undefined);
+  
+  const user = token ? AuthService.getUserByToken(token) : null;
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      message: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập để tiếp tục.'
+    });
+  }
+
   const permissions = AuthService.getPermissionsByRole(user.role);
   res.json({
     success: true,
+    authenticated: true,
     data: {
-      ...user,
+      ...AuthService.sanitizeUserForClient(user),
       permissions
     }
   });
 });
 
 app.post('/api/auth/switch-user', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+  const currentUser = token ? AuthService.getUserByToken(token) : null;
+
+  // Chỉ SUPER_ADMIN mới có quyền chuyển đổi tài khoản
+  if (!currentUser || currentUser.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ success: false, message: 'Chỉ Quản Trị Viên Tối Cao (Root Admin) mới có quyền chuyển đổi tài khoản kiểm tra' });
+  }
+
   const { username } = req.body;
   if (!username) {
     return res.status(400).json({ success: false, message: 'Thiếu username cần chuyển' });
@@ -1785,7 +1854,7 @@ app.post('/api/auth/switch-user', (req, res) => {
   res.json({
     success: true,
     data: {
-      ...result.user,
+      ...AuthService.sanitizeUserForClient(result.user),
       permissions
     },
     message: result.message

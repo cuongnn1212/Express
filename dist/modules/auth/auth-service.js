@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 export const HUBS_LIST = [
     { code: 'SGN', name: 'Tổng Kho Sài Gòn (Tân Bình - SGN Hub)', address: 'Phúc Yên, Phan Huy Ích, P.15, Q. Tân Bình, TP.HCM', hotline: '0976 843 168' },
     { code: 'HAN', name: 'Tổng Kho Hà Nội (Nội Bài - HAN Hub)', address: 'Khu Logistics Sân bay Quốc tế Nội Bài, Sóc Sơn, Hà Nội', hotline: '0988 123 456' },
@@ -99,6 +100,39 @@ export class AuthService {
     static auditLogs = [];
     static rolePermissions = {};
     static currentUsername = 'admin';
+    static sessions = new Map();
+    static hashPassword(password, salt) {
+        return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    }
+    static generateSalt() {
+        return crypto.randomBytes(16).toString('hex');
+    }
+    static getDefaultPasswordForUsername(username) {
+        const defaultPasswords = {
+            'admin': 'admin@123',
+            'bgd': 'bgd@123',
+            'ketoan': 'ketoan@123',
+            'khohan': 'khohan@123',
+            'khosgn': 'khosgn@123',
+            'khodad': 'khodad@123',
+            'daily_annam': 'annam@123',
+            'fba_seller': 'fba@123'
+        };
+        return defaultPasswords[username] || `${username}@123`;
+    }
+    static setPassword(user, newPass) {
+        const salt = this.generateSalt();
+        user.salt = salt;
+        user.passwordHash = this.hashPassword(newPass, salt);
+    }
+    static verifyPassword(user, password) {
+        if (!user.passwordHash || !user.salt) {
+            const defaultPass = this.getDefaultPasswordForUsername(user.username);
+            return password === defaultPass;
+        }
+        const hash = this.hashPassword(password, user.salt);
+        return hash === user.passwordHash;
+    }
     static init() {
         try {
             const dir = path.dirname(this.userFile);
@@ -125,6 +159,13 @@ export class AuthService {
                         isActive: true,
                         createdAt: new Date().toISOString()
                     });
+                }
+                // Khởi tạo mật khẩu mã hóa cho tất cả tài khoản nếu chưa có
+                for (const u of this.users) {
+                    if (!u.passwordHash || !u.salt) {
+                        const defPass = this.getDefaultPasswordForUsername(u.username);
+                        this.setPassword(u, defPass);
+                    }
                 }
                 this.persistUsers();
             }
@@ -412,6 +453,95 @@ export class AuthService {
             hub: user.hub
         });
         return { success: true, user, message: `Đã chuyển sang tài khoản ${user.fullName} (${user.role})` };
+    }
+    static login(username, password) {
+        const user = this.getUserById(username);
+        if (!user) {
+            return { success: false, message: 'Tên đăng nhập hoặc mật khẩu không chính xác' };
+        }
+        if (!user.isActive) {
+            return { success: false, message: 'Tài khoản này đang bị khóa. Vui lòng liên hệ Admin.' };
+        }
+        if (!this.verifyPassword(user, password)) {
+            return { success: false, message: 'Tên đăng nhập hoặc mật khẩu không chính xác' };
+        }
+        // Tạo token phiên đăng nhập (hiệu lực 24 giờ)
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+        this.sessions.set(token, {
+            token,
+            userId: user.id,
+            username: user.username,
+            role: user.role,
+            hub: user.hub,
+            createdAt: new Date().toISOString(),
+            expiresAt
+        });
+        this.currentUsername = user.username;
+        this.logAction({
+            userId: user.id,
+            username: user.username,
+            userRole: user.role,
+            action: 'LOGIN',
+            targetId: user.username,
+            details: `Đăng nhập hệ thống thành công (${user.role} @ Hub ${user.hub})`,
+            hub: user.hub
+        });
+        return {
+            success: true,
+            token,
+            user: this.sanitizeUserForClient(user),
+            message: 'Đăng nhập thành công'
+        };
+    }
+    static logout(token) {
+        if (!token)
+            return false;
+        const session = this.sessions.get(token);
+        if (session) {
+            this.logAction({
+                userId: session.userId,
+                username: session.username,
+                userRole: session.role,
+                action: 'LOGOUT',
+                targetId: session.username,
+                details: `Đăng xuất khỏi hệ thống`,
+                hub: session.hub
+            });
+            this.sessions.delete(token);
+            return true;
+        }
+        return false;
+    }
+    static getUserByToken(token) {
+        if (!token)
+            return null;
+        const session = this.sessions.get(token);
+        if (!session)
+            return null;
+        if (Date.now() > session.expiresAt) {
+            this.sessions.delete(token);
+            return null;
+        }
+        return this.getUserById(session.username) || null;
+    }
+    static sanitizeUserForClient(user) {
+        const { passwordHash, salt, ...safeUser } = user;
+        return safeUser;
+    }
+    static changePassword(username, oldPass, newPass) {
+        const user = this.getUserById(username);
+        if (!user)
+            return { success: false, message: 'Không tìm thấy tài khoản' };
+        if (!this.verifyPassword(user, oldPass)) {
+            return { success: false, message: 'Mật khẩu cũ không chính xác' };
+        }
+        if (!newPass || newPass.length < 6) {
+            return { success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự' };
+        }
+        this.setPassword(user, newPass);
+        this.persistUsers();
+        return { success: true, message: 'Đổi mật khẩu thành công' };
     }
     /**
      * Bảo mật cấp độ trường (Field-Level Security):

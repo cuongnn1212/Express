@@ -1,5 +1,27 @@
 [
   {
+    "id": "log_1791786203610_301",
+    "timestamp": "2026-10-12T06:23:23.610Z",
+    "userId": "usr_admin",
+    "username": "admin",
+    "userRole": "SUPER_ADMIN",
+    "action": "LOGOUT",
+    "targetId": "admin",
+    "details": "Đăng xuất khỏi hệ thống",
+    "hub": "SGN"
+  },
+  {
+    "id": "log_1791786191225_70",
+    "timestamp": "2026-10-12T06:23:11.225Z",
+    "userId": "usr_admin",
+    "username": "admin",
+    "userRole": "SUPER_ADMIN",
+    "action": "LOGIN",
+    "targetId": "admin",
+    "details": "Đăng nhập hệ thống thành công (SUPER_ADMIN @ Hub SGN)",
+    "hub": "SGN"
+  },
+  {
     "id": "log_1791771514190_299",
     "timestamp": "2026-10-12T02:18:34.190Z",
     "userId": "customer_portal",

@@ -9,7 +9,9 @@
     "walletBalance": 0,
     "creditLimit": 0,
     "isActive": true,
-    "createdAt": "2026-10-08T18:17:14.720Z"
+    "createdAt": "2026-10-08T18:17:14.720Z",
+    "salt": "8e18a8d6f06109a22b8cdc937476b000",
+    "passwordHash": "67acb036c380c0f5d26598654f60a9b5cf9e8731125e0e3fb5f9fcfb118d7426e1f91abeb473cc743a824849389d2302722542d0253e873ec02b5467d5e9d69a"
   },
   {
     "id": "usr_bgd",
@@ -21,7 +23,9 @@
     "walletBalance": 0,
     "creditLimit": 0,
     "isActive": true,
-    "createdAt": "2026-10-12T01:35:47.934Z"
+    "createdAt": "2026-10-12T01:35:47.934Z",
+    "salt": "a4ac4cd25d5552f7584fcf722679a27b",
+    "passwordHash": "3c5dab848450619cd1add8a8def0f151cb53f29e3bbfbcbaf152d163eb76cc4aa29c96e8fb52b3578e5a016f888955a44079c17cbbe07a2b72a8b9eca731d6dd"
   },
   {
     "id": "usr_accountant",
@@ -33,7 +37,9 @@
     "walletBalance": 0,
     "creditLimit": 0,
     "isActive": true,
-    "createdAt": "2026-10-08T18:17:14.721Z"
+    "createdAt": "2026-10-08T18:17:14.721Z",
+    "salt": "52d6e8952305a4467f24ec1b43ed31ad",
+    "passwordHash": "a16c356980630dd9bd92381a12f9759bb895d0d0f22cc071bea641464921ab430d34bab22da7e59cf72d904d18b8ac63ca3f1c5d1a8592837d92f47fc605da47"
   },
   {
     "id": "usr_warehouse_sgn",
@@ -45,7 +51,9 @@
     "walletBalance": 0,
     "creditLimit": 0,
     "isActive": true,
-    "createdAt": "2026-10-08T18:17:14.721Z"
+    "createdAt": "2026-10-08T18:17:14.721Z",
+    "salt": "84bc15eb96c6c794be8bd7364a403957",
+    "passwordHash": "4409588f6c0d15cf5e77d0adb87cdaa296b9e7877c9921d0e8704270664d920b002114a05910c6fd615960270fb5e10f87b1e46c87788d1669967edc682f8e2a"
   },
   {
     "id": "usr_warehouse_han",
@@ -57,7 +65,9 @@
     "walletBalance": 0,
     "creditLimit": 0,
     "isActive": true,
-    "createdAt": "2026-10-08T18:17:14.721Z"
+    "createdAt": "2026-10-08T18:17:14.721Z",
+    "salt": "1a7641b5298c8ff05ba4101ed60be29c",
+    "passwordHash": "f8d5d9627d6be4349ab4888fb8692288269339ca16195e92963451bf6dfd75c765e847807c8b83e0f612089524ac10e2f22eabbde39ff3038a76e0a76f71a25a"
   },
   {
     "id": "usr_agent_annam",
@@ -70,7 +80,9 @@
     "walletBalance": 15500000,
     "creditLimit": 50000000,
     "isActive": true,
-    "createdAt": "2026-10-08T18:17:14.721Z"
+    "createdAt": "2026-10-08T18:17:14.721Z",
+    "salt": "06b05642fdb8773140998c58b0e74583",
+    "passwordHash": "95f09f7b898666e94c7bda914c9ec8bbd594b0fe7570b93f34ce39b206cd3546f665b26c89694da9fcbcc668bc7a25bb45ed31d2bab26170e09d0a9fe3621ea1"
   },
   {
     "id": "usr_agent_crossborder",
@@ -83,7 +95,9 @@
     "walletBalance": 3200000,
     "creditLimit": 0,
     "isActive": true,
-    "createdAt": "2026-10-08T18:17:14.721Z"
+    "createdAt": "2026-10-08T18:17:14.721Z",
+    "salt": "2d49c7396212d0af1a764a39766c5ff5",
+    "passwordHash": "1ffd56e8d34a544e02b5dc580b2f02e6710b7a8672e78ad5a41034abc8eb52460ed68125272f2a767af07c04177fe30db813cb2d8422b4bc6d93669eb057fe84"
   },
   {
     "id": "usr_1791768332676",
@@ -96,6 +110,8 @@
     "walletBalance": 0,
     "creditLimit": 0,
     "isActive": true,
-    "createdAt": "2026-10-12T01:25:32.676Z"
+    "createdAt": "2026-10-12T01:25:32.676Z",
+    "salt": "8c8b90f94fc8adaae6f5bcdbf5d048a5",
+    "passwordHash": "87068176fcc92af642bcc3b86e8629f0e3415ffae16e22e5c3d671d785dc2ffa33d9fcc78dc5aecec4afaf1a281ff341a5d7b264db1ae59e061683e7c81c1490"
   }
 ]

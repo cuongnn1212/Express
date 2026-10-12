@@ -288,8 +288,8 @@
         </div>
 
         <div class="flex items-center space-x-3 text-xs">
-          <!-- Role & User Switcher -->
-          <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-inner">
+          <!-- Role & User Switcher (Chỉ hiển thị cho SUPER_ADMIN) -->
+          <div id="wrapperUserSwitch" class="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-inner">
             <span class="text-[11px] font-bold text-slate-500 px-2 flex items-center space-x-1">
               <i class="fa-solid fa-user-shield text-indigo-600"></i>
               <span class="hidden sm:inline">Tài khoản:</span>
@@ -319,6 +319,12 @@
             <i class="fa-solid fa-arrow-up-right-from-square"></i>
             <span>Cổng Báo Giá</span>
           </a>
+
+          <!-- Nút Đăng Xuất -->
+          <button onclick="handleAdminLogout()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1.5 cursor-pointer" title="Đăng xuất khỏi hệ thống">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>Đăng xuất</span>
+          </button>
         </div>
       </header>
 
@@ -4903,6 +4909,14 @@
   </div>
 
   <script>
+    // 🛡️ AUTH GUARD: Chặn truy cập nếu chưa đăng nhập, chuyển hướng sang trang login
+    (function checkAuthGuard() {
+      const token = localStorage.getItem('pandalex_token');
+      if (!token) {
+        window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+      }
+    })();
+
     // Quản lý Ẩn / Hiện các Nhóm Menu Accordion
     function toggleGroup(grpId) {
       const el = document.getElementById(grpId);
@@ -8701,16 +8715,23 @@
       }
     }
 
-    // 10. Chuyển đổi User đang đăng nhập từ Header
+    // 10. Chuyển đổi User đang đăng nhập từ Header (Chỉ SUPER_ADMIN được phép)
     async function switchCurrentUserFromHeader(username) {
+      const token = localStorage.getItem('pandalex_token');
       try {
         const res = await fetch('/api/auth/switch-user', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({ username })
         });
         const d = await res.json();
         if (d.success) {
+          if (d.token) {
+            localStorage.setItem('pandalex_token', d.token);
+          }
           currentAuthUser = d.data;
           applyUserRolePermissions(currentAuthUser);
           
@@ -8718,7 +8739,7 @@
           const sec = window.location.hash.replace('#', '') || 'dashboard';
           switchAdminSection(sec);
         } else {
-          alert('Lỗi chuyển tài khoản: ' + d.message);
+          alert('Lỗi chuyển tài khoản: ' + (d.message || d.error || 'Thao tác không được phép'));
         }
       } catch (e) {
         console.error('Lỗi switch user:', e);
@@ -8729,6 +8750,16 @@
     function applyUserRolePermissions(userData) {
       if (!userData) return;
       currentAuthUser = userData;
+
+      // Ẩn/Hiện selector đổi vai trò: Chỉ SUPER_ADMIN mới được thấy Switcher
+      const wrapperSwitch = document.getElementById('wrapperUserSwitch');
+      if (wrapperSwitch) {
+        if (userData.role === 'SUPER_ADMIN') {
+          wrapperSwitch.classList.remove('hidden');
+        } else {
+          wrapperSwitch.classList.add('hidden');
+        }
+      }
 
       // Cập nhật selector trên TopBar
       const selSwitch = document.getElementById('selCurrentUserSwitch');
@@ -8792,14 +8823,52 @@
 
     // 12. Kiểm tra và tải người dùng hiện tại khi load trang
     async function checkAndLoadCurrentUser() {
+      const token = localStorage.getItem('pandalex_token');
+      if (!token) {
+        window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+        return;
+      }
       try {
-        const res = await fetch('/api/auth/current-user');
+        const res = await fetch('/api/auth/current-user', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.status === 401) {
+          localStorage.removeItem('pandalex_token');
+          localStorage.removeItem('pandalex_user');
+          window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+          return;
+        }
         const d = await res.json();
         if (d.success && d.data) {
           applyUserRolePermissions(d.data);
+        } else {
+          localStorage.removeItem('pandalex_token');
+          localStorage.removeItem('pandalex_user');
+          window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
         }
       } catch (e) {
         console.error('Lỗi nạp current-user:', e);
+      }
+    }
+
+    // Đăng xuất khỏi hệ thống
+    async function handleAdminLogout() {
+      const token = localStorage.getItem('pandalex_token');
+      try {
+        if (token) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        }
+      } catch (e) {
+        console.error('Lỗi đăng xuất:', e);
+      } finally {
+        localStorage.removeItem('pandalex_token');
+        localStorage.removeItem('pandalex_user');
+        window.location.replace('/login.html');
       }
     }
 

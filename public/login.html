@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Đăng Nhập Quản Trị Hệ Thống | PandaLex Express</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; }
+    :root {
+      --ups-brown: #351c15;
+      --ups-gold: #ffb500;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950 flex flex-col justify-between text-slate-100">
+
+  <!-- TOP HEADER -->
+  <header class="p-4 sm:p-6 flex items-center justify-between max-w-7xl mx-auto w-full">
+    <a href="/" class="flex items-center space-x-3 group">
+      <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center font-black text-stone-950 text-xl shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+        🐼
+      </div>
+      <div>
+        <h1 class="text-base font-extrabold text-white tracking-tight leading-none">PandaLex Express</h1>
+        <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Enterprise Control Portal</span>
+      </div>
+    </a>
+
+    <a href="/" class="text-xs font-bold text-slate-300 hover:text-amber-400 transition flex items-center space-x-1.5 bg-slate-800/80 hover:bg-slate-800 px-3.5 py-1.5 rounded-xl border border-slate-700">
+      <i class="fa-solid fa-house text-amber-400"></i>
+      <span>Trang Chủ Khách Hàng ↗</span>
+    </a>
+  </header>
+
+  <!-- LOGIN CARD CONTAINER -->
+  <main class="flex-1 flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-md">
+      
+      <!-- Card Box -->
+      <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        
+        <!-- Top Accent Bar -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600"></div>
+
+        <!-- Header inside Card -->
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-2xl mb-3 shadow-inner">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">Xác Thực Quản Trị Viên</h2>
+          <p class="text-xs text-slate-400 mt-1">Đăng nhập tài khoản để vào hệ thống điều hành & quản lý vận đơn</p>
+        </div>
+
+        <!-- Alert Error Message -->
+        <div id="loginAlert" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start space-x-2">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-400"></i>
+          <span id="loginAlertText">Tên đăng nhập hoặc mật khẩu không chính xác.</span>
+        </div>
+
+        <!-- Form -->
+        <form id="formLogin" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Tên Đăng Nhập</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                <i class="fa-solid fa-user text-sm"></i>
+              </span>
+              <input type="text" id="inpUsername" required autofocus placeholder="admin / bgd / ketoan / khohan..." class="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Mật Khẩu</label>
+              <span class="text-[11px] text-slate-500">Mặc định: [username]@123</span>
+            </div>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                <i class="fa-solid fa-lock text-sm"></i>
+              </span>
+              <input type="password" id="inpPassword" required placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300">
+                <i id="iconEye" class="fa-solid fa-eye text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <label class="flex items-center space-x-2 text-slate-400 cursor-pointer select-none">
+              <input type="checkbox" id="chkRemember" checked class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-amber-500 cursor-pointer">
+              <span>Ghi nhớ phiên đăng nhập</span>
+            </label>
+            <span class="text-slate-500">Bảo mật mã hóa PBKDF2</span>
+          </div>
+
+          <button type="submit" id="btnLoginSubmit" class="w-full mt-2 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-sm rounded-xl transition-all duration-200 shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-arrow-right-to-bracket text-base"></i>
+            <span>ĐĂNG NHẬP HỆ THỐNG</span>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
+          <div class="relative flex justify-center text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-slate-900 px-3">
+            Tài Khoản Thử Nghiệm Nhanh (Click 1 Chạm)
+          </div>
+        </div>
+
+        <!-- Quick Login Demo Buttons Grid -->
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button type="button" onclick="fillQuickLogin('admin', 'admin@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-xl text-left transition group">
+            <div class="font-extrabold text-amber-400 group-hover:text-amber-300 flex items-center justify-between">
+              <span>👑 Super Admin</span>
+              <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1 rounded">Cấp 1</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">admin • admin@123</div>
+          </button>
+
+          <button type="button" onclick="fillQuickLogin('bgd', 'bgd@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/50 rounded-xl text-left transition group">
+            <div class="font-extrabold text-indigo-400 group-hover:text-indigo-300 flex items-center justify-between">
+              <span>🏛️ Ban Giám Đốc</span>
+              <span class="text-[9px] bg-indigo-500/20 text-indigo-300 px-1 rounded">Cấp 2</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">bgd • bgd@123</div>
+          </button>
+
+          <button type="button" onclick="fillQuickLogin('ketoan', 'ketoan@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-left transition group">
+            <div class="font-extrabold text-emerald-400 group-hover:text-emerald-300 flex items-center justify-between">
+              <span>💼 Kế Toán Trưởng</span>
+              <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1 rounded">Cấp 3</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">ketoan • ketoan@123</div>
+          </button>
+
+          <button type="button" onclick="fillQuickLogin('khosgn', 'khosgn@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 rounded-xl text-left transition group">
+            <div class="font-extrabold text-cyan-400 group-hover:text-cyan-300 flex items-center justify-between">
+              <span>📦 Thủ Kho Tân Bình</span>
+              <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1 rounded">SGN Hub</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">khosgn • khosgn@123</div>
+          </button>
+
+          <button type="button" onclick="fillQuickLogin('khohan', 'khohan@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 rounded-xl text-left transition group">
+            <div class="font-extrabold text-sky-400 group-hover:text-sky-300 flex items-center justify-between">
+              <span>📦 Thủ Kho Nội Bài</span>
+              <span class="text-[9px] bg-sky-500/20 text-sky-300 px-1 rounded">HAN Hub</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">khohan • khohan@123</div>
+          </button>
+
+          <button type="button" onclick="fillQuickLogin('daily_annam', 'annam@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/50 rounded-xl text-left transition group">
+            <div class="font-extrabold text-rose-400 group-hover:text-rose-300 flex items-center justify-between">
+              <span>🤝 Đại Lý An Nam</span>
+              <span class="text-[9px] bg-rose-500/20 text-rose-300 px-1 rounded">Cấp 5</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">daily_annam • annam@123</div>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Footer Info -->
+      <div class="text-center mt-6 text-xs text-slate-500">
+        <p>© 2026 PandaLex Express International Gateway. All rights reserved.</p>
+        <p class="mt-1 text-[11px] text-slate-600">Được bảo vệ bằng mã hóa xác thực phiên 2 lớp & RBAC 2.0</p>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Điền nhanh thông tin tài khoản mẫu
+    function fillQuickLogin(username, password) {
+      document.getElementById('inpUsername').value = username;
+      document.getElementById('inpPassword').value = password;
+      hideAlert();
+      document.getElementById('inpPassword').focus();
+    }
+
+    // Ẩn/Hiện mật khẩu
+    function togglePasswordVisibility() {
+      const inp = document.getElementById('inpPassword');
+      const icon = document.getElementById('iconEye');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        inp.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    function showAlert(msg) {
+      const alert = document.getElementById('loginAlert');
+      const text = document.getElementById('loginAlertText');
+      text.textContent = msg;
+      alert.classList.remove('hidden');
+    }
+
+    function hideAlert() {
+      document.getElementById('loginAlert').classList.add('hidden');
+    }
+
+    // Xử lý gửi form đăng nhập
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      hideAlert();
+
+      const username = document.getElementById('inpUsername').value.trim();
+      const password = document.getElementById('inpPassword').value;
+      const btn = document.getElementById('btnLoginSubmit');
+
+      if (!username || !password) {
+        showAlert('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
+        return;
+      }
+
+      const originalBtnHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Đang xác thực...</span>';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success && data.token) {
+          // Lưu token và thông tin người dùng vào localStorage
+          localStorage.setItem('pandalex_token', data.token);
+          localStorage.setItem('pandalex_user', JSON.stringify(data.data));
+
+          // Chuyển hướng theo query param redirect (nếu có), mặc định vào /admin.html
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectTarget = urlParams.get('redirect') || '/admin.html';
+          window.location.href = redirectTarget;
+        } else {
+          showAlert(data.message || 'Tên đăng nhập hoặc mật khẩu không chính xác.');
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+        }
+      } catch (err) {
+        console.error('Lỗi kết nối máy chủ:', err);
+        showAlert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng hoặc thử lại sau.');
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+      }
+    }
+
+    // Tự động kiểm tra nếu đã đăng nhập rồi thì cho vào thẳng admin
+    (async function checkExistingLogin() {
+      const token = localStorage.getItem('pandalex_token');
+      if (token) {
+        try {
+          const res = await fetch('/api/auth/current-user', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          const d = await res.json();
+          if (d.success && d.authenticated) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectTarget = urlParams.get('redirect') || '/admin.html';
+            window.location.href = redirectTarget;
+          }
+        } catch (_) {}
+      }
+    })();
+  </script>
+</body>
+</html>
