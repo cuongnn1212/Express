@@ -2,12 +2,12 @@
   "name": "pandalex-express",
   "version": "1.0.0",
   "description": "PandaLex Express - Multi-Carrier Gateway (DHL, FedEx, UPS)",
-  "main": "app.js",
+  "main": "loader.cjs",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node app.js",
+    "start": "node loader.cjs",
     "test-rate": "tsx src/scripts/test-rate.ts"
   },
   "dependencies": {
