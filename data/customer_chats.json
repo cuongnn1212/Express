@@ -25,5 +25,24 @@
     "senderName": "Trợ lý CSKH PandaLex 24/7",
     "message": "Chào Anh Nam! Giá cước gửi hàng đi Mỹ hiện tại chỉ từ 210.000đ/kg đối với hàng lô và có ưu đãi 35% cho đại lý. Quý khách có thể sử dụng công cụ tính cước nhanh ngay trên trang hoặc để lại số điện thoại để chuyên viên gọi lại nhé!",
     "timestamp": "2026-10-12T02:18:37.660Z"
+  },
+  {
+    "id": "chat_1791789917436_4k0y",
+    "sessionId": "sess_1791772150663",
+    "customerName": "Khách Hàng",
+    "customerPhone": "",
+    "sender": "CUSTOMER",
+    "senderName": "Khách Hàng",
+    "message": "Tôi muốn gửi thịt đi mỹ",
+    "timestamp": "2026-10-12T07:25:17.437Z"
+  },
+  {
+    "id": "chat_1791789917441_bot",
+    "sessionId": "sess_1791772150663",
+    "customerName": "Khách Hàng",
+    "sender": "PANDALEX_BOT",
+    "senderName": "Trí Tuệ Logistics PandaLex 24/7",
+    "message": "Kính chào Quý khách Khách Hàng! PandaLex Logistics Trade Brain xin gửi đến Quý khách bản tư vấn chuyên môn chi tiết:\n\n🏛️ **CHÍNH SÁCH THUẾ & NGƯỠNG MIỄN THUẾ TẠI MỸ (HOA KỲ):**\n• **Ngưỡng miễn thuế (De Minimis):** **800 USD**. Ngưỡng Section 321: Miễn 100% thuế nhập khẩu và thuế bang cho kiện hàng dưới $800 USD/ngày/người nhận đối với hàng cá nhân & thương mại điện tử B2C.\n• **Thuế nhập khẩu (Customs Duty):** Từ 0% đến 37.5% tùy theo mã HS Code đối với hàng hóa trên $800 USD.\n• **Thuế GTGT / Tiêu dùng (VAT / GST):** Mỹ không có VAT liên bang, nhưng áp dụng State Sales Tax (thuế bang 0% - 10.25% tùy bang giao hàng).\n• **Lưu ý phụ phí thủ tục:** Hàng trên $800 USD chuyển sang diện Formal Entry (hải quan chính ngạch), phát sinh phí xử lý Merchandise Processing Fee (MPF tối thiểu $31.67 USD) + phí ủy thác của hãng chuyển phát.\n• **Cảnh báo chống bán phá giá:** Cảnh báo thuế chống bán phá giá (AD/CVD) cực cao (lên đến 100% - 300%) đối với: nhôm định hình, đinh thép, mật ong, pin năng lượng mặt trời, túi nilon nhựa PE từ Việt Nam.\n\n💼 **LỜI KHUYÊN THƯƠNG MẠI & KHAI BÁO HÓA ĐƠN (COMMERCIAL INVOICE):**\n• **Quy tắc mô tả hàng:** Mô tả chi tiết chất liệu, công dụng (VD: không ghi \"Clothes\" mà phải ghi \"Men 100% Cotton Knitted T-Shirt\", không ghi \"Gift\").\n• **Cảnh báo khai thấp giá trị (Undervaluation):** Nếu khai báo điện thoại/máy móc giá $10 - $20 để trốn thuế Section 321, Hải quan sẽ yêu cầu bằng chứng thanh toán ngân hàng (Bank Transfer / PayPal slip) và truy thu phạt gấp 3-5 lần.\n• **Khuyến nghị Incoterms:** Khuyên dùng **DDP** (Khuyến nghị chọn DDP (Delivered Duty Paid) cho hàng bán lẻ, FBA Amazon hoặc quà tặng để tránh phát sinh thuế bất ngờ làm người nhận từ chối nhận hàng.)\n\n📞 Quý khách cần hỗ trợ xuất mã Prior Notice FDA, chứng thư Hun trùng hoặc đặt lịch Shipper qua lấy hàng tận nơi miễn phí, vui lòng để lại số điện thoại hoặc gọi trực tiếp Hotline CSKH PandaLex 24/7: **0976 843 168**.",
+    "timestamp": "2026-10-12T07:25:17.440Z"
   }
 ]

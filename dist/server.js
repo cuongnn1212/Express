@@ -29,6 +29,8 @@ import { AwbManagerService } from './modules/shipment/awb-manager-service.js';
 import { ManifestService } from './modules/warehouse/manifest-service.js';
 import { ReconciliationService } from './modules/finance/reconciliation-service.js';
 import { CommunicationService } from './modules/customer/communication-service.js';
+import { LogisticsTradeBrain } from './modules/ai/logistics-trade-brain.js';
+import { COUNTRY_TRADE_POLICIES } from './modules/ai/trade-compliance-knowledge.js';
 import compression from 'compression';
 dotenv.config();
 const app = express();
@@ -498,12 +500,12 @@ app.get('/api/customer/chat/messages', (req, res) => {
     res.json({ success: true, count: messages.length, data: messages });
 });
 // 7. Gửi tin nhắn Live Chat
-app.post('/api/customer/chat/send', (req, res) => {
+app.post('/api/customer/chat/send', async (req, res) => {
     const { sessionId, customerName, customerPhone, message, sender, senderName, awbNumber } = req.body;
     if (!message) {
         return res.status(400).json({ success: false, message: 'Tin nhắn không được để trống' });
     }
-    const result = CommunicationService.postChatMessage({
+    const result = await CommunicationService.postChatMessage({
         sessionId: sessionId || 'default_session',
         customerName: customerName || 'Khách hàng',
         customerPhone,
@@ -513,6 +515,38 @@ app.post('/api/customer/chat/send', (req, res) => {
         awbNumber
     });
     res.json({ success: true, data: result });
+});
+/**
+ * API: BỘ NÃO TRÍ TUỆ THƯƠNG MẠI, THUẾ SUẤT & PHÁP CHẾ QUỐC TẾ (AI TRADE BRAIN)
+ * POST /api/ai/trade-advisor
+ */
+app.post('/api/ai/trade-advisor', async (req, res) => {
+    const { query, customerName, customerCode } = req.body;
+    if (!query || typeof query !== 'string') {
+        return res.status(400).json({ success: false, message: 'Vui lòng cung cấp câu hỏi hoặc yêu cầu tư vấn' });
+    }
+    const analysis = LogisticsTradeBrain.analyzeQuery(query);
+    const advice = await LogisticsTradeBrain.consult(query, { customerName, customerCode });
+    res.json({
+        success: true,
+        data: {
+            advice,
+            analysis
+        }
+    });
+});
+/**
+ * API: LẤY CẨM NANG THUẾ SUẤT, DE MINIMIS & DANH MỤC CẤM TỪNG NƯỚC (US, AU, CA, EU)
+ * GET /api/ai/trade-handbook/:country
+ */
+app.get('/api/ai/trade-handbook/:country', (req, res) => {
+    const code = (req.params.country || '').toUpperCase();
+    const policy = COUNTRY_TRADE_POLICIES[code] || COUNTRY_TRADE_POLICIES.US;
+    res.json({
+        success: true,
+        country: code,
+        data: policy
+    });
 });
 /**
  * API: Thống kê tổng quan hệ thống cho Admin Dashboard

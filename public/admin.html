@@ -307,27 +307,16 @@
         </div>
 
         <div class="flex items-center space-x-3 text-xs">
-          <!-- Role & User Switcher (Chỉ hiển thị cho SUPER_ADMIN) -->
-          <div id="wrapperUserSwitch" class="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-inner">
-            <span class="text-[11px] font-bold text-slate-500 px-2 flex items-center space-x-1">
-              <i class="fa-solid fa-user-shield text-indigo-600"></i>
-              <span class="hidden sm:inline">Tài khoản:</span>
-            </span>
-            <select id="selCurrentUserSwitch" onchange="switchCurrentUserFromHeader(this.value)" class="bg-white text-slate-900 font-extrabold text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-              <option value="admin">👑 Quản Trị Viên (admin - SUPER_ADMIN - Cấp 1 Tối Cao)</option>
-              <option value="bgd">🏛️ Ban Giám Đốc (bgd - DIRECTOR - Cấp 2 Điều Hành)</option>
-              <option value="ketoan">💼 Kế Toán Trưởng (ketoan - ACCOUNTANT - Cấp 3)</option>
-              <option value="khohan">📦 Thủ Kho Nội Bài (khohan - WAREHOUSE @ HAN - Cấp 4)</option>
-              <option value="khosgn">📦 Thủ Kho Tân Bình (khosgn - WAREHOUSE @ SGN - Cấp 4)</option>
-              <option value="khodad">📦 Thủ Kho Đà Nẵng (khodad - WAREHOUSE @ DAD - Cấp 4)</option>
-              <option value="daily_annam">🤝 Đại Lý An Nam (daily_annam - AGENT @ AG-002 - Cấp 5)</option>
-              <option value="fba_seller">🛒 CrossBorder FBA (fba_seller - AGENT @ FBA-991 - Cấp 5)</option>
-            </select>
+          <!-- Thông tin tài khoản đăng nhập (Bảo mật, chỉ đọc) -->
+          <div class="flex items-center space-x-2 bg-slate-100/90 border border-slate-200 rounded-xl px-2.5 py-1 shadow-inner">
+            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+            <div class="flex flex-col text-left leading-tight">
+              <span id="topBarUserFullName" class="font-extrabold text-slate-800 text-[11px] truncate max-w-[130px]">Đang đăng nhập...</span>
+              <span id="badgeCurrentRoleHub" class="text-[9px] font-black text-indigo-700 truncate max-w-[140px]">SUPER_ADMIN • SGN Hub</span>
+            </div>
           </div>
-
-          <span id="badgeCurrentRoleHub" class="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200">
-            SUPER_ADMIN • SGN Hub
-          </span>
 
           <a href="/home.html" target="_blank" class="bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1.5">
             <i class="fa-solid fa-house"></i>
@@ -4999,6 +4988,8 @@
         if (el) el.classList.remove('hidden');
         if (icon) icon.style.transform = 'rotate(0deg)';
       }
+    }
+
     // Quản lý Drawer Sidebar trên thiết bị di động (Mobile Responsive)
     function toggleAdminMobileSidebar() {
       const sb = document.getElementById('adminSidebar');
@@ -8770,19 +8761,11 @@
       if (!userData) return;
       currentAuthUser = userData;
 
-      // Ẩn/Hiện selector đổi vai trò: Chỉ SUPER_ADMIN mới được thấy Switcher
-      const wrapperSwitch = document.getElementById('wrapperUserSwitch');
-      if (wrapperSwitch) {
-        if (userData.role === 'SUPER_ADMIN') {
-          wrapperSwitch.classList.remove('hidden');
-        } else {
-          wrapperSwitch.classList.add('hidden');
-        }
+      // Cập nhật thông tin User trên TopBar (Tên & Vai trò thực tế)
+      const topBarName = document.getElementById('topBarUserFullName');
+      if (topBarName) {
+        topBarName.textContent = userData.fullName || userData.username || 'Người dùng';
       }
-
-      // Cập nhật selector trên TopBar
-      const selSwitch = document.getElementById('selCurrentUserSwitch');
-      if (selSwitch) selSwitch.value = userData.username;
 
       // Cập nhật Role Badge trên TopBar
       const badgeRoleHub = document.getElementById('badgeCurrentRoleHub');
@@ -8823,7 +8806,10 @@
         const btn = document.getElementById(btnId);
         if (btn) {
           const perm = perms[menuKey];
-          const canView = perm ? perm.canView : (userData.role === 'SUPER_ADMIN');
+          // SUPER_ADMIN và DIRECTOR luôn xem được 100% tất cả menu; mặc định là hiển thị
+          const canView = (userData.role === 'SUPER_ADMIN' || userData.role === 'DIRECTOR') 
+            ? true 
+            : (perm && typeof perm.canView === 'boolean' ? perm.canView : true);
           if (canView) {
             btn.classList.remove('hidden');
           } else {
@@ -10356,7 +10342,19 @@ curl -X POST http://localhost:4000/api/shipments/create \\
       if (cached) applyUserRolePermissions(JSON.parse(cached));
     } catch (_) {}
 
-    loadAdminStats();
+    expandAllGroups();
+    const initialHash = window.location.hash.replace('#', '').trim();
+    if (initialHash && typeof switchAdminSection === 'function') {
+      switchAdminSection(initialHash);
+    } else {
+      loadAdminStats();
+    }
+
+    window.addEventListener('hashchange', () => {
+      const h = window.location.hash.replace('#', '').trim();
+      if (h && typeof switchAdminSection === 'function') switchAdminSection(h);
+    });
+
     checkAndLoadCurrentUser();
   </script>
 </body>

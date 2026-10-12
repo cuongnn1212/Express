@@ -1,5 +1,38 @@
 [
   {
+    "id": "log_1791790350396_64",
+    "timestamp": "2026-10-12T07:32:30.396Z",
+    "userId": "usr_admin",
+    "username": "admin",
+    "userRole": "SUPER_ADMIN",
+    "action": "LOGIN",
+    "targetId": "admin",
+    "details": "Đăng nhập hệ thống thành công (SUPER_ADMIN @ Hub SGN)",
+    "hub": "SGN"
+  },
+  {
+    "id": "log_1791789953501_103",
+    "timestamp": "2026-10-12T07:25:53.501Z",
+    "userId": "usr_admin",
+    "username": "admin",
+    "userRole": "SUPER_ADMIN",
+    "action": "LOGIN",
+    "targetId": "admin",
+    "details": "Đăng nhập hệ thống thành công (SUPER_ADMIN @ Hub SGN)",
+    "hub": "SGN"
+  },
+  {
+    "id": "log_1791789621119_206",
+    "timestamp": "2026-10-12T07:20:21.119Z",
+    "userId": "usr_admin",
+    "username": "admin",
+    "userRole": "SUPER_ADMIN",
+    "action": "LOGIN",
+    "targetId": "admin",
+    "details": "Đăng nhập hệ thống thành công (SUPER_ADMIN @ Hub SGN)",
+    "hub": "SGN"
+  },
+  {
     "id": "log_1791787009134_845",
     "timestamp": "2026-10-12T06:36:49.134Z",
     "userId": "usr_admin",

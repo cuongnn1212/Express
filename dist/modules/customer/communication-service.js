@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { LogisticsTradeBrain } from '../ai/logistics-trade-brain.js';
 const TICKETS_FILE = path.resolve('data/customer_tickets.json');
 const CHATS_FILE = path.resolve('data/customer_chats.json');
 export class CommunicationService {
@@ -204,7 +205,7 @@ export class CommunicationService {
             return [];
         }
     }
-    static postChatMessage(entry) {
+    static async postChatMessage(entry) {
         this.ensureFiles();
         let all = [];
         try {
@@ -230,27 +231,22 @@ export class CommunicationService {
         if (entry.sender === 'CUSTOMER') {
             const text = entry.message.toLowerCase();
             let botResponse = '';
-            if (text.includes('giá') || text.includes('cước') || text.includes('bao nhiêu')) {
-                botResponse = `Chào ${entry.customerName}! Giá cước gửi hàng đi Mỹ hiện tại chỉ từ 210.000đ/kg đối với hàng lô và có ưu đãi 35% cho đại lý. Quý khách có thể sử dụng công cụ tính cước nhanh ngay trên trang hoặc để lại số điện thoại để chuyên viên gọi lại nhé!`;
-            }
-            else if (text.includes('lấy hàng') || text.includes('pick') || text.includes('tận nhà') || text.includes('tận nơi')) {
-                botResponse = `PandaLex Express hỗ trợ lấy hàng miễn phí tận nơi tại Hà Nội, TP.HCM và Đà Nẵng. Quý khách vui lòng bấm sang tab "Đặt Lấy Hàng Tận Nơi" hoặc nhắn địa chỉ cụ thể để Shipper điều phối xe ngay ạ!`;
-            }
-            else if (text.includes('pin') || text.includes('chất lỏng') || text.includes('mỹ phẩm') || text.includes('thực phẩm')) {
-                botResponse = `Dạ PandaLex nhận vận chuyển có điều kiện các mặt hàng pin lithium, mỹ phẩm, thực phẩm có nhãn mác rõ ràng qua chuyên tuyến Air Cargo có kèm MSDS. Quý khách vui lòng cung cấp chi tiết loại hàng để bên em tư vấn thủ tục nhé!`;
-            }
-            else if (text.includes('awb') || text.includes('1z') || text.includes('77') || text.includes('đơn')) {
-                botResponse = `Dạ chuyên viên CSKH PandaLex đã nhận được thông tin tra cứu vận đơn của Quý khách. Đội ngũ sẽ tra soát vị trí thực tế của kiện hàng và phản hồi ngay trong ít phút!`;
+            if (text.includes('lấy hàng') || text.includes('pick') || text.includes('tận nhà') || text.includes('tận nơi')) {
+                botResponse = `Dạ PandaLex Express hỗ trợ lấy hàng miễn phí tận nơi tại Hà Nội, TP.HCM và Đà Nẵng. Quý khách vui lòng cung cấp địa chỉ cụ thể và số kiện để điều phối viên cho Shipper qua cân đo và lấy hàng ngay trong ngày ạ!`;
             }
             else {
-                botResponse = `Cảm ơn Quý khách ${entry.customerName} đã nhắn tin đến PandaLex Express. Yêu cầu của Quý khách đã được gửi tới điều phối viên trực tuyến. Trong trường hợp khẩn cấp, Quý khách có thể gọi trực tiếp Hotline 0976 843 168 (24/7).`;
+                // Gọi Bộ não Trí Tuệ Thương Mại, Thuế & Pháp Chế Quốc Tế
+                botResponse = await LogisticsTradeBrain.consult(entry.message, {
+                    customerName: entry.customerName,
+                    customerCode: entry.customerPhone
+                });
             }
             botReply = {
                 id: `chat_${Date.now() + 1}_bot`,
                 sessionId: entry.sessionId,
                 customerName: entry.customerName,
                 sender: 'PANDALEX_BOT',
-                senderName: 'Trợ lý CSKH PandaLex 24/7',
+                senderName: 'Trí Tuệ Logistics PandaLex 24/7',
                 message: botResponse,
                 timestamp: new Date().toISOString()
             };
