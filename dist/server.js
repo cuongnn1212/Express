@@ -1612,6 +1612,11 @@ app.post('/api/admin/tracking/config', (req, res) => {
  * =========================================================================
  */
 app.get('/api/auth/users', (req, res) => {
+    const token = extractRequestToken(req);
+    const user = token ? AuthService.getUserByToken(token) : null;
+    if (!user || (user.role !== 'SUPER_ADMIN' && user.role !== 'DIRECTOR')) {
+        return res.status(403).json({ success: false, message: 'Yêu cầu quyền Quản Trị Viên để xem danh sách tài khoản' });
+    }
     res.json({ success: true, data: AuthService.getUsers() });
 });
 app.get('/api/auth/hubs', (req, res) => {
@@ -1660,8 +1665,8 @@ app.post('/api/auth/login', (req, res) => {
         return res.status(401).json(result);
     }
     const permissions = AuthService.getPermissionsByRole(result.user.role);
-    // Thiết lập Cookie phiên cho trình duyệt
-    res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=86400`);
+    // Thiết lập Cookie phiên cho trình duyệt (hết hạn sau 30 phút)
+    res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=1800`);
     res.json({
         success: true,
         token: result.token,
@@ -1728,7 +1733,7 @@ app.post('/api/auth/switch-user', (req, res) => {
     }
     const permissions = AuthService.getPermissionsByRole(result.user.role);
     if (result.token) {
-        res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=86400`);
+        res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=1800`);
     }
     res.json({
         success: true,

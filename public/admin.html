@@ -10326,6 +10326,28 @@ curl -X POST http://localhost:4000/api/shipments/create \\
         .replace(/"/g, '&quot;');
     }
 
+    // ⏱️ TỰ ĐỘNG ĐĂNG XUẤT SAU 30 PHÚT KHÔNG CÓ THAO TÁC
+    (function initInactivityAutoLogout() {
+      const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 phút
+      let idleTimer = null;
+
+      function resetIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+          document.cookie = 'pandalex_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          localStorage.removeItem('pandalex_token');
+          localStorage.removeItem('pandalex_user');
+          window.location.replace('/login.html?timeout=1');
+        }, INACTIVITY_TIMEOUT_MS);
+      }
+
+      ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evt => {
+        window.addEventListener(evt, resetIdleTimer, { passive: true });
+      });
+
+      resetIdleTimer();
+    })();
+
     // Start
     loadAdminStats();
     checkAndLoadCurrentUser();

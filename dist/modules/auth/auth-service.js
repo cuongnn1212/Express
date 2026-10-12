@@ -437,15 +437,17 @@ export class AuthService {
     static getCurrentUser() {
         return this.getUserById(this.currentUsername) || this.users[0];
     }
+    // ⏱️ Thời gian hết hạn sau 30 phút không hoạt động (30 * 60 * 1000 ms)
+    static INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
     static switchCurrentUser(username) {
         const user = this.getUserById(username);
         if (!user) {
             return { success: false, user: this.users[0], message: `Không tìm thấy tài khoản ${username}` };
         }
         this.currentUsername = user.username;
-        // Cấp token phiên mới cho tài khoản chuyển đổi
+        // Cấp token phiên mới cho tài khoản chuyển đổi (hết hạn sau 30 phút)
         const token = crypto.randomBytes(32).toString('hex');
-        const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+        const expiresAt = Date.now() + this.INACTIVITY_TIMEOUT_MS;
         this.sessions.set(token, {
             token,
             userId: user.id,
@@ -477,9 +479,9 @@ export class AuthService {
         if (!this.verifyPassword(user, password)) {
             return { success: false, message: 'Tên đăng nhập hoặc mật khẩu không chính xác' };
         }
-        // Tạo token phiên đăng nhập (hiệu lực 24 giờ)
+        // Tạo token phiên đăng nhập (hiệu lực 30 phút tính từ thao tác cuối)
         const token = crypto.randomBytes(32).toString('hex');
-        const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+        const expiresAt = Date.now() + this.INACTIVITY_TIMEOUT_MS;
         this.sessions.set(token, {
             token,
             userId: user.id,
@@ -531,10 +533,13 @@ export class AuthService {
         const session = this.sessions.get(token);
         if (!session)
             return null;
+        // Kiểm tra hết hạn 30 phút không thao tác
         if (Date.now() > session.expiresAt) {
             this.sessions.delete(token);
             return null;
         }
+        // Trượt thời gian hết hạn thêm 30 phút khi có thao tác
+        session.expiresAt = Date.now() + this.INACTIVITY_TIMEOUT_MS;
         return this.getUserById(session.username) || null;
     }
     static sanitizeUserForClient(user) {
@@ -579,7 +584,7 @@ export class AuthService {
         return shipments.map(s => this.sanitizeShipmentForRole(s, role));
     }
     static getUsers() {
-        return this.users;
+        return this.users.map(u => this.sanitizeUserForClient(u));
     }
     static getUserById(id) {
         return this.users.find(u => u.id === id || u.username === id);

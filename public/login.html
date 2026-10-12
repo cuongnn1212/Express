@@ -68,20 +68,19 @@
               <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
                 <i class="fa-solid fa-user text-sm"></i>
               </span>
-              <input type="text" id="inpUsername" required autofocus placeholder="admin / bgd / ketoan / khohan..." class="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+              <input type="text" id="inpUsername" required autofocus autocomplete="username" placeholder="Nhập tên tài khoản" class="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
             </div>
           </div>
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Mật Khẩu</label>
-              <span class="text-[11px] text-slate-500">Mặc định: [username]@123</span>
             </div>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
                 <i class="fa-solid fa-lock text-sm"></i>
               </span>
-              <input type="password" id="inpPassword" required placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+              <input type="password" id="inpPassword" required autocomplete="current-password" placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
               <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300">
                 <i id="iconEye" class="fa-solid fa-eye text-sm"></i>
               </button>
@@ -93,7 +92,7 @@
               <input type="checkbox" id="chkRemember" checked class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-amber-500 cursor-pointer">
               <span>Ghi nhớ phiên đăng nhập</span>
             </label>
-            <span class="text-slate-500">Bảo mật mã hóa PBKDF2</span>
+            <span class="text-slate-500">Bảo mật PBKDF2</span>
           </div>
 
           <button type="submit" id="btnLoginSubmit" class="w-full mt-2 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-sm rounded-xl transition-all duration-200 shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2">
@@ -101,65 +100,6 @@
             <span>ĐĂNG NHẬP HỆ THỐNG</span>
           </button>
         </form>
-
-        <!-- Divider -->
-        <div class="relative my-6">
-          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
-          <div class="relative flex justify-center text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-slate-900 px-3">
-            Tài Khoản Thử Nghiệm Nhanh (Click 1 Chạm)
-          </div>
-        </div>
-
-        <!-- Quick Login Demo Buttons Grid -->
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <button type="button" onclick="fillQuickLogin('admin', 'admin@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-xl text-left transition group">
-            <div class="font-extrabold text-amber-400 group-hover:text-amber-300 flex items-center justify-between">
-              <span>👑 Super Admin</span>
-              <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1 rounded">Cấp 1</span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">admin • admin@123</div>
-          </button>
-
-          <button type="button" onclick="fillQuickLogin('bgd', 'bgd@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/50 rounded-xl text-left transition group">
-            <div class="font-extrabold text-indigo-400 group-hover:text-indigo-300 flex items-center justify-between">
-              <span>🏛️ Ban Giám Đốc</span>
-              <span class="text-[9px] bg-indigo-500/20 text-indigo-300 px-1 rounded">Cấp 2</span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">bgd • bgd@123</div>
-          </button>
-
-          <button type="button" onclick="fillQuickLogin('ketoan', 'ketoan@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-left transition group">
-            <div class="font-extrabold text-emerald-400 group-hover:text-emerald-300 flex items-center justify-between">
-              <span>💼 Kế Toán Trưởng</span>
-              <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1 rounded">Cấp 3</span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">ketoan • ketoan@123</div>
-          </button>
-
-          <button type="button" onclick="fillQuickLogin('khosgn', 'khosgn@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 rounded-xl text-left transition group">
-            <div class="font-extrabold text-cyan-400 group-hover:text-cyan-300 flex items-center justify-between">
-              <span>📦 Thủ Kho Tân Bình</span>
-              <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1 rounded">SGN Hub</span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">khosgn • khosgn@123</div>
-          </button>
-
-          <button type="button" onclick="fillQuickLogin('khohan', 'khohan@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 rounded-xl text-left transition group">
-            <div class="font-extrabold text-sky-400 group-hover:text-sky-300 flex items-center justify-between">
-              <span>📦 Thủ Kho Nội Bài</span>
-              <span class="text-[9px] bg-sky-500/20 text-sky-300 px-1 rounded">HAN Hub</span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">khohan • khohan@123</div>
-          </button>
-
-          <button type="button" onclick="fillQuickLogin('daily_annam', 'annam@123')" class="p-2 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/50 rounded-xl text-left transition group">
-            <div class="font-extrabold text-rose-400 group-hover:text-rose-300 flex items-center justify-between">
-              <span>🤝 Đại Lý An Nam</span>
-              <span class="text-[9px] bg-rose-500/20 text-rose-300 px-1 rounded">Cấp 5</span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5 font-mono">daily_annam • annam@123</div>
-          </button>
-        </div>
 
       </div>
 
@@ -173,13 +113,13 @@
   </main>
 
   <script>
-    // Điền nhanh thông tin tài khoản mẫu
-    function fillQuickLogin(username, password) {
-      document.getElementById('inpUsername').value = username;
-      document.getElementById('inpPassword').value = password;
-      hideAlert();
-      document.getElementById('inpPassword').focus();
-    }
+    // Kiểm tra thông báo hết hạn phiên do không thao tác
+    (function checkTimeoutNotice() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('timeout') === '1') {
+        showAlert('Phiên làm việc đã tự động kết thúc sau 30 phút không có thao tác để đảm bảo an toàn.');
+      }
+    })();
 
     // Ẩn/Hiện mật khẩu
     function togglePasswordVisibility() {
