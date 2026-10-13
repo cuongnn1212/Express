@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PandaLex Express - Cẩm Nang & Hướng Dẫn Sử Dụng Phần Mềm (User Manual)</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    html { scroll-behavior: smooth; }
+    @media print {
+      aside, header, .no-print { display: none !important; }
+      main { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      body { background: white !important; color: black !important; font-size: 11pt !important; }
+      .print-break { page-break-before: always; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Top Sticky Header -->
+  <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md border-b border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <a href="/admin.html" class="flex items-center space-x-2 text-white hover:text-amber-400 transition" title="Quay lại Admin Console">
+        <div class="w-9 h-9 bg-amber-500 text-slate-950 font-black rounded-xl flex items-center justify-center text-lg shadow">
+          🐼
+        </div>
+        <div>
+          <h1 class="text-sm font-extrabold tracking-tight">PandaLex Express</h1>
+          <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Cẩm Nang &amp; Hướng Dẫn Sử Dụng Toàn Diện</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Quick Search & Actions -->
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <div class="relative hidden md:block w-64">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+        <input type="text" id="searchManual" oninput="handleSearchManual()" placeholder="Tìm kiếm nghiệp vụ..." class="w-full bg-slate-800 text-slate-200 text-xs pl-8 pr-3 py-1.5 rounded-xl border border-slate-700 focus:outline-none focus:border-amber-400">
+      </div>
+      <button onclick="window.print()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs border border-slate-700 flex items-center space-x-1.5 transition no-print" title="In hoặc lưu PDF">
+        <i class="fa-solid fa-print"></i>
+        <span class="hidden sm:inline">In / Xuất PDF</span>
+      </button>
+      <a href="/admin.html" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center space-x-1.5 transition no-print shadow">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Vào Hệ Thống</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Body Layout -->
+  <div class="flex-1 flex max-w-7xl w-full mx-auto p-4 sm:p-6 gap-6">
+
+    <!-- Left Sticky Sidebar Menu (Desktop) -->
+    <aside class="w-64 flex-shrink-0 hidden lg:block sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto no-print space-y-2 text-xs">
+      <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-1">
+        <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider px-2 py-1">Mục Lục Hướng Dẫn</p>
+        <a href="#sec1" class="block px-2.5 py-1.5 rounded-xl text-slate-700 hover:bg-amber-50 hover:text-amber-800 font-bold transition">1. Tổng Quan &amp; Đăng Nhập</a>
+        <a href="#sec2" class="block px-2.5 py-1.5 rounded-xl text-slate-700 hover:bg-amber-50 hover:text-amber-800 font-bold transition">2. Sơ Đồ Quy Trình Vận Hành</a>
+        <a href="#sec3" class="block px-2.5 py-1.5 rounded-xl text-slate-700 hover:bg-amber-50 hover:text-amber-800 font-bold transition">3. Kinh Doanh &amp; Tạo Đơn (AWB)</a>
+        <a href="#sec4" class="block px-2.5 py-1.5 rounded-xl text-slate-700 hover:bg-amber-50 hover:text-amber-800 font-bold transition">4. Thủ Kho &amp; Cổng Tài Chính</a>
+        <a href="#sec5" class="block px-2.5 py-1.5 rounded-xl text-emerald-800 bg-emerald-50/70 font-extrabold hover:bg-emerald-100 transition">5. Kế Toán &amp; Sổ Quỹ Thu/Chi ⭐</a>
+        <a href="#sec6" class="block px-2.5 py-1.5 rounded-xl text-slate-700 hover:bg-amber-50 hover:text-amber-800 font-bold transition">6. Khách Hàng &amp; Công Nợ</a>
+        <a href="#sec7" class="block px-2.5 py-1.5 rounded-xl text-slate-700 hover:bg-amber-50 hover:text-amber-800 font-bold transition">7. Quản Trị &amp; Biểu Cước</a>
+        <a href="#sec8" class="block px-2.5 py-1.5 rounded-xl text-slate-700 hover:bg-amber-50 hover:text-amber-800 font-bold transition">8. Câu Hỏi Thường Gặp (FAQ)</a>
+      </div>
+
+      <!-- Quick Roles Navigator -->
+      <div class="p-3.5 bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl shadow-sm space-y-2">
+        <p class="text-[10px] font-black uppercase text-amber-400 tracking-wider">Lối Tắt Theo Vai Trò</p>
+        <a href="#sec3" class="flex items-center space-x-2 text-slate-300 hover:text-white p-1 rounded transition">
+          <i class="fa-solid fa-user-tie text-amber-400 w-4 text-center"></i>
+          <span>Nhân viên Kinh Doanh</span>
+        </a>
+        <a href="#sec4" class="flex items-center space-x-2 text-slate-300 hover:text-white p-1 rounded transition">
+          <i class="fa-solid fa-boxes-stacked text-sky-400 w-4 text-center"></i>
+          <span>Thủ Kho Bưu Cục</span>
+        </a>
+        <a href="#sec5" class="flex items-center space-x-2 text-slate-300 hover:text-white p-1 rounded transition">
+          <i class="fa-solid fa-file-invoice-dollar text-emerald-400 w-4 text-center"></i>
+          <span>Kế Toán Tài Chính</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Articles -->
+    <main class="flex-1 space-y-8 min-w-0">
+
+      <!-- Hero Banner -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black">
+          <i class="fa-solid fa-shield-check"></i>
+          <span>Tài Liệu Hướng Dẫn Vận Hành Chuẩn (SOP - Enterprise Edition 2026)</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+          Cẩm Nang Hướng Dẫn Sử Dụng Phần Mềm PandaLex Express
+        </h2>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Hệ thống Quản trị Vận tải Quốc tế (TMS) &amp; Kế toán Tài chính Logistics khép kín. Hướng dẫn chi tiết từng thao tác cho Sales, Thủ kho, Kế toán và Ban Quản trị.
+        </p>
+      </div>
+
+      <!-- SECTION 1 -->
+      <section id="sec1" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+          <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm">1</div>
+          <h3 class="text-lg font-extrabold text-slate-900">Tổng Quan &amp; Đăng Nhập Hệ Thống</h3>
+        </div>
+        <div class="space-y-3 text-xs leading-relaxed text-slate-700">
+          <p>
+            <b>PandaLex Express</b> hỗ trợ quản lý vận tải quốc tế tích hợp đa hãng (UPS, FedEx, DHL), quản lý 3 Hub chi nhánh (Hà Nội <code class="font-bold text-indigo-700 bg-indigo-50 px-1 py-0.5 rounded">HAN</code>, TP. Hồ Chí Minh <code class="font-bold text-indigo-700 bg-indigo-50 px-1 py-0.5 rounded">SGN</code>, Đà Nẵng <code class="font-bold text-indigo-700 bg-indigo-50 px-1 py-0.5 rounded">DAD</code>) và hệ thống sổ quỹ kế toán theo Thông tư 200/2014/TT-BTC.
+          </p>
+          <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+            <p class="font-bold text-slate-900">Các bước đăng nhập an toàn:</p>
+            <ol class="list-decimal list-inside space-y-1 text-slate-600 pl-1">
+              <li>Truy cập <a href="/admin.html" class="text-indigo-600 font-bold hover:underline">/admin.html</a> hoặc đường dẫn trang quản trị.</li>
+              <li>Nhập tài khoản &amp; mật khẩu được phân quyền (Admin, Kế toán, Thủ kho, Kinh doanh).</li>
+              <li>Chọn Hub chi nhánh làm việc (SGN, HAN hoặc DAD).</li>
+              <li>Hệ thống bảo vệ bằng <b>JWT Head Auth Guard</b>, tự động bảo mật phiên đăng nhập và ngăn chặn truy cập trái phép.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2 -->
+      <section id="sec2" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+          <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-sm">2</div>
+          <h3 class="text-lg font-extrabold text-slate-900">Sơ Đồ Quy Trình Vận Hành Khép Kín</h3>
+        </div>
+        <div class="text-xs text-slate-700 space-y-3">
+          <p class="leading-relaxed">
+            Mọi kiện hàng đi từ lúc nhận yêu cầu đến khi bàn giao hãng bay đều tuân thủ chặt chẽ 5 bước dưới đây:
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-center pt-2">
+            <div class="bg-blue-50 border border-blue-200 p-3 rounded-2xl space-y-1">
+              <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-[11px] inline-flex items-center justify-center">1</span>
+              <p class="font-extrabold text-blue-900">Tạo Đơn AWB</p>
+              <p class="text-[10px] text-blue-700">Kinh doanh nhập gửi/nhận, chọn luồng Tiền mặt hoặc Hợp đồng</p>
+            </div>
+            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-2xl space-y-1">
+              <span class="w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px] inline-flex items-center justify-center">2</span>
+              <p class="font-extrabold text-indigo-900">Nhập Kho (Inbound)</p>
+              <p class="text-[10px] text-indigo-700">Quét barcode, cân đo D x R x C, tính thể tích chia 5000</p>
+            </div>
+            <div class="bg-rose-50 border border-rose-200 p-3 rounded-2xl space-y-1">
+              <span class="w-6 h-6 rounded-full bg-rose-600 text-white font-black text-[11px] inline-flex items-center justify-center">3</span>
+              <p class="font-extrabold text-rose-900">Cổng Tài Chính</p>
+              <p class="text-[10px] text-rose-700">Đơn tiền mặt bị KHÓA XUẤT KHO cho tới khi có Phiếu Thu</p>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl space-y-1">
+              <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-[11px] inline-flex items-center justify-center">4</span>
+              <p class="font-extrabold text-emerald-900">Lập Phiếu Thu</p>
+              <p class="text-[10px] text-emerald-700">Kế toán thu tiền, xuất Phiếu 01-TT, mở khóa xuất kho</p>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 p-3 rounded-2xl space-y-1">
+              <span class="w-6 h-6 rounded-full bg-amber-600 text-white font-black text-[11px] inline-flex items-center justify-center">5</span>
+              <p class="font-extrabold text-amber-900">Xuất Kho Hãng</p>
+              <p class="text-[10px] text-amber-700">Thủ kho đóng Bảng Kê Xuất Kho giao tài xế UPS/FedEx</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3 -->
+      <section id="sec3" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-sm">3</div>
+          <h3 class="text-lg font-extrabold text-slate-900">Phân Hệ Dành Cho Kinh Doanh &amp; Điều Hành (Sales / Dispatcher)</h3>
+        </div>
+        <div class="space-y-4 text-xs leading-relaxed text-slate-700">
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 mb-1">3.1 Tra Cứu Giá Cước &amp; Tính Trọng Lượng Thể Tích IATA</h4>
+            <p>
+              Hệ thống áp dụng công thức quy chuẩn hàng không quốc tế:
+            </p>
+            <div class="p-3 bg-slate-100 rounded-xl font-mono text-center my-2 text-indigo-900 font-bold">
+              Trọng lượng thể tích (kg) = (Dài cm × Rộng cm × Cao cm) / 5000
+            </div>
+            <p>
+              Hệ thống sẽ tự động so sánh giữa <b>Trọng lượng thực tế (Gross Weight)</b> và <b>Trọng lượng thể tích (DIM Weight)</b>, lấy giá trị lớn hơn làm <b>Trọng lượng tính cước (Chargeable Weight)</b>.
+            </p>
+          </div>
+
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 mb-1">3.2 Phân Loại Luồng Thanh Toán (Bắt Buộc Chọn Đúng)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+              <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-1">
+                <span class="font-extrabold text-amber-900 text-xs">📦 1. Tiền Mặt / Thu Ngay (IMMEDIATE)</span>
+                <p class="text-[11px] text-amber-800">
+                  Áp dụng cho khách lẻ, khách vãng lai. <b>Đơn này sẽ tự động KHÓA XUẤT KHO</b>. Thủ kho không thể cho hàng bay nếu kế toán chưa lập Phiếu Thu tiền mặt (01-TT).
+                </p>
+              </div>
+              <div class="p-4 bg-sky-50 border border-sky-200 rounded-2xl space-y-1">
+                <span class="font-extrabold text-sky-900 text-xs">🤝 2. Khách Hợp Đồng / Trả Sau (POSTPAID)</span>
+                <p class="text-[11px] text-sky-800">
+                  Áp dụng cho khách hàng doanh nghiệp, đại lý có ký hợp đồng và hạn mức công nợ. Cước bán sẽ tự động ghi nợ vào sổ công nợ khách hàng.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 mb-1">3.3 In Nhãn AWB &amp; Hóa Đơn Thương Mại (Commercial Invoice)</h4>
+            <p>
+              Sau khi lưu đơn, bấm nút <b>In Tem AWB</b> để in nhãn mã vạch chuẩn nhiệt (4x6 inch) dán lên kiện, và bấm <b>In Invoice</b> hoặc <b>Tải File Excel Invoice</b> để phục vụ thông quan xuất khẩu.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4 -->
+      <section id="sec4" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+          <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center font-black text-sm">4</div>
+          <h3 class="text-lg font-extrabold text-slate-900">Phân Hệ Dành Cho Thủ Kho &amp; Vận Hành Kho Bãi</h3>
+        </div>
+        <div class="space-y-4 text-xs leading-relaxed text-slate-700">
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 mb-1">4.1 Quét Mã Nhập Kho (Inbound Scan)</h4>
+            <p>
+              Khi hàng về kho bưu cục: Dùng máy quét mã vạch quét mã AWB trên kiện, đặt lên cân điện tử lấy Gross Weight, đo 3 chiều Dài - Rộng - Cao, bấm <b>Xác Nhận Nhập Kho</b>.
+            </p>
+          </div>
+
+          <div class="p-4 bg-rose-50 border-2 border-rose-200 rounded-2xl space-y-2">
+            <div class="font-extrabold text-rose-900 flex items-center space-x-2">
+              <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+              <span>4.2 Cổng Kiểm Soát Tài Chính (Financial Gate)</span>
+            </div>
+            <p class="text-[11px] text-rose-800">
+              Nếu đơn là tiền mặt và chưa thu tiền, màn hình kho sẽ hiện màu đỏ: <b class="text-rose-900">⛔ CHƯA ĐỦ ĐIỀU KIỆN XUẤT KHO (ELIGIBLE = FALSE)</b>.
+              Thủ kho tuyệt đối không được giao kiện hàng cho tài xế hãng bay. Bắt buộc liên hệ kế toán thu tiền và lập Phiếu Thu để hệ thống mở khóa xanh <b class="text-emerald-700">✅ ĐỦ ĐIỀU KIỆN XUẤT KHO</b>.
+            </p>
+          </div>
+
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 mb-1">4.3 Lập Bảng Kê Xuất Kho (Dispatch Manifest)</h4>
+            <p>
+              Khi chuẩn bị bàn giao cho xe hãng UPS / FedEx: Chọn các đơn hàng đã xanh đủ điều kiện, bấm <b>Tạo Bảng Kê Xuất Kho</b>, in ra 2 liên có mã bảng kê (VD: <code>BK-HAN-20261013-001</code>), hai bên ký biên bản bàn giao.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: TRỌNG TÂM KẾ TOÁN -->
+      <section id="sec5" class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-300 shadow-md space-y-5 print-break">
+        <div class="flex items-center justify-between border-b border-emerald-100 pb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm">5</div>
+            <div>
+              <h3 class="text-lg font-black text-emerald-950">Phân Hệ Kế Toán &amp; Quản Lý Tài Chính (Finance Enterprise)</h3>
+              <p class="text-[11px] text-emerald-700 font-bold">Quy chuẩn Thu - Chi theo số AWB &amp; Chuẩn Hóa Upload File Excel</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-black uppercase">Trọng Tâm</span>
+        </div>
+
+        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-950 space-y-1 text-xs">
+          <div class="font-black flex items-center space-x-1.5">
+            <i class="fa-solid fa-star text-amber-500"></i>
+            <span>NGUYÊN TẮC VÀNG: BẮT BUỘC SỐ VẬN ĐƠN (AWB) TRONG MỌI KHOẢN THU VÀ CHI</span>
+          </div>
+          <p class="text-[11px] text-emerald-900 leading-relaxed">
+            Mọi khoản thu tiền về hay chi tiền ra đều phải gắn liền với mã AWB tồn tại trong CSDL. Thu tiền là để gạch nợ cho AWB đó; Chi tiền (cước gốc hãng, hải quan, xe tải, bao bì) là để ghi nhận vào lịch sử chi phí của chính AWB đó để tính lãi lỗ ròng chính xác từng đơn.
+          </p>
+        </div>
+
+        <!-- 5.1 Thu đơn lẻ -->
+        <div class="space-y-2 text-xs">
+          <h4 class="font-extrabold text-sm text-slate-900">5.1 Lập Phiếu Thu Tiền Đơn Lẻ (Mẫu 01-TT)</h4>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700 pl-1">
+            <li>Bấm <b><code>+ Lập Phiếu Thu Tiền</code></b> trong menu Sổ Quỹ.</li>
+            <li>Nhập <b>Mã Vận Đơn (AWB) *</b> rồi bấm nút <b>Tra Cứu</b>. Hệ thống tự động nạp cước bán, tên khách hàng, số điện thoại, Hub thu tiền.</li>
+            <li>Chọn Kênh thanh toán (Tiền mặt, Chuyển khoản Vietcombank, Techcombank, Ví...).</li>
+            <li>Bấm <b>Lưu Phiếu Thu</b> (hoặc <b>Lưu &amp; In Ngay 01-TT</b>). Hệ thống cấp mã số <code>PT-YYYYMMDD-XXXX</code>, cập nhật tiền vào Sổ Quỹ và <b>mở khóa xuất kho ngay lập tức</b>.</li>
+          </ol>
+        </div>
+
+        <!-- 5.2 Thu Excel -->
+        <div class="space-y-2 text-xs">
+          <h4 class="font-extrabold text-sm text-slate-900">5.2 Thu Tiền Hàng Loạt Bằng File Excel (.xlsx)</h4>
+          <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2.5">
+            <p class="font-bold text-slate-800">Quy trình chuẩn 4 bước:</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-center text-[11px]">
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="font-extrabold text-indigo-700 block">Bước 1</span>
+                <span>Bấm nút <b>📥 Tải File Mẫu Excel (.xlsx)</b> về máy tính</span>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="font-extrabold text-indigo-700 block">Bước 2</span>
+                <span>Điền cột <b>Mã AWB *</b> và <b>Số Tiền *</b> vào file Excel</span>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="font-extrabold text-indigo-700 block">Bước 3</span>
+                <span>Kéo thả file Excel lên ô Upload để hệ thống đối soát CSDL</span>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="font-extrabold text-indigo-700 block">Bước 4</span>
+                <span>Kiểm tra bảng Preview (xanh/đỏ) rồi bấm <b>🚀 Xác Nhận Thu Tiền</b></span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 italic">
+              * Hệ thống tự động kiểm tra: Dòng có AWB tồn tại hiện màu xanh <b class="text-emerald-700">Hợp lệ</b>; Dòng sai AWB hiện màu đỏ <b class="text-rose-600">Lỗi AWB</b>. Chỉ các dòng hợp lệ mới được sinh phiếu thu.
+            </p>
+          </div>
+        </div>
+
+        <!-- 5.3 Chi đơn lẻ -->
+        <div class="space-y-2 text-xs">
+          <h4 class="font-extrabold text-sm text-slate-900">5.3 Lập Phiếu Chi Tiền Đơn Lẻ (Mẫu 02-TT) &amp; Ghi Nhận Chi Phí AWB</h4>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700 pl-1">
+            <li>Bấm <b><code>+ Lập Phiếu Chi Tiền</code></b>.</li>
+            <li>Nhập <b>Mã Vận Đơn (AWB) *</b> rồi bấm <b>Tra Cứu</b>. Hệ thống tự động nạp cước gốc hãng (Cost Price) và đơn vị nhận tiền (UPS/FedEx).</li>
+            <li>Chọn Khoản mục chi:
+              <ul class="list-disc list-inside pl-4 text-slate-600 pt-0.5 space-y-0.5">
+                <li><code>EXP_CARRIER_COST</code>: Chi cước gốc mua hãng bay (Tự động gạch nợ Hãng <code>vendorSettled = true</code>).</li>
+                <li><code>EXP_CUSTOMS_CLEARANCE</code>: Chi phí kiểm hóa, hải quan.</li>
+                <li><code>EXP_FIRST_MILE_TRUCKING</code>: Chi phí xe tải trung chuyển nhận hàng.</li>
+                <li><code>EXP_PACKAGING_SUPPLIES</code>: Mua thùng carton, màng bọc PE, băng dính.</li>
+                <li><code>EXP_SHIPMENT_COMPENSATION</code>: Bồi thường hư hỏng hàng hóa.</li>
+              </ul>
+            </li>
+            <li>Bấm <b>Lưu Phiếu Chi</b> (hoặc <b>Lưu &amp; In Ngay 02-TT</b>). Khoản chi được ghi nhận tức thì vào mảng <code>expenseHistory</code> của chính AWB.</li>
+          </ol>
+        </div>
+
+        <!-- 5.4 Chi Excel -->
+        <div class="space-y-2 text-xs">
+          <h4 class="font-extrabold text-sm text-slate-900">5.4 Chi Phí Hàng Loạt Bằng File Excel (.xlsx)</h4>
+          <p>
+            Tương tự như thu tiền: Bấm <b>📤 Chi Tiền Theo Excel</b>, tải file mẫu <code>PandaLex_Mau_Chi_Phi_AWB.xlsx</code>, điền danh sách số AWB kèm mã khoản mục chi và số tiền chi, kéo thả file lên hệ thống và bấm <b>🚀 Xác Nhận Chi Tiền</b>.
+          </p>
+        </div>
+
+        <!-- 5.5 Sổ Quỹ & Danh Mục -->
+        <div class="space-y-2 text-xs">
+          <h4 class="font-extrabold text-sm text-slate-900">5.5 Sổ Quỹ Toàn Diện (Cash Book) &amp; Quản Lý Danh Mục</h4>
+          <p>
+            Màn hình <b>Sổ Quỹ Thu - Chi</b> hiển thị tức thì: <b>Tổng Thu</b>, <b>Tổng Chi</b>, <b>Tồn Quỹ Tiền Mặt</b>, <b>Tồn Quỹ Ngân Hàng</b> và <b>Lợi Nhuận Gộp</b>. Kế toán có thể bấm vào nút máy in trên từng dòng giao dịch để in lại Phiếu Thu 01-TT hoặc Phiếu Chi 02-TT bất cứ lúc nào.
+          </p>
+        </div>
+      </section>
+
+      <!-- SECTION 6 -->
+      <section id="sec6" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+          <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center font-black text-sm">6</div>
+          <h3 class="text-lg font-extrabold text-slate-900">Phân Hệ Quản Lý Khách Hàng &amp; Công Nợ</h3>
+        </div>
+        <div class="space-y-3 text-xs leading-relaxed text-slate-700">
+          <p>
+            Hệ thống theo dõi chặt chẽ hạn mức tín dụng nợ (Credit Limit) của từng khách hàng và đại lý:
+          </p>
+          <ul class="list-disc list-inside space-y-1 pl-1 text-slate-600">
+            <li>Theo dõi công nợ lũy kế thời gian thực theo từng số AWB.</li>
+            <li>Cảnh báo khách hàng vượt hạn mức công nợ hoặc nợ quá hạn thanh toán.</li>
+            <li>Xuất file Excel Bảng kê đối soát công nợ chi tiết gửi cho khách hàng định kỳ vào ngày 15 hoặc cuối tháng.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SECTION 7 -->
+      <section id="sec7" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-black text-sm">7</div>
+          <h3 class="text-lg font-extrabold text-slate-900">Quản Trị Hệ Thống &amp; Biểu Cước Hãng</h3>
+        </div>
+        <div class="space-y-3 text-xs leading-relaxed text-slate-700">
+          <p>
+            - <b>Cập nhật biểu cước</b>: Nạp trực tiếp file Excel biểu cước mới của UPS và FedEx khi hãng điều chỉnh giá định kỳ.<br>
+            - <b>Phân quyền vai trò</b>: Sử dụng trang <code>permissions.html</code> để gán quyền chính xác cho từng nhân sự (Admin, Kế toán, Thủ kho, Kinh doanh), đảm bảo an toàn dữ liệu và tuân thủ nguyên tắc kiểm soát nội bộ.
+          </p>
+        </div>
+      </section>
+
+      <!-- SECTION 8 -->
+      <section id="sec8" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center font-black text-sm">8</div>
+          <h3 class="text-lg font-extrabold text-slate-900">Câu Hỏi Thường Gặp (FAQ)</h3>
+        </div>
+        <div class="space-y-3 text-xs leading-relaxed text-slate-700">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+            <p class="font-extrabold text-slate-900">❓ Tại sao tôi bấm Xuất Kho mà hệ thống báo lỗi không cho xuất?</p>
+            <p class="text-slate-600">
+              👉 Vì đây là đơn hàng <b>Tiền Mặt (IMMEDIATE)</b> nhưng kế toán chưa lập Phiếu Thu. Báo ngay cho kế toán lập Phiếu Thu tiền mặt (01-TT) cho số AWB đó. Khi phiếu thu được lưu, đơn hàng sẽ tự động chuyển màu xanh và xuất kho bình thường.
+            </p>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+            <p class="font-extrabold text-slate-900">❓ Khi up file Excel Thu Tiền có dòng báo đỏ thì phải làm sao?</p>
+            <p class="text-slate-600">
+              👉 Dòng màu đỏ là do số AWB không tồn tại trên hệ thống (hoặc gõ sai ký tự, thừa khoảng trắng). Hãy kiểm tra lại số AWB trên kiện hàng và chỉnh sửa lại file Excel rồi kéo thả file lên lại.
+            </p>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+            <p class="font-extrabold text-slate-900">❓ Thu tiền 100 đơn hàng của đại lý cùng lúc thì làm thế nào nhanh nhất?</p>
+            <p class="text-slate-600">
+              👉 Dùng tính năng <b>Thu Tiền Theo Excel</b>: Tải file mẫu về, dán 100 số AWB và số tiền tương ứng, kéo thả file lên và bấm <b>Xác Nhận Thu Tiền Hàng Loạt</b>. Hệ thống gạch nợ 100 đơn hàng chỉ trong 1 giây.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer Info -->
+      <footer class="text-center py-6 text-slate-400 text-xs border-t border-slate-200 space-y-1">
+        <p class="font-bold text-slate-600">PandaLex Express TMS &amp; Finance Enterprise System © 2026</p>
+        <p>Tài liệu ban hành lưu hành nội bộ - Đơn vị vận hành chuyển phát nhanh quốc tế UPS &amp; FedEx.</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    function handleSearchManual() {
+      const q = document.getElementById('searchManual').value.toLowerCase().trim();
+      const sections = document.querySelectorAll('main section');
+      if (!q) {
+        sections.forEach(s => s.classList.remove('hidden'));
+        return;
+      }
+      sections.forEach(s => {
+        const text = s.innerText.toLowerCase();
+        if (text.includes(q)) {
+          s.classList.remove('hidden');
+        } else {
+          s.classList.add('hidden');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
