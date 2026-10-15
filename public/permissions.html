@@ -70,8 +70,9 @@
             <option value="khohan">📦 Thủ Kho Nội Bài (khohan - WAREHOUSE @ HAN - Cấp 4)</option>
             <option value="khosgn">📦 Thủ Kho Tân Bình (khosgn - WAREHOUSE @ SGN - Cấp 4)</option>
             <option value="khodad">📦 Thủ Kho Đà Nẵng (khodad - WAREHOUSE @ DAD - Cấp 4)</option>
-            <option value="daily_annam">🤝 Đại Lý An Nam (daily_annam - AGENT @ AG-002 - Cấp 5)</option>
-            <option value="fba_seller">🛒 CrossBorder FBA (fba_seller - AGENT @ FBA-991 - Cấp 5)</option>
+            <option value="doitac_kho">🏭 Đối Tác Kho Vệ Tinh (doitac_kho - WAREHOUSE_PARTNER @ SGN - Cấp 5)</option>
+            <option value="daily_annam">🤝 Đại Lý An Nam (daily_annam - AGENT @ AG-002 - Cấp 6)</option>
+            <option value="fba_seller">🛒 CrossBorder FBA (fba_seller - AGENT @ FBA-991 - Cấp 6)</option>
           </select>
         </div>
 
@@ -250,7 +251,7 @@
             <div class="space-y-1">
               <p class="font-extrabold">Quy tắc bảo mật cấp độ trường (Field Masking Integrity):</p>
               <p class="text-[11px] text-amber-800 leading-relaxed">
-                Ngay cả khi vai trò <strong>Thủ Kho (WAREHOUSE)</strong> hoặc <strong>Đại Lý (AGENT)</strong> được cấp quyền <em>Xem</em> vận đơn, trường dữ liệu <strong>Giá Vốn Code Hãng (costPrice)</strong> và lợi nhuận gộp vẫn luôn bị lọc bỏ triệt để ở tầng API phía máy chủ, đảm bảo tuyệt đối không rò rỉ hợp đồng gốc của PandaLex với UPS/FedEx.
+                Đối với vai trò <strong>Thủ Kho (WAREHOUSE)</strong> hoặc <strong>Đại Lý (AGENT)</strong>, trường <strong>Giá Vốn Code Hãng (costPrice)</strong> luôn bị lọc bỏ triệt để ở tầng API phía máy chủ. Đặc biệt với vai trò <strong>Đối Tác Kho / Kho Vệ Tinh (WAREHOUSE_PARTNER)</strong>, toàn bộ <strong>Giá Bán, Giá Vốn và Sổ Quỹ Tài Chính</strong> đều bị giấu kín hoàn toàn (Bảo mật tuyệt đối), chỉ được phép quét Nhập kho, Cân đo, Kiểm tra ảnh kiện hàng và Xuất kho.
               </p>
             </div>
           </div>
@@ -381,8 +382,9 @@
               <option value="DIRECTOR">Ban Giám Đốc (DIRECTOR - Cấp 2 Điều Hành)</option>
               <option value="ACCOUNTANT">Kế Toán Trưởng (ACCOUNTANT - Cấp 3)</option>
               <option value="WAREHOUSE" selected>Thủ Kho (WAREHOUSE - Cấp 4)</option>
-              <option value="AGENT">Đại Lý Cấp 2 (AGENT - Cấp 5)</option>
-              <option value="CUSTOMER">Khách Hàng Lẻ (CUSTOMER - Cấp 6)</option>
+              <option value="WAREHOUSE_PARTNER">Đối Tác Kho / Kho Vệ Tinh - Không Xem Giá (WAREHOUSE_PARTNER - Cấp 5)</option>
+              <option value="AGENT">Đại Lý Cấp 2 (AGENT - Cấp 6)</option>
+              <option value="CUSTOMER">Khách Hàng Lẻ (CUSTOMER - Cấp 7)</option>
             </select>
           </div>
           <div>

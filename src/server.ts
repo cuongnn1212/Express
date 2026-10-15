@@ -23,6 +23,7 @@ import { FinanceService } from './modules/finance/finance-service.js';
 import { FreightService } from './modules/freight/freight-service.js';
 import { CustomerService } from './modules/customer/customer-service.js';
 import { ExcelExportService } from './modules/export/excel-export-service.js';
+import { CustomsCargoConfigService } from './modules/pricing/customs-cargo-config.js';
 import { CommercialInvoiceService } from './modules/export/commercial-invoice-service.js';
 import { InvoiceRepository } from './modules/export/invoice-repository.js';
 import { AwbOcrService } from './modules/shipment/awb-ocr-service.js';
@@ -32,6 +33,7 @@ import { ReconciliationService } from './modules/finance/reconciliation-service.
 import { CommunicationService } from './modules/customer/communication-service.js';
 import { LogisticsTradeBrain } from './modules/ai/logistics-trade-brain.js';
 import { COUNTRY_TRADE_POLICIES } from './modules/ai/trade-compliance-knowledge.js';
+import { R2StorageService } from './modules/storage/r2-storage-service.js';
 
 import compression from 'compression';
 
@@ -123,8 +125,15 @@ const uploadStorage = multer.diskStorage({
 });
 const upload = multer({ storage: uploadStorage });
 
-// Biểu cước mặc định được đóng gói trong thư mục rates/ của dự án (không phụ thuộc máy tính cá nhân)
-const upsExcelPath = path.join(ROOT_DIR, 'rates', 'UPS_QUOTATION_2026.xlsx');
+// Đường dẫn các file biểu cước chuẩn hóa trong thư mục rates/ hoặc Banggia_2026/
+const upsViettelPath = fs.existsSync(path.join(ROOT_DIR, 'rates', 'UPS_VIETTEL_2026.xlsx'))
+  ? path.join(ROOT_DIR, 'rates', 'UPS_VIETTEL_2026.xlsx')
+  : path.join(ROOT_DIR, 'Banggia_2026', 'Bảng giá nhà cung cấp ', 'VIettel. Bảng giá UPS từ ngày 01.06.2026.xlsx');
+
+const upsFrankPath = fs.existsSync(path.join(ROOT_DIR, 'rates', 'UPS_FRANK_CUSTOMER_2026.xlsx'))
+  ? path.join(ROOT_DIR, 'rates', 'UPS_FRANK_CUSTOMER_2026.xlsx')
+  : path.join(ROOT_DIR, 'Banggia_2026', 'Bảng giá Khách hàng', 'UPS_FRANK_10.10.2026.xlsx');
+
 const fedexExcelPath = path.join(ROOT_DIR, 'rates', 'FEDEX_SELL_JUL_2026.xlsx');
 
 // Nạp an toàn: nếu thiếu/lỗi file biểu cước thì ghi log và tiếp tục chạy, không làm sập server
@@ -138,36 +147,63 @@ function safeLoad<T>(label: string, loader: () => T): T | undefined {
   }
 }
 
-const upsRateTable = safeLoad('UPS', () => ExcelRateImporter.parseUpsRateFile(upsExcelPath));
-if (upsRateTable) {
-  RateRegistryService.registerTable(upsRateTable, {
-    id: 'ups_default_2026',
-    carrier: 'UPS',
-    contractName: upsRateTable.contractName,
-    serviceName: upsRateTable.serviceName,
-    fileName: 'QUOTATION 1.2026_ UPS.xlsx',
-    filePath: upsExcelPath,
-    uploadedAt: new Date().toISOString(),
-    isActive: true
-  });
+export function loadDefaultRateTables() {
+  // 1. Biểu cước Nhà Cung Cấp Viettel cho dịch vụ UPS
+  const viettelTable = safeLoad('UPS Viettel', () => ExcelRateImporter.parseUpsRateFile(upsViettelPath, {
+    contractName: 'UPS - Nhà Cung Cấp Viettel (Từ 01.06.2026)'
+  }));
+  if (viettelTable) {
+    RateRegistryService.registerTable(viettelTable, {
+      id: 'ups_viettel_2026',
+      carrier: 'UPS',
+      contractName: viettelTable.contractName,
+      serviceName: viettelTable.serviceName,
+      fileName: 'VIettel. Bảng giá UPS từ ngày 01.06.2026.xlsx',
+      filePath: upsViettelPath,
+      uploadedAt: new Date().toISOString(),
+      isActive: true
+    });
+  }
+
+  // 2. Biểu cước Khách Hàng (Frank) cho dịch vụ UPS
+  const frankTable = safeLoad('UPS Khách Hàng (Frank)', () => ExcelRateImporter.parseUpsRateFile(upsFrankPath, {
+    contractName: 'UPS - Bảng Giá Khách Hàng Frank (10.10.2026)'
+  }));
+  if (frankTable) {
+    RateRegistryService.registerTable(frankTable, {
+      id: 'ups_frank_2026',
+      carrier: 'UPS',
+      contractName: frankTable.contractName,
+      serviceName: frankTable.serviceName,
+      fileName: 'UPS_FRANK_10.10.2026.xlsx',
+      filePath: upsFrankPath,
+      uploadedAt: new Date().toISOString(),
+      isActive: true
+    });
+  }
+
+  // 3. Biểu cước FedEx
+  const fedexTable = safeLoad('FedEx', () => FedExRateImporter.parseFedExRateFile(fedexExcelPath, 'IP'));
+  if (fedexTable) {
+    RateRegistryService.registerTable(fedexTable, {
+      id: 'fedex_default_2026',
+      carrier: 'FEDEX',
+      contractName: fedexTable.contractName,
+      serviceName: fedexTable.serviceName,
+      fileName: 'FEDEX EXP UPDATE 01 JUL 2026 - SELL.xlsx',
+      filePath: fedexExcelPath,
+      uploadedAt: new Date().toISOString(),
+      isActive: true
+    });
+  }
 }
 
-const fedexRateTable = safeLoad('FedEx', () => FedExRateImporter.parseFedExRateFile(fedexExcelPath, 'IP'));
-if (fedexRateTable) {
-  RateRegistryService.registerTable(fedexRateTable, {
-    id: 'fedex_default_2026',
-    carrier: 'FEDEX',
-    contractName: fedexRateTable.contractName,
-    serviceName: fedexRateTable.serviceName,
-    fileName: 'FEDEX EXP UPDATE 01 JUL 2026 - SELL.xlsx',
-    filePath: fedexExcelPath,
-    uploadedAt: new Date().toISOString(),
-    isActive: true
-  });
+if (!RateRegistryService.isDefaultsCleared()) {
+  loadDefaultRateTables();
 }
 
 const universalEngine = new UniversalPricingEngine(
-  [upsRateTable, fedexRateTable].filter((t): t is NonNullable<typeof t> => !!t)
+  RateRegistryService.getActiveTables()
 );
 
 // Health check
@@ -632,8 +668,8 @@ app.get('/api/admin/stats', (req, res) => {
       activeRateTables: metas.filter(m => m.isActive).length,
       totalCustomers: CustomerPolicyService.getAll().length,
       supportedCountries: {
-        ups: Object.keys(upsRateTable?.zones || {}).length,
-        fedex: Object.keys(fedexRateTable?.zones || {}).length
+        ups: Object.keys(RateRegistryService.getActiveTables().find(t => t.carrier === 'UPS')?.zones || {}).length,
+        fedex: Object.keys(RateRegistryService.getActiveTables().find(t => t.carrier === 'FEDEX')?.zones || {}).length
       },
       fuelSurcharge: SurchargeConfigService.get().fuelSurcharge
     }
@@ -776,7 +812,20 @@ app.put('/api/rates/tables/:id/toggle', (req, res) => {
 });
 
 /**
- * API: Xóa bảng giá
+ * API: Xóa toàn bộ bảng giá đã có sẵn trên phần mềm
+ * DELETE /api/rates/tables
+ */
+app.delete('/api/rates/tables', (req, res) => {
+  const count = RateRegistryService.clearAllTables();
+  res.json({
+    success: true,
+    message: `Đã xóa sạch toàn bộ ${count} bảng giá có sẵn khỏi phần mềm!`,
+    deletedCount: count
+  });
+});
+
+/**
+ * API: Xóa một bảng giá theo ID
  * DELETE /api/rates/tables/:id
  */
 app.delete('/api/rates/tables/:id', (req, res) => {
@@ -785,6 +834,25 @@ app.delete('/api/rates/tables/:id', (req, res) => {
     success: deleted,
     message: deleted ? 'Đã xóa bảng giá thành công' : 'Không tìm thấy bảng giá cần xóa'
   });
+});
+
+/**
+ * API: Khôi phục lại các bảng giá mẫu mặc định (UPS & FedEx 2026)
+ * POST /api/rates/tables/restore-defaults
+ */
+app.post('/api/rates/tables/restore-defaults', (req, res) => {
+  try {
+    RateRegistryService.setDefaultsCleared(false);
+    loadDefaultRateTables();
+
+    res.json({
+      success: true,
+      message: 'Đã nạp khôi phục đầy đủ các biểu cước mẫu (UPS Viettel, UPS Khách Hàng Frank, FedEx) thành công!',
+      data: RateRegistryService.getAllMetas()
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err?.message || 'Lỗi khi khôi phục bảng giá mẫu' });
+  }
 });
 
 /**
@@ -1266,6 +1334,15 @@ app.get('/api/awb/reconciliation/:tracking', (req, res) => {
  */
 app.post('/api/shipments/create', (req, res) => {
   try {
+    const callerToken = extractRequestToken(req);
+    const callerUser = callerToken ? AuthService.getUserByToken(callerToken) : null;
+    if (callerUser && !AuthService.hasPermission(callerUser.role, 'shipments', 'canCreate')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Chức vụ của bạn không có quyền tạo đơn hàng mới (shipments.canCreate = false).'
+      });
+    }
+
     // Kiểm tra xác thực qua X-API-KEY (nếu khách hàng gọi trực tiếp qua REST API)
     const headerApiKey = (req.headers['x-api-key'] || req.query.apiKey || '').toString().trim();
     let apiCustomer = undefined;
@@ -1362,11 +1439,14 @@ app.post('/api/shipments/create', (req, res) => {
       hub: stored.hub
     });
 
+    const currentUser = AuthService.getCurrentUser();
+    const sanitized = AuthService.sanitizeShipmentForRole(stored, currentUser.role);
+
     res.json({
       success: true,
       message: 'Tạo vận đơn và sinh nhãn in AWB thành công!',
-      data: stored,
-      financialInfo: {
+      data: sanitized,
+      financialInfo: !AuthService.hasPermission(currentUser.role, 'finance', 'canView') ? undefined : {
         category: finCat,
         paymentStatus: pStatus,
         paymentMethod: pMethod,
@@ -1465,8 +1545,12 @@ app.get('/api/shipments/:id/financial-gate', (req, res) => {
  */
 app.get('/api/shipments/export-excel', (req, res) => {
   try {
+    const currentUser = AuthService.getCurrentUser();
     const shipments = ShipmentRepository.getAll();
-    const buffer = ExcelExportService.exportShipmentsToExcel(shipments);
+    const sanitized = AuthService.sanitizeShipmentsForRole(shipments, currentUser.role);
+    const hidePrice = !AuthService.hasPermission(currentUser.role, 'rates', 'canView') && !AuthService.hasPermission(currentUser.role, 'finance', 'canView');
+    const hideCost = hidePrice || !AuthService.hasPermission(currentUser.role, 'codeVsSell', 'canView');
+    const buffer = ExcelExportService.exportShipmentsToExcel(sanitized as any, { hidePrice, hideCost });
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="danhsachbill_PandaLex_${dateStr}.xlsx"`);
@@ -1496,6 +1580,61 @@ app.get('/api/shipments', (req, res) => {
     success: true,
     data: sanitized
   });
+});
+
+// Tải file mẫu Excel Up Số AWB + Trọng Lượng (Kg) Tự Động Tính Giá Cước (.xlsx)
+app.get('/api/shipments/templates/awb-pricing-excel', (req, res) => {
+  try {
+    const buffer = FinanceService.generateAwbPricingExcelTemplate();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="PandaLex_Mau_Tinh_Gia_AWB_Kg.xlsx"');
+    res.send(buffer);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Chạy thử danh sách mẫu Tính Giá Bằng Excel (AWB + Kg)
+app.get('/api/shipments/sample-awb-pricing', (req, res) => {
+  try {
+    const sampleBuf = FinanceService.generateAwbPricingExcelTemplate();
+    const result = FinanceService.parseAndCalculateAwbPricingExcel(sampleBuf, false, {
+      defaultCountry: (req.query.defaultCountry || 'US') as string,
+      defaultCarrier: (req.query.defaultCarrier || 'AUTO') as string,
+      defaultCustomerCode: (req.query.defaultCustomerCode || 'PDL-GUEST') as string,
+      defaultCargoType: (req.query.defaultCargoType || 'COSMETICS_FOOD') as any,
+      isCosmetics: req.query.isCosmetics === 'true',
+      vatPercent: req.query.vatPercent !== undefined ? Number(req.query.vatPercent) : 8,
+      surgeDiscountPercent: req.query.surgeDiscountPercent !== undefined ? Number(req.query.surgeDiscountPercent) : 50,
+      securityFeePerAwb: req.query.securityFeePerAwb !== undefined ? Number(req.query.securityFeePerAwb) : 150000,
+      upsFuelPercent: req.query.upsFuelPercent !== undefined ? Number(req.query.upsFuelPercent) : undefined,
+      fedexFuelPercent: req.query.fedexFuelPercent !== undefined ? Number(req.query.fedexFuelPercent) : undefined,
+      fuelPercentOverride: req.query.fuelPercentOverride !== undefined ? Number(req.query.fuelPercentOverride) : undefined,
+      marketMarkupPercent: req.query.marketMarkupPercent !== undefined ? Number(req.query.marketMarkupPercent) : 0
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Tải trực tiếp 2 file Excel 10 đơn hàng test
+app.get('/api/shipments/download-customer-10-orders-excel', (req, res) => {
+  const filePath = path.join(process.cwd(), 'public', 'Bang_Ke_Thu_Tien_Khach_Hang_10_Don.xlsx');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'Bang_Ke_Thu_Tien_Khach_Hang_10_Don.xlsx');
+  } else {
+    res.status(404).json({ success: false, message: 'File chưa được tạo' });
+  }
+});
+
+app.get('/api/shipments/download-supplier-10-orders-excel', (req, res) => {
+  const filePath = path.join(process.cwd(), 'public', 'Bang_Ke_Thanh_Toan_NCC_Viettel_10_Don.xlsx');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'Bang_Ke_Thanh_Toan_NCC_Viettel_10_Don.xlsx');
+  } else {
+    res.status(404).json({ success: false, message: 'File chưa được tạo' });
+  }
 });
 
 /**
@@ -1911,11 +2050,9 @@ app.get('/api/auth/current-user', (req, res) => {
 
 app.post('/api/auth/switch-user', (req, res) => {
   const token = extractRequestToken(req);
-  const currentUser = token ? AuthService.getUserByToken(token) : null;
-
-  // Chỉ SUPER_ADMIN mới có quyền chuyển đổi tài khoản
-  if (!currentUser || currentUser.role !== 'SUPER_ADMIN') {
-    return res.status(403).json({ success: false, message: 'Chỉ Quản Trị Viên Tối Cao (Root Admin) mới có quyền chuyển đổi tài khoản kiểm tra' });
+  const caller = token ? AuthService.getUserByToken(token) : null;
+  if (!caller || caller.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ success: false, message: 'Quyền truy cập bị từ chối. Chỉ SUPER_ADMIN mới có quyền chuyển đổi tài khoản.' });
   }
 
   const { username } = req.body;
@@ -1928,10 +2065,11 @@ app.post('/api/auth/switch-user', (req, res) => {
   }
   const permissions = AuthService.getPermissionsByRole(result.user.role);
   if (result.token) {
-    res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=1800`);
+    res.setHeader('Set-Cookie', `pandalex_token=${result.token}; Path=/; SameSite=Lax; Max-Age=86400`);
   }
   res.json({
     success: true,
+    token: result.token,
     data: {
       ...AuthService.sanitizeUserForClient(result.user),
       permissions
@@ -2000,8 +2138,11 @@ app.get('/api/hubs', (req, res) => {
 
 // API: Vị trí địa lý & Phân vùng cước (Zones & Countries)
 app.get('/api/geo/countries-and-zones', (req, res) => {
-  const upsZones = upsRateTable ? upsRateTable.zones : {};
-  const fedexZones = fedexRateTable ? fedexRateTable.zones : {};
+  const activeTables = RateRegistryService.getActiveTables();
+  const upsTable = activeTables.find(t => t.carrier === 'UPS');
+  const fedexTable = activeTables.find(t => t.carrier === 'FEDEX');
+  const upsZones = upsTable ? upsTable.zones : {};
+  const fedexZones = fedexTable ? fedexTable.zones : {};
   const allCountries = Array.from(new Set([...Object.keys(upsZones), ...Object.keys(fedexZones)])).sort();
 
   const data = allCountries.map(codeOrName => ({
@@ -2100,26 +2241,307 @@ app.post('/api/warehouse/pickup-confirm', (req, res) => {
 app.post('/api/warehouse/scan-inbound', (req, res) => {
   const { trackingNumber, hub, operator } = req.body;
   if (!trackingNumber) return res.status(400).json({ success: false, message: 'Thiếu số tracking' });
-  const result = WarehouseService.scanInbound(trackingNumber, hub || 'SGN', operator || 'khosgn');
+  const result: any = WarehouseService.scanInbound(trackingNumber, hub || 'SGN', operator || 'khosgn');
+  if (result && result.shipment) {
+    const token = extractRequestToken(req);
+    const user = token ? AuthService.getUserByToken(token) : AuthService.getCurrentUser();
+    result.shipment = AuthService.sanitizeShipmentForRole(result.shipment, user?.role || 'WAREHOUSE');
+  }
   res.json(result);
 });
+
+// =========================================================================
+// CLOUDFLARE R2 STORAGE & MOBILE INBOUND SCAN (CAMERA ĐIỆN THOẠI 2 TRONG 1)
+// =========================================================================
+
+// Lấy trạng thái cấu hình Cloudflare R2
+app.get('/api/storage/r2/status', (req, res) => {
+  const cfg = R2StorageService.getConfig();
+  const isConfigured = R2StorageService.isConfigured();
+  res.json({
+    success: true,
+    isConfigured,
+    config: {
+      accountId: cfg.accountId ? (cfg.accountId.slice(0, 4) + '••••' + cfg.accountId.slice(-4)) : '',
+      bucketName: cfg.bucketName,
+      publicDomain: cfg.publicDomain,
+      hasAccessKey: Boolean(cfg.accessKeyId),
+      hasSecretKey: Boolean(cfg.secretAccessKey)
+    }
+  });
+});
+
+// Cập nhật cấu hình Cloudflare R2 (Lưu vào data/r2_storage_config.json)
+app.post('/api/storage/r2/config', (req, res) => {
+  const { accountId, accessKeyId, secretAccessKey, bucketName, publicDomain } = req.body;
+  const result = R2StorageService.saveConfig({
+    accountId,
+    accessKeyId,
+    secretAccessKey,
+    bucketName,
+    publicDomain
+  });
+  res.json(result);
+});
+
+// Test kết nối tới Cloudflare R2 (Put thử 1 file test nhỏ)
+app.post('/api/storage/r2/test', async (req, res) => {
+  const testRes = await R2StorageService.testConnection();
+  res.json(testRes);
+});
+
+// Proxy xem ảnh khi bucket R2 để Private hoặc dùng gateway nội bộ
+app.get('/api/storage/file/*', async (req, res) => {
+  const key = (req.params as any)[0] || (req.params as any)['0'] || '';
+  if (!key) return res.status(400).send('Thiếu file key');
+
+  // Kiểm tra nếu có ở local fallback trước
+  const localPath = path.join(process.cwd(), 'uploads', 'inbound_photos', key.replace(/[^a-zA-Z0-9._-]/g, '_'));
+  if (fs.existsSync(localPath)) {
+    return res.sendFile(localPath);
+  }
+
+  // Đọc từ Cloudflare R2
+  const r2Stream = await R2StorageService.getObjectStream(key);
+  if (!r2Stream || !r2Stream.Body) {
+    return res.status(404).send('Không tìm thấy ảnh trên Cloudflare R2 hoặc Local');
+  }
+
+  if (r2Stream.ContentType) {
+    res.setHeader('Content-Type', r2Stream.ContentType);
+  }
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  (r2Stream.Body as any).pipe(res);
+});
+
+// API Chuyên Dụng: Nhận Hàng Bằng Điện Thoại (Quét AWB + Chụp Tem + Chụp Kiện Hàng & Đẩy R2)
+app.post('/api/inbound/mobile-scan', async (req, res) => {
+  try {
+    const {
+      awb,
+      weightKg,
+      carrier,
+      destinationCountry,
+      cargoType,
+      hub = 'SGN',
+      operator = 'kho_mobile',
+      notes,
+      awbPhotoBase64,
+      packagePhotoBase64
+    } = req.body;
+
+    const cleanAwb = String(awb || '').trim().toUpperCase();
+    if (!cleanAwb) {
+      return res.status(400).json({ success: false, message: 'Vui lòng quét hoặc nhập mã vận đơn AWB!' });
+    }
+
+    const timestamp = Date.now();
+    let awbLabelPhotoUrl = '';
+    let packageBoxPhotoUrl = '';
+    let storageProvider: 'CLOUDFLARE_R2' | 'LOCAL_FALLBACK' = 'LOCAL_FALLBACK';
+    const photoRecords: any[] = [];
+
+    // 1. Upload ảnh nhãn AWB nếu có
+    if (awbPhotoBase64) {
+      const parsed = R2StorageService.parseDataUrl(awbPhotoBase64);
+      const key = `inbound/${cleanAwb}_label_${timestamp}.${parsed.ext}`;
+      const uploadRes = await R2StorageService.uploadBuffer(parsed.buffer, key, parsed.mimeType);
+      if (uploadRes.success) {
+        awbLabelPhotoUrl = uploadRes.url;
+        storageProvider = uploadRes.storageProvider;
+        photoRecords.push({
+          url: uploadRes.url,
+          type: 'AWB_LABEL',
+          capturedAt: new Date().toISOString(),
+          storageProvider: uploadRes.storageProvider
+        });
+      }
+    }
+
+    // 2. Upload ảnh kiện hàng ngoại quan / bàn cân nếu có
+    if (packagePhotoBase64) {
+      const parsed = R2StorageService.parseDataUrl(packagePhotoBase64);
+      const key = `inbound/${cleanAwb}_box_${timestamp}.${parsed.ext}`;
+      const uploadRes = await R2StorageService.uploadBuffer(parsed.buffer, key, parsed.mimeType);
+      if (uploadRes.success) {
+        packageBoxPhotoUrl = uploadRes.url;
+        storageProvider = uploadRes.storageProvider;
+        photoRecords.push({
+          url: uploadRes.url,
+          type: 'PACKAGE_BOX',
+          capturedAt: new Date().toISOString(),
+          storageProvider: uploadRes.storageProvider
+        });
+      }
+    }
+
+    // 3. Cập nhật hoặc Khởi tạo Đơn Hàng trong CSDL
+    let shipment = ShipmentRepository.getById(cleanAwb);
+    const parsedWeight = parseFloat(weightKg);
+    const effectiveWeight = !isNaN(parsedWeight) && parsedWeight > 0 ? parsedWeight : (shipment?.chargeableWeightKg || 1);
+    const detectedCarrier = carrier || (cleanAwb.startsWith('1Z') ? 'UPS' : (cleanAwb.length === 12 || cleanAwb.length === 34 ? 'FEDEX' : (shipment?.carrier || 'UPS')));
+    const nowIso = new Date().toISOString();
+
+    if (!shipment) {
+      // Kiện hàng mới đến kho (chưa có trong đơn hàng)
+      const newShp: any = {
+        shipmentId: `SHP-${timestamp}`,
+        orderCode: `ORD-${cleanAwb}`,
+        trackingNumber: cleanAwb,
+        awb: cleanAwb,
+        carrier: detectedCarrier,
+        serviceType: detectedCarrier === 'UPS' ? 'UPS Express Saver' : 'FedEx International Priority',
+        destinationCountry: destinationCountry || 'US',
+        weightKg: effectiveWeight,
+        totalWeightKg: effectiveWeight,
+        chargeableWeightKg: effectiveWeight,
+        cargoType: cargoType || 'GENERAL',
+        customerCode: 'PDL-GUEST',
+        customerName: 'Khách lẻ / Nhập kho Camera',
+        status: 'INBOUND_RECEIVED',
+        financialCategory: 'IMMEDIATE',
+        financialStatus: {
+          isPaid: false,
+          isDeducted: false,
+          isCustomerCommitted: true,
+          committedAt: nowIso,
+          committedBy: operator,
+          eligibleForDispatch: false
+        },
+        currentWarehouseHub: hub,
+        inboundedAt: nowIso,
+        inboundedBy: operator,
+        inboundHub: hub,
+        awbLabelPhotoUrl,
+        packageBoxPhotoUrl,
+        inboundPhotos: photoRecords,
+        notes: notes || `Nhập kho từ Camera Điện Thoại (${hub})`,
+        pieces: [
+          {
+            pieceNumber: 1,
+            trackingNumber: cleanAwb,
+            weightKg: effectiveWeight,
+            inboundStatus: 'INBOUNDED',
+            inboundAt: nowIso,
+            inboundHub: hub
+          }
+        ],
+        createdAt: nowIso
+      };
+      ShipmentRepository.save(newShp, `Nhập kho mới từ Camera Điện Thoại (${effectiveWeight}kg) - Lưu ảnh qua ${storageProvider}`);
+      shipment = newShp;
+    } else {
+      // Kiện hàng đã có trong hệ thống -> Cập nhật trạng thái và ảnh
+      shipment.status = 'INBOUND_RECEIVED';
+      shipment.inboundedAt = nowIso;
+      shipment.inboundedBy = operator;
+      shipment.inboundHub = hub;
+      shipment.currentWarehouseHub = hub;
+      if (!isNaN(parsedWeight) && parsedWeight > 0) {
+        (shipment as any).weightKg = parsedWeight;
+        shipment.chargeableWeightKg = parsedWeight;
+        shipment.totalWeightKg = parsedWeight;
+        if (shipment.pieces && shipment.pieces.length > 0) {
+          shipment.pieces[0].weightKg = parsedWeight;
+        }
+      }
+      if (awbLabelPhotoUrl) shipment.awbLabelPhotoUrl = awbLabelPhotoUrl;
+      if (packageBoxPhotoUrl) shipment.packageBoxPhotoUrl = packageBoxPhotoUrl;
+      if (!shipment.inboundPhotos) shipment.inboundPhotos = [];
+      shipment.inboundPhotos.push(...photoRecords);
+      if (notes) {
+        shipment.notes = shipment.notes ? `${shipment.notes} | ${notes}` : notes;
+      }
+      if (shipment.pieces) {
+        shipment.pieces.forEach(p => {
+          (p as any).inboundStatus = 'INBOUNDED';
+          (p as any).inboundAt = nowIso;
+          (p as any).inboundHub = hub;
+        });
+      }
+      ShipmentRepository.save(shipment, `Cập nhật nhập kho & ảnh bằng chứng qua Camera Điện Thoại (${storageProvider})`);
+    }
+
+    return res.json({
+      success: true,
+      message: `🎉 Đã nhập kho thành công AWB ${cleanAwb}!`,
+      shipment,
+      storageProvider,
+      photos: {
+        labelUrl: awbLabelPhotoUrl,
+        packageUrl: packageBoxPhotoUrl
+      }
+    });
+  } catch (err: any) {
+    console.error('Lỗi API mobile inbound scan:', err);
+    return res.status(500).json({ success: false, message: 'Lỗi xử lý: ' + err.message });
+  }
+});
+
+// API Tra cứu hình ảnh bằng chứng AWB nhanh (cho nhân viên, kế toán & khách hàng)
+app.get('/api/inbound/photos/:awb', (req, res) => {
+  const queryAwb = String(req.params.awb || '').trim().toUpperCase();
+  if (!queryAwb) {
+    return res.status(400).json({ success: false, message: 'Vui lòng cung cấp mã AWB cần tra cứu' });
+  }
+
+  const allShipments = ShipmentRepository.getAll();
+  const shipment = allShipments.find((s: any) =>
+    (s.masterTrackingNumber && String(s.masterTrackingNumber).toUpperCase() === queryAwb) ||
+    (s.awb && String(s.awb).toUpperCase() === queryAwb) ||
+    (s.trackingNumber && String(s.trackingNumber).toUpperCase() === queryAwb) ||
+    (s.pieces && s.pieces.some((p: any) => p.trackingNumber && String(p.trackingNumber).toUpperCase() === queryAwb))
+  );
+
+  if (!shipment) {
+    return res.status(404).json({
+      success: false,
+      message: `Không tìm thấy đơn hàng nào có mã AWB là "${queryAwb}"`
+    });
+  }
+
+  const anyShp = shipment as any;
+  return res.json({
+    success: true,
+    shipmentId: anyShp.shipmentId,
+    awb: anyShp.masterTrackingNumber || anyShp.awb || anyShp.trackingNumber,
+    carrier: anyShp.carrier || 'UNKNOWN',
+    weightKg: anyShp.chargeableWeightKg || anyShp.weightKg || anyShp.totalWeightKg || 0,
+    status: anyShp.status,
+    inboundHub: anyShp.inboundHub || anyShp.currentWarehouseHub || 'SGN',
+    inboundedAt: anyShp.inboundedAt || anyShp.createdAt,
+    inboundedBy: anyShp.inboundedBy || 'kho_system',
+    notes: anyShp.notes || '',
+    awbLabelPhotoUrl: anyShp.awbLabelPhotoUrl || '',
+    packageBoxPhotoUrl: anyShp.packageBoxPhotoUrl || '',
+    inboundPhotos: anyShp.inboundPhotos || []
+  });
+});
+
 
 // 3. Danh sách đơn trong Kho Chờ Xuất (đã nhập kho & đủ 3 điều kiện tài chính)
 app.get('/api/warehouse/waiting-dispatch', (req, res) => {
   const hub = req.query.hub as string | undefined;
   const list = ShipmentRepository.getWaitingDispatch(hub);
-  res.json({ success: true, data: list, count: list.length });
+  const currentUser = AuthService.getCurrentUser();
+  const sanitized = AuthService.sanitizeShipmentsForRole(list, currentUser.role);
+  res.json({ success: true, data: sanitized, count: sanitized.length });
 });
 
 // 4. Bảng Kê Xuất Kho (Dispatch Manifests)
 app.get('/api/warehouse/manifests', (req, res) => {
-  res.json({ success: true, data: ManifestService.getAll() });
+  const currentUser = AuthService.getCurrentUser();
+  const list = ManifestService.getAll();
+  const sanitized = list.map(m => ManifestService.sanitizeManifestForRole(m, currentUser.role));
+  res.json({ success: true, data: sanitized });
 });
 
 app.get('/api/warehouse/manifests/:id', (req, res) => {
+  const currentUser = AuthService.getCurrentUser();
   const m = ManifestService.getById(req.params.id);
   if (!m) return res.status(404).json({ success: false, message: 'Không tìm thấy Bảng kê: ' + req.params.id });
-  res.json({ success: true, data: m });
+  const sanitized = ManifestService.sanitizeManifestForRole(m, currentUser.role);
+  res.json({ success: true, data: sanitized });
 });
 
 app.post('/api/warehouse/manifests', (req, res) => {
@@ -2132,16 +2554,22 @@ app.post('/api/warehouse/manifests', (req, res) => {
 });
 
 app.get('/api/warehouse/manifests/:id/print', (req, res) => {
+  const currentUser = AuthService.getCurrentUser();
   const m = ManifestService.getById(req.params.id);
   if (!m) return res.status(404).send('Không tìm thấy Bảng kê: ' + req.params.id);
+  const hidePrice = !AuthService.hasPermission(currentUser.role, 'rates', 'canView') && !AuthService.hasPermission(currentUser.role, 'finance', 'canView');
+  const hideCost = hidePrice || !AuthService.hasPermission(currentUser.role, 'codeVsSell', 'canView');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(ManifestService.renderManifestHtml(m));
+  res.send(ManifestService.renderManifestHtml(m, { hidePrice, hideCost }));
 });
 
 app.get('/api/warehouse/manifests/:id/excel', (req, res) => {
+  const currentUser = AuthService.getCurrentUser();
   const m = ManifestService.getById(req.params.id);
   if (!m) return res.status(404).send('Không tìm thấy Bảng kê: ' + req.params.id);
-  const buf = ManifestService.exportManifestExcel(m);
+  const hidePrice = !AuthService.hasPermission(currentUser.role, 'rates', 'canView') && !AuthService.hasPermission(currentUser.role, 'finance', 'canView');
+  const hideCost = hidePrice || !AuthService.hasPermission(currentUser.role, 'codeVsSell', 'canView');
+  const buf = ManifestService.exportManifestExcel(m, { hidePrice, hideCost });
   res.setHeader('Content-Disposition', `attachment; filename="${m.manifestId}.xlsx"`);
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.send(buf);
@@ -2273,8 +2701,9 @@ app.get('/api/warehouse/hub-shipments', (req, res) => {
   const postpaidCount = inboundedList.filter(s => s.financialCategory === 'POSTPAID').length;
   const walletCount = inboundedList.filter(s => s.financialCategory === 'WALLET').length;
 
-  const currentUser = AuthService.getCurrentUser();
-  const sanitizedList = AuthService.sanitizeShipmentsForRole(list, currentUser.role);
+  const token = extractRequestToken(req);
+  const currentUser = token ? AuthService.getUserByToken(token) : AuthService.getCurrentUser();
+  const sanitizedList = AuthService.sanitizeShipmentsForRole(list, currentUser?.role || 'WAREHOUSE');
 
   res.json({
     success: true,
@@ -2729,6 +3158,225 @@ app.post('/api/finance/payment-vouchers/upload-excel', upload.single('excelFile'
   }
 });
 
+// 7e. Tải file mẫu Excel Up Số AWB + Trọng Lượng (Kg) Tự Động Tính Giá Cước (.xlsx)
+app.get('/api/shipments/templates/awb-pricing-excel', (req, res) => {
+  try {
+    const buffer = FinanceService.generateAwbPricingExcelTemplate();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="PandaLex_Mau_Tinh_Gia_AWB_Kg.xlsx"');
+    res.send(buffer);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7f. Tải lên File Excel (Số AWB + Trọng Lượng Kg) để Tự Động Tính Giá Gốc + Giá Bán & Cập Nhật Đơn Hàng
+app.post('/api/shipments/upload-awb-pricing-excel', upload.single('excelFile'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Vui lòng đính kèm file Excel (.xlsx, .xls, .csv)' });
+    }
+    const fileBuffer = fs.readFileSync(req.file.path);
+    try { fs.unlinkSync(req.file.path); } catch (_) {}
+
+    const applyToShipments = req.query.apply === 'true' || req.body.apply === 'true' || req.body.apply === true;
+    const options = {
+      defaultCountry: (req.body.defaultCountry || req.query.defaultCountry || 'US') as string,
+      defaultCarrier: (req.body.defaultCarrier || req.query.defaultCarrier || 'AUTO') as string,
+      defaultCustomerCode: (req.body.defaultCustomerCode || req.query.defaultCustomerCode || 'PDL-GUEST') as string,
+      isDocument: req.body.isDocument === 'true' || req.body.isDocument === true || req.query.isDocument === 'true',
+      defaultCargoType: (req.body.defaultCargoType || req.query.defaultCargoType || 'GENERAL') as any,
+      isCosmetics: req.body.isCosmetics === 'true' || req.body.isCosmetics === true || req.query.isCosmetics === 'true',
+      customsFeePerKg: req.body.customsFeePerKg !== undefined ? Number(req.body.customsFeePerKg) : undefined,
+      securityFeePerAwb: req.body.securityFeePerAwb !== undefined ? Number(req.body.securityFeePerAwb) : undefined,
+      vatPercent: req.body.vatPercent !== undefined ? Number(req.body.vatPercent) : undefined,
+      surgeDiscountPercent: req.body.surgeDiscountPercent !== undefined ? Number(req.body.surgeDiscountPercent) : undefined,
+      orderProcessingFee: req.body.deliveryFee !== undefined ? Number(req.body.deliveryFee) : (req.body.orderProcessingFee !== undefined ? Number(req.body.orderProcessingFee) : undefined),
+      deliveryFee: req.body.deliveryFee !== undefined ? Number(req.body.deliveryFee) : (req.body.orderProcessingFee !== undefined ? Number(req.body.orderProcessingFee) : undefined),
+      upsFuelPercent: req.body.upsFuelPercent !== undefined ? Number(req.body.upsFuelPercent) : (req.query.upsFuelPercent !== undefined ? Number(req.query.upsFuelPercent) : undefined),
+      fedexFuelPercent: req.body.fedexFuelPercent !== undefined ? Number(req.body.fedexFuelPercent) : (req.query.fedexFuelPercent !== undefined ? Number(req.query.fedexFuelPercent) : undefined),
+      fuelPercentOverride: req.body.fuelPercentOverride !== undefined ? Number(req.body.fuelPercentOverride) : (req.query.fuelPercentOverride !== undefined ? Number(req.query.fuelPercentOverride) : undefined)
+    };
+    const result = FinanceService.parseAndCalculateAwbPricingExcel(fileBuffer, applyToShipments, options);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+// 7g-extra. Danh mục & Đơn giá Phí Hải Quan theo từng loại hàng
+app.get('/api/pricing-tool/customs-cargo-types', (req, res) => {
+  try {
+    const list = CustomsCargoConfigService.getAllCargoTypes();
+    res.json({ success: true, cargoTypes: list });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/pricing-tool/customs-cargo-types', (req, res) => {
+  try {
+    const rates = req.body.rates || {};
+    CustomsCargoConfigService.updateRates(rates);
+    res.json({ success: true, message: 'Đã cập nhật thành công biểu phí Hải quan theo loại hàng', cargoTypes: CustomsCargoConfigService.getAllCargoTypes() });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7h. Tính lại giá cước cho 1 dòng AWB khi chỉnh sửa trực tiếp trên Bảng (List)
+app.post('/api/shipments/recalculate-awb-row', (req, res) => {
+  try {
+    const result = FinanceService.recalculateSingleAwbRow(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7i. Xuất danh sách kết quả tính giá AWB ra file Excel chuẩn đẹp (.xlsx)
+app.post('/api/shipments/export-awb-pricing-excel', (req, res) => {
+  try {
+    const rows = req.body.rows || [];
+    const buffer = FinanceService.exportAwbPricingResultToExcel(rows);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Bang_Tinh_Gia_AWB_${new Date().toISOString().slice(0, 10)}.xlsx"`);
+    res.send(buffer);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7j. Xuất Bảng Kê Cước Thu Khách Hàng (.xlsx) - Đầy đủ tất cả các loại phí thu khách
+app.post('/api/shipments/export-pricing-customer-excel', (req, res) => {
+  try {
+    const rows = req.body.rows || [];
+    const buffer = FinanceService.exportCustomerPricingExcel(rows);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Bang_Ke_Thu_Tien_Khach_Hang_${new Date().toISOString().slice(0, 10)}.xlsx"`);
+    res.send(buffer);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7k. Xuất Bảng Kê Chi Trả Nhà Cung Cấp Viettel (.xlsx) - Cước, HQ 32k, Phí hàng 8k
+app.post('/api/shipments/export-pricing-supplier-excel', (req, res) => {
+  try {
+    const rows = req.body.rows || [];
+    const buffer = FinanceService.exportSupplierPricingExcel(rows);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Bang_Ke_Chi_Tra_NCC_Viettel_${new Date().toISOString().slice(0, 10)}.xlsx"`);
+    res.send(buffer);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7l. Lưu Danh Sách Đơn Hàng Đã Sửa & Tính Giá Vào Hệ Thống (Mục 2.2 Quản Lý Đơn Hàng)
+app.post('/api/shipments/save-awb-pricing-batch', (req, res) => {
+  try {
+    const rows = req.body.rows || [];
+    const validRows = rows.filter((r: any) => r && r.valid !== false && r.awb);
+    let updatedCount = 0;
+    let createdCount = 0;
+
+    for (const r of validRows) {
+      const rawAwb = String(r.awb).trim().toUpperCase();
+      const existing = ShipmentRepository.getById(rawAwb);
+      const w = Number(r.chargeableWeightKg || r.weightKg || 1);
+      const cost = Number(r.supplierCostPrice !== undefined ? r.supplierCostPrice : (r.costPrice || 0));
+      const sell = Number(r.customerSellPrice !== undefined ? r.customerSellPrice : (r.sellPrice || 0));
+      const profit = Number(r.profit !== undefined ? r.profit : (sell - cost));
+      const country = r.destinationCountry || 'US';
+      const carrier = r.carrier || (rawAwb.startsWith('1Z') ? 'UPS' : 'FEDEX');
+      const custCode = r.customerCode || 'PDL-GUEST';
+      const custObj = CustomerService.getByCode(custCode);
+      const custName = r.customerName || custObj?.customerName || (custObj as any)?.name || 'Khách vãng lai';
+
+      if (existing) {
+        existing.totalWeightKg = w;
+        existing.chargeableWeightKg = w;
+        existing.costPrice = cost;
+        existing.sellPrice = sell;
+        existing.profit = profit;
+        existing.carrier = carrier;
+        if (existing.shipTo) existing.shipTo.countryCode = country;
+        existing.customerCode = custCode;
+        existing.customerName = custName;
+        ShipmentRepository.save(existing, `Cập nhật từ Tool Tính Giá Excel (${w}kg - Cost: ${cost}đ - Sell: ${sell}đ)`);
+        updatedCount++;
+      } else {
+        const nowIso = new Date().toISOString();
+        const rowNum = updatedCount + createdCount + 1;
+        const newShp: any = {
+          id: `SHP-${Date.now()}-${rowNum}`,
+          shipmentId: `SHP-${Date.now()}-${rowNum}`,
+          shipmentNumber: `PDL-${Date.now().toString().slice(-6)}-${rowNum}`,
+          masterTrackingNumber: rawAwb,
+          carrier,
+          serviceCode: carrier === 'UPS' ? 'SAVER' : 'IP',
+          serviceName: carrier === 'UPS' ? 'UPS Worldwide Saver' : 'FedEx Intl Priority',
+          customerCode: custCode,
+          customerName: custName,
+          financialCategory: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : custObj?.financialCategory === 'PREPAID_WALLET' ? 'WALLET' : 'IMMEDIATE',
+          paymentTerm: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : 'PREPAID',
+          paymentStatus: 'UNPAID',
+          status: 'INBOUND_RECEIVED',
+          hub: 'SGN',
+          currentWarehouseHub: 'SGN',
+          totalPieces: 1,
+          totalWeightKg: w,
+          volumetricWeightKg: w,
+          chargeableWeightKg: w,
+          costPrice: cost,
+          sellPrice: sell,
+          profit,
+          destinationCountry: country,
+          shipFrom: {
+            contactName: custName,
+            companyName: custName,
+            city: 'HO CHI MINH',
+            countryCode: 'VN',
+            phone: custObj?.phone || '0909000111'
+          },
+          shipTo: {
+            contactName: 'CONSIGNEE ' + country,
+            city: country,
+            countryCode: country,
+            phone: '0000000000'
+          },
+          pieces: [
+            {
+              pieceNumber: 1,
+              trackingNumber: rawAwb,
+              weightKg: w,
+              lengthCm: 25,
+              widthCm: 20,
+              heightCm: 15,
+              inboundStatus: 'INBOUNDED'
+            }
+          ],
+          createdAt: nowIso
+        };
+        ShipmentRepository.save(newShp, `Tạo mới từ Tool Tính Giá Excel (${w}kg)`);
+        createdCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      totalSaved: validRows.length,
+      updatedCount,
+      createdCount,
+      message: `Đã lưu thành công ${validRows.length} vận đơn (${createdCount} tạo mới, ${updatedCount} cập nhật)`
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // 8. Danh sách Phiếu Chi
 app.get('/api/finance/payment-vouchers', (req, res) => {
   const { categoryCode, type, paymentMethod, hub, keyword, fromDate, toDate } = req.query as any;
@@ -2796,9 +3444,10 @@ app.delete('/api/finance/categories/:id', (req, res) => {
   }
 });
 
-// 10. Tra cứu nhanh AWB cho việc lập phiếu thu / chi
+// 10. Tra cứu nhanh AWB cho việc lập phiếu thu / chi (hỗ trợ truyền ?weightKg= để tự tính lại cước)
 app.get('/api/finance/awb-lookup/:awb', (req, res) => {
-  const info = FinanceService.lookupAwbForVoucher(req.params.awb);
+  const weightKg = req.query.weightKg ? parseFloat(String(req.query.weightKg)) : undefined;
+  const info = FinanceService.lookupAwbForVoucher(req.params.awb, weightKg);
   if (!info) return res.status(404).json({ success: false, message: 'Không tìm thấy vận đơn: ' + req.params.awb });
   res.json(info);
 });

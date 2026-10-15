@@ -6,7 +6,10 @@ export class ExcelExportService {
    * Xuất danh sách Vận đơn ra Buffer Excel (.xlsx) chuẩn nghiệp vụ PandaLex
    * Kế thừa từ logic BookingManager.ascx.cs của ship.pandalexvn.com
    */
-  static exportShipmentsToExcel(shipments: StoredShipment[]): Buffer {
+  static exportShipmentsToExcel(shipments: StoredShipment[], options?: { hidePrice?: boolean; hideCost?: boolean }): Buffer {
+    const hidePrice = !!options?.hidePrice;
+    const hideCost = hidePrice || !!options?.hideCost;
+
     // Tiêu đề cột chuẩn hóa
     const headers = [
       'STT',
@@ -37,19 +40,26 @@ export class ExcelExportService {
     let totalSell = 0;
     let totalProfit = 0;
 
-    const rows = shipments.map((s, index) => {
+    const rows = shipments.map((s: any, index) => {
+      const isItemPriceHidden = hidePrice || s.isPriceHidden;
+      const isItemCostHidden = hideCost || isItemPriceHidden;
+
       const actWeight = s.totalWeightKg || 0;
       const volWeight = s.volumetricWeightKg || 0;
       const chgWeight = s.chargeableWeightKg || Math.max(actWeight, volWeight);
-      const cost = s.costPrice || Math.round(chgWeight * 220000);
-      const sell = s.sellPrice || Math.round(chgWeight * 275000);
-      const profit = s.profit !== undefined ? s.profit : (sell - cost);
+      const rawCost = isItemCostHidden ? 0 : (s.costPrice || Math.round(chgWeight * 220000));
+      const rawSell = isItemPriceHidden ? 0 : (s.sellPrice || Math.round(chgWeight * 275000));
+      const rawProfit = (isItemCostHidden || isItemPriceHidden) ? 0 : (s.profit !== undefined ? s.profit : (rawSell - rawCost));
 
       totalWeight += actWeight;
       totalPieces += s.totalPieces || 1;
-      totalCost += cost;
-      totalSell += sell;
-      totalProfit += profit;
+      totalCost += rawCost;
+      totalSell += rawSell;
+      totalProfit += rawProfit;
+
+      const costDisplay = isItemCostHidden ? 'Bảo mật' : rawCost;
+      const sellDisplay = isItemPriceHidden ? 'Bảo mật' : rawSell;
+      const profitDisplay = (isItemCostHidden || isItemPriceHidden) ? 'Bảo mật' : rawProfit;
 
       const pTermText = s.paymentTerm === 'POSTPAID' ? 'Thanh toán sau (Công nợ)' : 'Thanh toán ngay (Prepaid)';
       const pStatusText = s.paymentStatus === 'PAID' ? 'Đã thu tiền' : 'Chưa thu (Ghi nợ)';
@@ -70,9 +80,9 @@ export class ExcelExportService {
         chgWeight,
         pTermText,
         pStatusText,
-        cost,
-        sell,
-        profit,
+        costDisplay,
+        sellDisplay,
+        profitDisplay,
         s.hub || 'SGN',
         s.shipTo?.countryCode || s.recipient?.country || 'US',
         s.recipient?.name || s.shipTo?.contactName || '',
@@ -95,9 +105,9 @@ export class ExcelExportService {
       '',
       '',
       '',
-      totalCost,
-      totalSell,
-      totalProfit,
+      hideCost ? 'Bảo mật' : totalCost,
+      hidePrice ? 'Bảo mật' : totalSell,
+      (hideCost || hidePrice) ? 'Bảo mật' : totalProfit,
       '',
       '',
       '',

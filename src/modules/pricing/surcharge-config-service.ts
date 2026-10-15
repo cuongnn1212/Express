@@ -19,16 +19,35 @@ export interface SurchargeConfig {
   };
   ups: {
     ahcAmount: number; // 420,000
+    ahcDemandAmount: number; // 42,300 (Bảng C: Phụ phí Nhu cầu - Phụ phí Xử lý mỗi gói)
     ahcLongestThresholdCm: number; // 120
     ahcSecondThresholdCm: number; // 76
     ahcWeightThresholdKg: number; // 25
     lpsAmount: number; // 1,950,000
+    lpsDemandAmount: number; // 148,050 (Bảng C: Phụ phí Nhu cầu - Gói hàng lớn mỗi gói)
     lpsGirthThresholdCm: number; // 300
     lpsMinWeightKg: number; // 40
-    ipfAmount: number; // 58,750
+    overMaxDemandAmount: number; // 4,700,000 (Bảng C: Phí Vượt quá giới hạn tối đa mỗi gói)
+    ipfAmount: number; // 58,750 (Phí Xử lý Quốc tế đi Hoa Kỳ mỗi lô hàng)
+    directDeliveryAmount: number; // 47,000 (Chỉ Phát Hàng Trực Tiếp mỗi gói)
+    declaredValueUnitVnd: number; // 2,350,000
+    declaredValueFeePerUnitVnd: number; // 47,000 (47,000 VND cho mỗi 2,350,000 VND)
+    returnPrintLabelAmount: number; // 23,500 (Nhãn trả hàng tự in)
+    returnPlusAttempt1Amount: number; // 103,400 (Nỗ lực nhận hàng UPS lần 1)
+    returnPlusAttempt3Amount: number; // 150,400 (Nỗ lực nhận hàng UPS lần 3)
     residentialAmount: number; // 95,000
     overMaxWeightKg: number; // 70
     overMaxLengthCm: number; // 274
+    surgeEmergencyFee: {
+      enabled: boolean;
+      effectivePeriod: string; // "27/09/2026 - 06/02/2027"
+      americasPerKg: number; // 39,950 VND/kg (Hoa Kỳ & Châu Mỹ)
+      europePerKg: number; // 28,200 VND/kg (Châu Âu)
+      ismeaPerKg: number; // 28,200 VND/kg (ISMEA - Trung Đông & Châu Phi)
+      apacPerKg: number; // 2,350 VND/kg (Châu Á Thái Bình Dương)
+      anzPerKg: number; // 2,350 VND/kg (Úc & New Zealand)
+      restOfWorldPerKg: number; // 39,950 VND/kg (Phần còn lại của thế giới)
+    };
   };
   fedex: {
     ahsAmount: number; // 450,000
@@ -77,10 +96,10 @@ export class SurchargeConfigService {
       weekLabel: 'Tuần 41 (05/10 - 11/10/2026)',
       startDate: '2026-10-05',
       endDate: '2026-10-11',
-      upsPercent: 28.5,
+      upsPercent: 52.5,
       fedexPercent: 23.5,
       dhlPercent: 25.0,
-      notes: 'Đang áp dụng tuần này (UPS công bố 02/10, FedEx công bố 03/10)',
+      notes: 'Đang áp dụng tuần này (UPS công bố 52.5%)',
       isCurrent: true
     },
     {
@@ -88,7 +107,7 @@ export class SurchargeConfigService {
       weekLabel: 'Tuần 42 (12/10 - 18/10/2026)',
       startDate: '2026-10-12',
       endDate: '2026-10-18',
-      upsPercent: 29.0,
+      upsPercent: 52.5,
       fedexPercent: 24.0,
       dhlPercent: 25.5,
       notes: 'Đã lên lịch áp dụng cho tuần tới theo thông báo mới',
@@ -98,23 +117,42 @@ export class SurchargeConfigService {
 
   private static config: SurchargeConfig = {
     fuelSurcharge: {
-      upsPercent: 28.5,
+      upsPercent: 52.5,
       fedexPercent: 23.5,
       dhlPercent: 25.0,
       currentWeekLabel: 'Tuần 41 (05/10 - 11/10/2026)'
     },
     ups: {
       ahcAmount: 420000,
+      ahcDemandAmount: 42300,
       ahcLongestThresholdCm: 120,
       ahcSecondThresholdCm: 76,
       ahcWeightThresholdKg: 25,
       lpsAmount: 1950000,
+      lpsDemandAmount: 148050,
       lpsGirthThresholdCm: 300,
       lpsMinWeightKg: 40,
+      overMaxDemandAmount: 4700000,
       ipfAmount: 58750,
+      directDeliveryAmount: 47000,
+      declaredValueUnitVnd: 2350000,
+      declaredValueFeePerUnitVnd: 47000,
+      returnPrintLabelAmount: 23500,
+      returnPlusAttempt1Amount: 103400,
+      returnPlusAttempt3Amount: 150400,
       residentialAmount: 95000,
       overMaxWeightKg: 70,
-      overMaxLengthCm: 274
+      overMaxLengthCm: 274,
+      surgeEmergencyFee: {
+        enabled: true,
+        effectivePeriod: 'Từ 27/09/2026 đến 06/02/2027',
+        americasPerKg: 39950,
+        europePerKg: 28200,
+        ismeaPerKg: 28200,
+        apacPerKg: 2350,
+        anzPerKg: 2350,
+        restOfWorldPerKg: 39950
+      }
     },
     fedex: {
       ahsAmount: 450000,
@@ -136,6 +174,95 @@ export class SurchargeConfigService {
 
   static get(): SurchargeConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Tra cứu mức Phí Biến Động Khẩn Cấp UPS (Surge Emergency Fee - VND/kg)
+   * cho lô hàng xuất khẩu từ Việt Nam đi quốc tế theo Bảng B (hiệu lực 27/09/2026 - 06/02/2027)
+   * Có hỗ trợ tỷ lệ giảm phí (mặc định giảm 50% theo chính sách hiện hành)
+   */
+  static getUpsSurgeRatePerKg(destinationCountry: string, discountPercent: number = 50): {
+    rawRatePerKg: number;
+    effectiveRatePerKg: number;
+    ratePerKg: number; // Tương thích ngược: bằng effectiveRatePerKg
+    discountPercent: number;
+    regionName: string;
+  } {
+    const surge = this.config.ups.surgeEmergencyFee;
+    if (!surge || !surge.enabled) {
+      return { rawRatePerKg: 0, effectiveRatePerKg: 0, ratePerKg: 0, discountPercent: 0, regionName: 'Không áp dụng' };
+    }
+    const c = (destinationCountry || 'US').trim().toUpperCase();
+    let rawRate = surge.restOfWorldPerKg;
+    let region = 'Phần còn lại của thế giới';
+
+    // 1. Úc và New Zealand: 2,350 VND/kg
+    const anzCountries = new Set(['AU', 'AUS', 'AUSTRALIA', 'NZ', 'NZL', 'NEW ZEALAND']);
+    if (anzCountries.has(c)) {
+      rawRate = surge.anzPerKg;
+      region = 'Úc & New Zealand';
+    } else {
+      // 2. Châu Á Thái Bình Dương (APAC): 2,350 VND/kg
+      const apacCountries = new Set([
+        'JP', 'KR', 'SG', 'TW', 'TH', 'MY', 'CN', 'HK', 'MO', 'ID', 'PH', 'IN',
+        'BN', 'KH', 'LA', 'MM', 'MN', 'GU', 'AS', 'MP', 'WS', 'NC', 'VN'
+      ]);
+      if (apacCountries.has(c)) {
+        rawRate = surge.apacPerKg;
+        region = 'Châu Á Thái Bình Dương';
+      } else {
+        // 3. Châu Âu (Europe): 28,200 VND/kg
+        const europeCountries = new Set([
+          'AL', 'AD', 'AM', 'AT', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK',
+          'EE', 'FI', 'FR', 'GE', 'DE', 'GI', 'GR', 'GG', 'HU', 'IS', 'IE', 'IL',
+          'IT', 'JE', 'XK', 'LV', 'LI', 'LT', 'LU', 'MT', 'MD', 'MC', 'ME', 'NL',
+          'MK', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE',
+          'CH', 'TR', 'UA', 'GB', 'UK'
+        ]);
+        if (europeCountries.has(c)) {
+          rawRate = surge.europePerKg;
+          region = 'Châu Âu';
+        } else {
+          // 4. ISMEA (Trung Đông & Châu Phi): 28,200 VND/kg
+          const ismeaCountries = new Set([
+            'AF', 'DZ', 'AO', 'AZ', 'BH', 'BD', 'BJ', 'BW', 'BF', 'BI', 'CM', 'CV',
+            'TD', 'KM', 'DJ', 'EG', 'ER', 'ET', 'GA', 'GM', 'GH', 'GN', 'GW', 'IQ',
+            'JO', 'KZ', 'KE', 'KW', 'KG', 'LB', 'LS', 'LR', 'MG', 'MW', 'MV', 'ML',
+            'MR', 'MU', 'YT', 'MA', 'MZ', 'NA', 'NP', 'NE', 'NG', 'OM', 'PK', 'QA',
+            'CG', 'CD', 'CI', 'TN', 'RE', 'RW', 'SA', 'LK', 'SN', 'SC', 'SL', 'ZA',
+            'SZ', 'TZ', 'TG', 'TM', 'AE', 'UAE', 'UG', 'UZ', 'YE', 'ZM', 'ZW'
+          ]);
+          if (ismeaCountries.has(c)) {
+            rawRate = surge.ismeaPerKg;
+            region = 'ISMEA (Trung Đông & Châu Phi)';
+          } else {
+            // 5. Hoa Kỳ và Châu Mỹ (US, CA, MX, Nam Mỹ, Caribe): 39,950 VND/kg
+            const americasCountries = new Set([
+              'US', 'USA', 'U.S.A.', 'CA', 'MX', 'AR', 'AW', 'BS', 'BB', 'BZ', 'BM',
+              'BO', 'BR', 'KY', 'CL', 'CO', 'CR', 'CW', 'DM', 'DO', 'EC', 'SV', 'GF',
+              'GD', 'GP', 'GT', 'GY', 'HT', 'HN', 'JM', 'MQ', 'MS', 'NI', 'PA', 'PY',
+              'PE', 'PR', 'BL', 'KN', 'LC', 'MF', 'SX', 'VC', 'SR', 'TT', 'TC', 'VI',
+              'VG', 'UY', 'VE', 'AI', 'AG'
+            ]);
+            if (americasCountries.has(c)) {
+              rawRate = surge.americasPerKg;
+              region = 'Hoa Kỳ & Châu Mỹ';
+            }
+          }
+        }
+      }
+    }
+
+    const disc = Math.max(0, Math.min(100, discountPercent));
+    const effectiveRate = Math.round(rawRate * (1 - disc / 100));
+
+    return {
+      rawRatePerKg: rawRate,
+      effectiveRatePerKg: effectiveRate,
+      ratePerKg: effectiveRate,
+      discountPercent: disc,
+      regionName: region
+    };
   }
 
   static getWeeklyFuelList(): WeeklyFuelEntry[] {

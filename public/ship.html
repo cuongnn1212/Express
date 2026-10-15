@@ -66,13 +66,28 @@
 <body class="bg-slate-100 min-h-screen text-slate-800">
 
   <!-- HEADER -->
-  <header class="brand-bg text-white shadow-lg sticky top-0 z-40">
+  <header id="shipTopHeader" class="brand-bg text-white shadow-lg sticky top-0 z-40">
     <div class="max-w-[1400px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <a href="/" class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center text-xl">🐼</a>
+        <a href="/" id="shipLogoHomeLink" class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center text-xl">🐼</a>
         <div>
-          <h1 class="text-base font-extrabold leading-tight">Tạo Vận Đơn Quốc Tế</h1>
+          <h1 id="shipPageTitle" class="text-base font-extrabold leading-tight">Tạo Đơn Hàng Quốc Tế (UPS / FedEx)</h1>
           <p class="text-[11px] text-white/70">Form đồng bộ theo màn hình <b>Create a Shipment (ups.com)</b> &amp; <b>FedEx Ship Manager</b></p>
+        </div>
+        <!-- Chuyển đổi Tạo Đơn Hàng / Quản Lý Đơn Hàng / Tool Tính Giá Excel -->
+        <div class="flex items-center bg-black/25 p-1 rounded-xl border border-white/15 ml-2 text-xs font-extrabold gap-1">
+          <button type="button" id="btnModeCreateOrder" onclick="switchShipPageMode('create')" class="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 shadow flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-file-circle-plus"></i>
+            <span>Tạo Đơn Hàng</span>
+          </button>
+          <button type="button" id="btnModeManageOrders" onclick="switchShipPageMode('manage')" class="px-3 py-1.5 rounded-lg text-white/80 hover:text-white flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Quản Lý Đơn Hàng</span>
+          </button>
+          <button type="button" onclick="if (window.parent && window.parent !== window && typeof window.parent.switchAdminSection === 'function') { window.parent.switchAdminSection('excelPricingTool'); } else { window.location.href = '/admin.html#excelPricingTool'; }" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>⚡ Tool Tính Giá Bằng Excel</span>
+          </button>
         </div>
       </div>
       <div class="flex items-center gap-2 text-xs font-bold">
@@ -83,10 +98,12 @@
         <button type="button" onclick="loadSample('UPS')" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Mẫu UPS (AWB thật)</button>
         <span class="w-px h-6 bg-white/30 mx-1"></span>
         <button type="button" onclick="openAwbScanModalInShip()" class="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-300 font-extrabold flex items-center gap-1.5 shadow"><i class="fa-solid fa-camera"></i><span>📸 Quét Nhãn AWB</span></button>
-        <a href="/" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center gap-1.5"><i class="fa-solid fa-calculator"></i><span>Báo Giá</span></a>
-        <a href="/invoice.html" class="px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-white flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i><span>Tạo Invoice</span></a>
-        <a href="/home.html" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold flex items-center gap-1.5 shadow"><i class="fa-solid fa-house"></i><span>Home UPS</span></a>
-        <a href="/admin.html" class="px-3 py-1.5 rounded-lg accent-bg text-slate-900 font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-sliders"></i><span>Admin</span></a>
+        <div id="shipStandaloneNavLinks" class="flex items-center gap-2">
+          <a href="/" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center gap-1.5"><i class="fa-solid fa-calculator"></i><span>Báo Giá</span></a>
+          <a href="/invoice.html" class="px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-white flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i><span>Tạo Invoice</span></a>
+          <a href="/home.html" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold flex items-center gap-1.5 shadow"><i class="fa-solid fa-house"></i><span>Home UPS</span></a>
+          <a href="/admin.html" class="px-3 py-1.5 rounded-lg accent-bg text-slate-900 font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-sliders"></i><span>Admin</span></a>
+        </div>
       </div>
     </div>
   </header>
@@ -244,7 +261,7 @@
     </form>
 
     <!-- ============ SUMMARY ============ -->
-    <aside class="xl:col-span-4">
+    <aside id="shipSummaryAside" class="xl:col-span-4">
       <div class="sticky top-20 space-y-4">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="brand-bg text-white px-4 py-2.5 text-sm font-extrabold flex items-center justify-between">
@@ -277,6 +294,7 @@
             <button type="button" onclick="printDocs('invoice')" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-file-invoice mr-1"></i>In Commercial Invoice (A4)</button>
             <button type="button" onclick="downloadInvoiceExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-file-excel mr-1"></i>Tải Excel CI Mẫu Chuẩn</button>
             <button type="button" onclick="printDocs('all')" class="bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2 rounded-lg">In tất cả</button>
+            <button type="button" onclick="switchShipPageMode('manage')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-4 py-2 rounded-lg"><i class="fa-solid fa-boxes-stacked mr-1"></i>Sang Quản Lý Đơn Hàng →</button>
           </div>
         </div>
         <div id="labelsOut" class="flex flex-wrap gap-6 justify-center bg-slate-100 p-6 rounded-lg"></div>
@@ -284,20 +302,25 @@
         <div id="invoiceOut" class="overflow-auto bg-slate-100 p-6 rounded-lg flex justify-center"></div>
     </section>
 
-    <!-- ============ DANH SÁCH VẬN ĐƠN ĐÃ TẠO (QUẢN LÝ TẬP TRUNG) ============ -->
-    <section class="xl:col-span-12">
+    <!-- ============ QUẢN LÝ ĐƠN HÀNG ĐÃ TẠO (TÁCH RIÊNG TAB) ============ -->
+    <section id="secManageOrdersInShip" class="xl:col-span-12 hidden">
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 mb-3">
           <div>
             <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
               <i class="fa-solid fa-boxes-stacked text-blue-600"></i>
-              <span>Lịch Sử Vận Đơn Đã Tạo & Bàn Giao</span>
+              <span>Quản Lý Đơn Hàng Đã Tạo &amp; In Lại Tem / Invoice</span>
             </h3>
-            <p class="text-xs text-slate-500">Quản lý toàn bộ danh sách AWB, in lại tem, in lại invoice, hoặc tra cứu hành trình</p>
+            <p class="text-xs text-slate-500">Quản lý toàn bộ danh sách AWB, in lại tem 4x6", in lại Commercial Invoice, hoặc tra cứu hành trình</p>
           </div>
-          <button type="button" onclick="loadSavedShipmentsList()" class="text-xs font-bold text-blue-600 hover:underline">
-            <i class="fa-solid fa-rotate-right mr-1"></i> Làm mới danh sách
-          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="loadSavedShipmentsList()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700">
+              <i class="fa-solid fa-rotate-right mr-1"></i> Làm mới danh sách
+            </button>
+            <button type="button" onclick="switchShipPageMode('create')" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-xs font-extrabold text-slate-950 shadow">
+              <i class="fa-solid fa-plus mr-1"></i> + Tạo Đơn Hàng Mới
+            </button>
+          </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -306,7 +329,7 @@
               <tr>
                 <th class="py-2.5 px-3">Thời Gian</th>
                 <th class="py-2.5 px-3">Mã Đơn / Tracking</th>
-                <th class="py-2.5 px-3">Hãng & Dịch Vụ</th>
+                <th class="py-2.5 px-3">Hãng &amp; Dịch Vụ</th>
                 <th class="py-2.5 px-3">Người Nhận (Ship To)</th>
                 <th class="py-2.5 px-3">Quy Cách</th>
                 <th class="py-2.5 px-3">Trạng Thái</th>
@@ -766,6 +789,12 @@ async function submitShipment() {
     }
     lastAwb = data.data;
     renderResult(lastAwb);
+    loadSavedShipmentsList();
+    try {
+      if (window.parent && window.parent !== window && typeof window.parent.loadAdminShipments === 'function') {
+        window.parent.loadAdminShipments();
+      }
+    } catch (_) {}
     $('msgBox').innerHTML = (lastAwb.warnings || []).map(w => `<div class="text-[11px] px-2 py-1 rounded bg-amber-50 text-amber-800">⚠️ ${esc(w)}</div>`).join('');
   } catch (e) {
     $('msgBox').innerHTML = `<div class="text-[11px] text-red-700">Lỗi kết nối: ${esc(e.message)}</div>`;
@@ -1448,6 +1477,51 @@ function checkAwbPrefill() {
 }
 
 // ======================================================================
+// CHUYỂN ĐỔI TẠO ĐƠN HÀNG / QUẢN LÝ ĐƠN HÀNG & CHẾ ĐỘ NHÚNG ADMIN
+// ======================================================================
+const isEmbeddedInAdmin = new URLSearchParams(window.location.search).get('embed') === '1';
+if (isEmbeddedInAdmin) {
+  const navLinks = $('shipStandaloneNavLinks');
+  if (navLinks) navLinks.classList.add('hidden');
+  const logoLink = $('shipLogoHomeLink');
+  if (logoLink) logoLink.removeAttribute('href');
+}
+
+function switchShipPageMode(mode) {
+  if (mode === 'manage' && isEmbeddedInAdmin && window.parent && window.parent !== window && typeof window.parent.switchAdminSection === 'function') {
+    window.parent.switchAdminSection('shipments');
+    return;
+  }
+
+  const formEl = $('shipForm');
+  const asideEl = $('shipSummaryAside');
+  const resEl = $('resultSection');
+  const manageEl = $('secManageOrdersInShip');
+  const btnCreate = $('btnModeCreateOrder');
+  const btnManage = $('btnModeManageOrders');
+  const titleEl = $('shipPageTitle');
+
+  if (mode === 'manage') {
+    formEl?.classList.add('hidden');
+    asideEl?.classList.add('hidden');
+    resEl?.classList.add('hidden');
+    manageEl?.classList.remove('hidden');
+    if (btnManage) btnManage.className = 'px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 shadow flex items-center gap-1.5 transition';
+    if (btnCreate) btnCreate.className = 'px-3 py-1.5 rounded-lg text-white/80 hover:text-white flex items-center gap-1.5 transition';
+    if (titleEl) titleEl.textContent = 'Quản Lý Đơn Hàng Đã Tạo (UPS / FedEx)';
+    loadSavedShipmentsList();
+  } else {
+    formEl?.classList.remove('hidden');
+    asideEl?.classList.remove('hidden');
+    if (lastAwb) resEl?.classList.remove('hidden');
+    manageEl?.classList.add('hidden');
+    if (btnCreate) btnCreate.className = 'px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 shadow flex items-center gap-1.5 transition';
+    if (btnManage) btnManage.className = 'px-3 py-1.5 rounded-lg text-white/80 hover:text-white flex items-center gap-1.5 transition';
+    if (titleEl) titleEl.textContent = 'Tạo Đơn Hàng Quốc Tế (UPS / FedEx)';
+  }
+}
+
+// ======================================================================
 // KHỞI TẠO
 // ======================================================================
 setCarrier('UPS');
@@ -1457,6 +1531,11 @@ loadShipmentCustomers();
 loadSavedShipmentsList();
 checkQuoteDraft();
 checkAwbPrefill();
+
+const initMode = new URLSearchParams(window.location.search).get('mode');
+if (initMode === 'manage') {
+  switchShipPageMode('manage');
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,30 @@
+{
+  "GENERAL": {
+    "UPS": { "supplierFeePerKg": 8000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Hàng thông thường: Trả Hải quan UPS 8.000 đ/kg / Thu khách 40.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 8000, "customerFeePerKg": 8000, "hasPrice": true, "note": "8.000 đ/kg" }
+  },
+  "COSMETICS_FOOD": {
+    "UPS": { "supplierFeePerKg": 32000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Mỹ phẩm/thực phẩm: Trả Hải quan UPS 32k / Thu khách 40k" },
+    "FEDEX": { "supplierFeePerKg": 32000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Mỹ phẩm/thực phẩm: Trả Hải quan FedEx 32k / Thu khách 40k" }
+  },
+  "BRANDED": {
+    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 35000, "customerFeePerKg": 45000, "hasPrice": true, "note": "Hàng thương hiệu FedEx: 35.000 đ/kg (Thu khách 45k)" }
+  },
+  "EYELASHES": {
+    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": false, "note": "Chưa có giá" }
+  },
+  "AGARWOOD": {
+    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": false, "note": "Chưa có giá" }
+  },
+  "HAIR": {
+    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": false, "note": "Chưa có giá" }
+  },
+  "DOCUMENT": {
+    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": true, "note": "0 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": true, "note": "0 đ/kg" }
+  }
+}

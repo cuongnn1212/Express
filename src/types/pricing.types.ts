@@ -51,23 +51,6 @@ export interface CustomerPolicy {
   note?: string;
 }
 
-export interface UniversalQuoteRequest {
-  carrier?: CarrierCode | 'ALL'; // UPS, FEDEX, or ALL (compare)
-  destinationCountry: string; // 'US', 'JP', 'Australia', etc.
-  postalCode?: string;
-  actualWeightKg: number;
-  lengthCm: number;
-  widthCm: number;
-  heightCm: number;
-  isDocument?: boolean;
-  customerId?: string; // ID của khách hàng đã setup (nếu có)
-  customMarginPercent?: number; // Override % lợi nhuận
-  customMarginFixedAmount?: number; // Override số tiền lợi nhuận cố định
-  isResidential?: boolean;
-  vatPercent?: number; // Default 0%
-  fuelPercentOverride?: number; // Override fuel surcharge % nếu cần
-  dimDivisor?: number; // Hệ số chia thể tích: 5000 (IATA Express) hoặc 6000 (Cargo / Tuyến riêng)
-}
 
 export interface UniversalQuoteBreakdown {
   carrier: CarrierCode;
@@ -81,14 +64,23 @@ export interface UniversalQuoteBreakdown {
   
   // Chi tiết giá COST (Giá vốn)
   baseRate: number; // Cước Net
+  surgeEmergencyFee?: number; // Phí biến động (đã giảm 50%)
+  orderProcessingFee?: number; // Phí xử lý đơn hàng / 1 đơn hàng (IPF 58,750 đ đi US)
   surcharges: SurchargeItem[];
-  totalFuelableAmount: number; // BaseRate + Phụ phí chịu xăng
+  totalFuelableAmount: number; // BaseRate + Phụ phí chịu xăng (Net + Biến động 50% + Xử lý đơn)
   fuelSurchargePercent: number;
   fuelSurchargeAmount: number;
   totalNonFuelSurcharges: number;
   subtotalBeforeVat: number;
   vatPercent: number;
   vatAmount: number;
+  totalAfterVat?: number; // Cước Hãng đã bao gồm FSC và VAT (trước khi cộng Hải quan và An ninh)
+  cargoType?: string;
+  isCosmetics?: boolean;
+  deliveryFee?: number; // Phí phát hàng (chịu phụ phí nhiên liệu)
+  customsFeePerKg?: number;
+  customsFeeAmount?: number; // Phí Hải quan / 1 kg (Mỹ phẩm: 40,000 đ/kg)
+  securityFeeAmount?: number; // Phí An ninh trên AWB
   totalCostPrice: number; // TỔNG GIÁ VỐN NỘI BỘ
 
   // Chi tiết GIÁ BÁN CHO KHÁCH
@@ -105,6 +97,31 @@ export interface UniversalQuoteBreakdown {
   currency: 'VND' | 'USD';
   estimatedDeliveryDays: string;
   warnings: string[];
+}
+
+export interface UniversalQuoteRequest {
+  carrier?: CarrierCode | 'ALL'; // UPS, FEDEX, or ALL (compare)
+  destinationCountry: string; // 'US', 'JP', 'Australia', etc.
+  postalCode?: string;
+  actualWeightKg: number;
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
+  isDocument?: boolean;
+  customerId?: string; // ID của khách hàng đã setup (nếu có)
+  customMarginPercent?: number; // Override % lợi nhuận
+  customMarginFixedAmount?: number; // Override số tiền lợi nhuận cố định
+  isResidential?: boolean;
+  vatPercent?: number; // Default 8%
+  fuelPercentOverride?: number; // Override fuel surcharge % nếu cần
+  dimDivisor?: number; // Hệ số chia thể tích: 5000 (IATA Express) hoặc 6000 (Cargo / Tuyến riêng)
+  cargoType?: 'GENERAL' | 'COSMETICS' | 'COSMETICS_FOOD' | 'BRANDED' | 'EYELASHES' | 'AGARWOOD' | 'HAIR' | 'DOCUMENT' | string;
+  isCosmetics?: boolean;
+  customsFeePerKg?: number; // Mặc định 40,000 đ/kg nếu là Hàng mỹ phẩm
+  securityFeePerAwb?: number; // Phí An ninh trên AWB
+  surgeDiscountPercent?: number; // Mặc định giảm 50% phí biến động
+  orderProcessingFee?: number; // Phí xử lý đơn hàng/1 đơn hàng
+  deliveryFee?: number; // Phí phát hàng/1 đơn (chịu phụ phí nhiên liệu)
 }
 
 export interface QuoteRequest {

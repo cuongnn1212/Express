@@ -8,9 +8,11 @@ import {
 import { CustomerPolicyService } from '../customer/customer-policy-service.js';
 import { SurchargeEngine } from './surcharge-engine.js';
 import { SurchargeConfigService } from './surcharge-config-service.js';
+import { CustomsCargoConfigService } from './customs-cargo-config.js';
 
 export class UniversalPricingEngine {
   private rateTables: Map<CarrierCode, CarrierRateTable> = new Map();
+  private tablesList: (CarrierRateTable & { id?: string })[] = [];
 
   constructor(tables?: CarrierRateTable[]) {
     if (tables) {
@@ -20,8 +22,12 @@ export class UniversalPricingEngine {
     }
   }
 
-  registerRateTable(table: CarrierRateTable): void {
-    this.rateTables.set(table.carrier, table);
+  registerRateTable(table: CarrierRateTable & { id?: string }): void {
+    this.tablesList.push(table);
+    // Lưu bảng đầu tiên cho carrier nếu chưa có, hoặc ưu tiên bảng Viettel làm mặc định
+    if (!this.rateTables.has(table.carrier) || table.contractName.toUpperCase().includes('VIETTEL')) {
+      this.rateTables.set(table.carrier, table);
+    }
   }
 
   getRateTable(carrier: CarrierCode): CarrierRateTable | undefined {
@@ -29,20 +35,59 @@ export class UniversalPricingEngine {
   }
 
   getAvailableCarriers(): CarrierCode[] {
-    return Array.from(this.rateTables.keys());
+    return Array.from(new Set(this.tablesList.map(t => t.carrier)));
   }
 
   /**
    * Tính báo giá hoàn chỉnh cho 1 hãng cụ thể (Cả Giá Cost và Giá Bán)
    */
-  quoteSingleCarrier(carrier: CarrierCode, req: UniversalQuoteRequest): UniversalQuoteBreakdown {
-    const table = this.rateTables.get(carrier);
+  quoteSingleCarrier(carrier: CarrierCode, req: UniversalQuoteRequest & { rateTableId?: string }): UniversalQuoteBreakdown {
+    let table: (CarrierRateTable & { id?: string }) | undefined = undefined;
+
+    // 1. Nếu có chỉ định cụ thể tableId
+    if (req.rateTableId) {
+      table = this.tablesList.find(t => t.id === req.rateTableId);
+    }
+
+    // 2. Nếu khách hàng là Frank (hoặc mã FRANK / PDL-FRANK), ưu tiên dùng bảng giá khách hàng Frank
+    if (!table && req.customerId) {
+      const custUpper = req.customerId.toUpperCase();
+      if (custUpper.includes('FRANK')) {
+        table = this.tablesList.find(t => t.carrier === carrier && (t.contractName.toUpperCase().includes('FRANK') || t.id?.includes('frank')));
+      }
+    }
+
+    // 3. Nếu chưa chọn, ưu tiên bảng Viettel cho UPS
+    if (!table && carrier === 'UPS') {
+      table = this.tablesList.find(t => t.carrier === carrier && (t.contractName.toUpperCase().includes('VIETTEL') || t.id?.includes('viettel')));
+    }
+
+    // 4. Fallback về bảng mặc định của carrier
+    if (!table) {
+      table = this.rateTables.get(carrier);
+    }
+    if (!table && this.tablesList.length > 0) {
+      table = this.tablesList.find(t => t.carrier === carrier) || this.tablesList[0];
+    }
+
     if (!table) {
       throw new Error(`Chưa có bảng giá cho hãng ${carrier}. Vui lòng nạp bảng giá trước.`);
     }
 
     const countryQuery = req.destinationCountry.trim().toUpperCase();
-    const zone = table.zones[countryQuery];
+    let zone = table.zones[countryQuery];
+    if (!zone) {
+      // Thử chuẩn hóa tên nước hoặc fallback
+      const normMap: Record<string, string> = {
+        'USA': 'US', 'UNITED STATES': 'US', 'MỸ': 'US', 'HOA KỲ': 'US',
+        'AUSTRALIA': 'AU', 'ÚC': 'AU', 'SINGAPORE': 'SG', 'HONG KONG': 'HK',
+        'TAIWAN': 'TW', 'NEW ZEALAND': 'NZ', 'GERMANY': 'DE', 'ĐỨC': 'DE'
+      };
+      const altCode = normMap[countryQuery];
+      if (altCode && table.zones[altCode]) {
+        zone = table.zones[altCode];
+      }
+    }
     if (!zone) {
       throw new Error(`Quốc gia '${req.destinationCountry}' không tìm thấy trong Zone Chart của ${carrier}.`);
     }
@@ -53,16 +98,19 @@ export class UniversalPricingEngine {
     const volWeight = parseFloat(volWeightRaw.toFixed(2));
     let rawWeight = Math.max(req.actualWeightKg, volWeight);
 
-    // 2. Chạy bộ quy tắc phụ phí tự động (AHC, LPS, IPF, Vùng xa, Giới hạn tối đa...)
+    // 2. Chạy bộ quy tắc phụ phí tự động (Surge Emergency Fee, Demand Surcharge, AHC, LPS, IPF, Vùng xa, Giới hạn tối đa...)
     const surchargeResult = SurchargeEngine.evaluate({
       carrier,
       destinationCountry: req.destinationCountry,
       actualWeightKg: req.actualWeightKg,
+      chargeableWeightKg: rawWeight,
       lengthCm: req.lengthCm,
       widthCm: req.widthCm,
       heightCm: req.heightCm,
       isResidential: req.isResidential,
-      isRemoteArea: false // Mặc định false nếu chưa tra zipcode vùng xa
+      isRemoteArea: false, // Mặc định false nếu chưa tra zipcode vùng xa
+      surgeDiscountPercent: req.surgeDiscountPercent !== undefined ? req.surgeDiscountPercent : 50,
+      orderProcessingFee: req.orderProcessingFee
     });
 
     // Nếu dính LPS/Oversize -> áp sàn cân nặng tối thiểu (thường là 40kg)
@@ -116,7 +164,15 @@ export class UniversalPricingEngine {
       throw new Error(`Không tìm thấy nấc giá phù hợp cho trọng lượng ${chargeableWeight}kg tại Zone ${zone}.`);
     }
 
-    const rateInTier = matchedTier.ratesByZone[zone];
+    let rateInTier = matchedTier.ratesByZone[zone];
+    if (rateInTier === undefined || rateInTier <= 0) {
+      // Fallback 1: Thử bỏ prefix Zone (ví dụ: 'Zone 05' -> '5')
+      const cleanZ = zone.replace(/^Zone\s*0?/i, '');
+      rateInTier = matchedTier.ratesByZone[cleanZ] ?? matchedTier.ratesByZone[`Zone ${cleanZ}`] ?? matchedTier.ratesByZone[`Zone 0${cleanZ}`];
+    }
+    if ((rateInTier === undefined || rateInTier <= 0) && (zone === 'US' || zone === 'USA')) {
+      rateInTier = matchedTier.ratesByZone['5'] ?? matchedTier.ratesByZone['Zone 05'];
+    }
     if (rateInTier === undefined || rateInTier <= 0) {
       throw new Error(`Không có đơn giá tại Zone ${zone} cho mức cân ${chargeableWeight}kg (${carrier}).`);
     }
@@ -130,10 +186,19 @@ export class UniversalPricingEngine {
     }
 
     // 5. Kết chuyển GIÁ VỐN HÃNG (CARRIER COST)
+    // CÔNG THỨC: (net + phí biến động (giảm 50%)/1kg + phí xử lý đơn/1 đơn) phụ phí xăng dầu X vat + phí hải quan/1kg + phí an ninh trên AWB
     let totalFuelableSurcharges = 0;
     let totalNonFuelSurcharges = 0;
+    let surgeEmergencyFee = 0;
+    let orderProcessingFee = 0;
 
     for (const s of surchargeResult.surcharges) {
+      if (s.code === 'SURGE_EMERGENCY') {
+        surgeEmergencyFee += s.amount;
+      } else if (s.code === 'IPF' || s.code === 'ORDER_PROCESSING' || s.code === 'DELIVERY_FEE' || s.code === 'DIRECT_DELIVERY') {
+        orderProcessingFee += s.amount;
+      }
+
       if (s.isFuelSurchargeable) {
         totalFuelableSurcharges += s.amount;
       } else {
@@ -151,11 +216,30 @@ export class UniversalPricingEngine {
       : (dynamicCarrierFuel !== undefined ? dynamicCarrierFuel : table.defaultFuelPercent);
     const fuelSurchargeAmount = Math.round((totalFuelableAmount * fuelPercent) / 100);
 
-    const subtotalBeforeVat = totalFuelableAmount + fuelSurchargeAmount + totalNonFuelSurcharges;
-    const vatPercent = req.vatPercent || 0;
-    const vatAmount = Math.round((subtotalBeforeVat * vatPercent) / 100);
+    const subtotalWithFuel = totalFuelableAmount + fuelSurchargeAmount;
+    const vatPercent = req.vatPercent !== undefined ? req.vatPercent : 8; // Mặc định 8% VAT
+    const vatAmount = Math.round((subtotalWithFuel * vatPercent) / 100);
+    const totalAfterVat = subtotalWithFuel + vatAmount + totalNonFuelSurcharges;
 
-    const totalCostPrice = subtotalBeforeVat + vatAmount; // GIÁ VỐN NỘI BỘ
+    // Phí Hải quan / 1 kg: Áp dụng duy nhất 1 loại hàng / 1 AWB (phân biệt Hải quan UPS vs Hải quan FedEx)
+    // Quy tắc: Nếu trọng lượng dưới 1 kg thì làm tròn thành 1 kg để tính phí hải quan
+    const cargoRate = CustomsCargoConfigService.getCargoRate(req.cargoType || (req.isCosmetics ? 'COSMETICS_FOOD' : undefined), carrier);
+    const isSupplier = Boolean(req.customerId && req.customerId.toUpperCase().includes('SUPPLIER'));
+    const defaultFeePerKg = isSupplier ? cargoRate.supplierFeePerKg : cargoRate.customerFeePerKg;
+    const customsFeePerKg = req.customsFeePerKg !== undefined 
+      ? req.customsFeePerKg 
+      : defaultFeePerKg;
+    const customsWeightKg = chargeableWeight > 0 ? Math.max(1, chargeableWeight) : 0;
+    const customsFeeAmount = Math.round(customsWeightKg * customsFeePerKg);
+    const isCosmetics = cargoRate.cargoType.code === 'COSMETICS_FOOD' || Boolean(req.isCosmetics);
+
+    // Phí An ninh trên AWB: Mặc định 150.000 đ / 1 đơn hàng thu từ khách hàng
+    const securityFeeAmount = req.securityFeePerAwb !== undefined 
+      ? Math.round(req.securityFeePerAwb) 
+      : 150000;
+
+    // TỔNG GIÁ VỐN NỘI BỘ (CARRIER COST)
+    const totalCostPrice = totalAfterVat + customsFeeAmount + securityFeeAmount;
 
     // 6. Áp dụng chính sách Lợi nhuận để tính GIÁ BÁN CHO KHÁCH (SELLING PRICE)
     const policy = req.customerId
@@ -182,14 +266,23 @@ export class UniversalPricingEngine {
       volumetricWeightKg: volWeight,
       chargeableWeightKg: chargeableWeight,
       baseRate,
+      surgeEmergencyFee,
+      orderProcessingFee,
+      deliveryFee: orderProcessingFee,
       surcharges: surchargeResult.surcharges,
       totalFuelableAmount,
       fuelSurchargePercent: fuelPercent,
       fuelSurchargeAmount,
       totalNonFuelSurcharges,
-      subtotalBeforeVat,
+      subtotalBeforeVat: subtotalWithFuel,
       vatPercent,
       vatAmount,
+      totalAfterVat,
+      cargoType: req.cargoType || (isCosmetics ? 'COSMETICS' : (isDoc ? 'DOCUMENT' : 'GENERAL')),
+      isCosmetics,
+      customsFeePerKg,
+      customsFeeAmount,
+      securityFeeAmount,
       totalCostPrice,
       customerPolicyApplied: {
         id: policy.id,

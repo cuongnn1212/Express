@@ -202,10 +202,41 @@ export class ManifestService {
         const clean = manifestId.trim().toUpperCase();
         return this.manifests.find(m => m.manifestId.toUpperCase() === clean);
     }
+    static sanitizeManifestForRole(manifest, role) {
+        if (!manifest)
+            return manifest;
+        const clone = { ...manifest };
+        if (role === 'WAREHOUSE_PARTNER') {
+            delete clone.totalCostPrice;
+            delete clone.totalSellPrice;
+            clone.isPriceHidden = true;
+            if (Array.isArray(clone.shipments)) {
+                clone.shipments = clone.shipments.map(s => {
+                    const sc = { ...s };
+                    delete sc.costPrice;
+                    delete sc.sellPrice;
+                    return sc;
+                });
+            }
+        }
+        else if (role !== 'SUPER_ADMIN' && role !== 'DIRECTOR' && role !== 'ACCOUNTANT') {
+            delete clone.totalCostPrice;
+            if (Array.isArray(clone.shipments)) {
+                clone.shipments = clone.shipments.map(s => {
+                    const sc = { ...s };
+                    delete sc.costPrice;
+                    return sc;
+                });
+            }
+        }
+        return clone;
+    }
     /**
      * Tạo giao diện HTML In Bảng Kê Xuất Kho khổ A4 chuẩn
      */
-    static renderManifestHtml(manifest) {
+    static renderManifestHtml(manifest, options) {
+        const hidePrice = !!options?.hidePrice;
+        const hideCost = hidePrice || !!options?.hideCost;
         const destTypeBadge = manifest.destinationType === 'INTERNAL_TRANSFER'
             ? '<span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Chuyển Kho Nội Bộ</span>'
             : manifest.destinationType === 'LOCAL_DELIVERY'
@@ -221,6 +252,8 @@ export class ManifestService {
                 : it.financialCategory === 'POSTPAID'
                     ? '<span style="color: #d97706; font-weight: bold;">Trả sau</span>'
                     : '<span style="color: #16a34a; font-weight: bold;">Tiền ngay</span>';
+            const costText = hideCost ? '<span style="color:#94a3b8;font-style:italic;">🔒 Bảo mật</span>' : `${(it.costPrice || 0).toLocaleString('vi-VN')} đ`;
+            const sellText = hidePrice ? '<span style="color:#94a3b8;font-style:italic;">🔒 Bảo mật</span>' : `${(it.sellPrice || 0).toLocaleString('vi-VN')} đ`;
             return `
         <tr>
           <td style="text-align: center;">${it.stt}</td>
@@ -241,8 +274,8 @@ export class ManifestService {
           <td style="text-align: center; font-weight: bold;">${it.piecesCount}</td>
           <td style="text-align: right;">${it.actualWeightKg.toFixed(1)}</td>
           <td style="text-align: right; font-weight: bold; color: #0f172a;">${it.chargeableWeightKg.toFixed(1)}</td>
-          <td style="text-align: right; font-size: 7.5pt;">${(it.costPrice || 0).toLocaleString('vi-VN')} đ</td>
-          <td style="text-align: right; font-size: 7.5pt; font-weight: bold; color: #1e3a8a;">${(it.sellPrice || 0).toLocaleString('vi-VN')} đ</td>
+          <td style="text-align: right; font-size: 7.5pt;">${costText}</td>
+          <td style="text-align: right; font-size: 7.5pt; font-weight: bold; color: #1e3a8a;">${sellText}</td>
           <td style="font-size: 7pt; color: #64748b;">${it.notes || '-'}</td>
         </tr>
       `;
@@ -541,8 +574,8 @@ export class ManifestService {
           <td style="text-align: center;">${manifest.totalPieces}</td>
           <td style="text-align: right;">${manifest.totalActualWeightKg.toFixed(1)}kg</td>
           <td style="text-align: right;">${manifest.totalChargeableWeightKg.toFixed(1)}kg</td>
-          <td style="text-align: right;">${(manifest.totalCostPrice || 0).toLocaleString('vi-VN')} đ</td>
-          <td style="text-align: right; color: #1e3a8a;">${(manifest.totalSellPrice || 0).toLocaleString('vi-VN')} đ</td>
+          <td style="text-align: right;">${hideCost ? '<span style="color:#94a3b8;font-style:italic;">🔒 Bảo mật</span>' : (manifest.totalCostPrice || 0).toLocaleString('vi-VN') + ' đ'}</td>
+          <td style="text-align: right; color: #1e3a8a;">${hidePrice ? '<span style="color:#94a3b8;font-style:italic;">🔒 Bảo mật</span>' : (manifest.totalSellPrice || 0).toLocaleString('vi-VN') + ' đ'}</td>
           <td style="text-align: center; color: #16a34a;">ĐÃ KIỂM SOÁT</td>
         </tr>
       </tbody>
@@ -577,7 +610,9 @@ export class ManifestService {
     /**
      * Xuất Bảng Kê Xuất Kho ra file Excel (.xlsx)
      */
-    static exportManifestExcel(manifest) {
+    static exportManifestExcel(manifest, options) {
+        const hidePrice = !!options?.hidePrice;
+        const hideCost = hidePrice || !!options?.hideCost;
         const rows = manifest.shipments.map(it => ({
             'STT': it.stt,
             'Mã Vận Đơn (Master AWB)': it.masterTrackingNumber,
@@ -592,8 +627,8 @@ export class ManifestService {
             'Trọng Lượng Thực (kg)': it.actualWeightKg,
             'Trọng Lượng Tính Cước (kg)': it.chargeableWeightKg,
             'Trị Giá Khai Báo (USD)': it.declaredValueUsd,
-            'Cước Vốn Trả Hãng (VNĐ)': it.costPrice || 0,
-            'Cước Bán Thu Khách (VNĐ)': it.sellPrice || 0,
+            'Cước Vốn Trả Hãng (VNĐ)': hideCost ? 'Bảo mật' : (it.costPrice || 0),
+            'Cước Bán Thu Khách (VNĐ)': hidePrice ? 'Bảo mật' : (it.sellPrice || 0),
             'Nơi Đến Cụ Thể': manifest.destinationName,
             'Ghi Chú': it.notes || ''
         }));
@@ -612,8 +647,8 @@ export class ManifestService {
             'Trọng Lượng Thực (kg)': manifest.totalActualWeightKg,
             'Trọng Lượng Tính Cước (kg)': manifest.totalChargeableWeightKg,
             'Trị Giá Khai Báo (USD)': manifest.totalDeclaredValueUsd,
-            'Cước Vốn Trả Hãng (VNĐ)': manifest.totalCostPrice || 0,
-            'Cước Bán Thu Khách (VNĐ)': manifest.totalSellPrice || 0,
+            'Cước Vốn Trả Hãng (VNĐ)': hideCost ? 'Bảo mật' : (manifest.totalCostPrice || 0),
+            'Cước Bán Thu Khách (VNĐ)': hidePrice ? 'Bảo mật' : (manifest.totalSellPrice || 0),
             'Nơi Đến Cụ Thể': manifest.destinationName,
             'Ghi Chú': 'Bảng kê xuất kho hợp lệ'
         });

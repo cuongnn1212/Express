@@ -39,6 +39,16 @@ export interface StoredShipment extends ShipmentAWBData {
   notes?: string;
   awbPdfUrl?: string;
 
+  // Ảnh chụp bằng chứng nhập kho (Lưu trữ Cloudflare R2)
+  awbLabelPhotoUrl?: string;       // Ảnh chụp nhãn tem AWB từ camera điện thoại
+  packageBoxPhotoUrl?: string;     // Ảnh chụp ngoại quan kiện hàng trên bàn cân
+  inboundPhotos?: Array<{
+    url: string;
+    type: 'AWB_LABEL' | 'PACKAGE_BOX' | 'OTHER';
+    capturedAt: string;
+    storageProvider?: 'CLOUDFLARE_R2' | 'LOCAL_FALLBACK';
+  }>;
+
   // Phân loại luồng thanh toán khi nhập kho: Thanh toán ngay / Thanh toán sau / Trừ ví điện tử
   financialCategory: FinancialCategory;
 

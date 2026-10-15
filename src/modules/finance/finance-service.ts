@@ -4,6 +4,8 @@ import * as XLSX from 'xlsx';
 import { AuthService, UserAccount } from '../auth/auth-service.js';
 import { ShipmentRepository } from '../shipment/shipment-repository.js';
 import { CustomerService } from '../customer/customer-service.js';
+import { RateRegistryService } from '../pricing/rate-registry-service.js';
+import { CustomsCargoConfigService } from '../pricing/customs-cargo-config.js';
 
 export interface WalletTransaction {
   id: string;
@@ -114,6 +116,7 @@ export interface CashBookSummary {
 
 export interface BatchReceiptItem {
   awbOrCust: string; // AWB hoặc Mã Khách Hàng
+  weightKg?: number; // Trọng lượng (Kg) để tự động tính cước
   amount: number;
   channel?: 'CASH' | 'BANK_TRANSFER' | 'WALLET' | 'POSTPAID_CONTRACT';
   channelName?: string;
@@ -127,6 +130,7 @@ export interface BatchReceiptItem {
 
 export interface BatchPaymentItem {
   awb?: string;
+  weightKg?: number; // Trọng lượng (Kg) để tự động tính cước gốc
   categoryCode: string;
   recipientName: string;
   recipientPhone?: string;
@@ -1186,7 +1190,8 @@ export class FinanceService {
 
   /**
    * 8.1 Thu tiền hàng loạt theo danh sách / file Excel (Batch Receipts)
-   * Yêu cầu bắt buộc: Mỗi dòng phải có số AWB hợp lệ trong hệ thống
+   * Yêu cầu bắt buộc: Mỗi dòng phải có số AWB hợp lệ trong hệ thống.
+   * Tự động tính cước từ Bảng giá Hãng + Quốc gia + Trọng lượng (Kg) nếu chưa nhập số tiền.
    */
   static createBatchReceiptVouchers(
     items: BatchReceiptItem[],
@@ -1216,9 +1221,32 @@ export class FinanceService {
         continue;
       }
 
-      let amount = it.amount;
+      const destCountry = (foundShipment as any).destinationCountry || foundShipment.shipTo?.countryCode || (foundShipment as any).recipientCountry || 'US';
+      const inputWeight = Number(it.weightKg || (it as any).chargeableWeightKg || 0);
+      const effectiveWeight = inputWeight > 0 ? inputWeight : (foundShipment.chargeableWeightKg || foundShipment.totalWeightKg || 1);
+
+      let amount = Number(it.amount || 0);
+      const quote = RateRegistryService.calculateRateForAwb({
+        carrier: foundShipment.carrier,
+        destinationCountry: destCountry,
+        weightKg: effectiveWeight,
+        isDocument: foundShipment.contentsType === 'DOCUMENT',
+        customerCode: foundShipment.customerCode
+      });
+
+      // Nếu người dùng truyền trọng lượng mới hoặc chưa điền số tiền -> tự động tính cước từ biểu giá
       if (!amount || amount <= 0) {
-        amount = foundShipment.sellPrice || (foundShipment.chargeableWeightKg ? Math.round(foundShipment.chargeableWeightKg * 275000) : 275000);
+        amount = quote ? quote.totalSellPrice : (foundShipment.sellPrice || Math.round(effectiveWeight * 275000));
+      }
+
+      // Cập nhật lại trọng lượng và giá cước trên vận đơn nếu có thay đổi trọng lượng từ file Excel
+      if (inputWeight > 0 && quote) {
+        foundShipment.totalWeightKg = inputWeight;
+        foundShipment.chargeableWeightKg = quote.chargeableWeightKg;
+        foundShipment.sellPrice = amount;
+        foundShipment.costPrice = quote.totalCostPrice;
+        foundShipment.profit = amount - quote.totalCostPrice;
+        ShipmentRepository.save(foundShipment, `Cập nhật trọng lượng (${quote.chargeableWeightKg} kg) & tự động tính cước từ Excel`);
       }
 
       const res = this.createReceiptVoucher({
@@ -1235,7 +1263,7 @@ export class FinanceService {
         referenceCode: it.referenceCode,
         payerName: it.payerName || foundShipment.customerName,
         payerPhone: it.payerPhone,
-        reason: it.reason || `Thu tiền cước AWB ${foundShipment.masterTrackingNumber} từ file Excel`,
+        reason: it.reason || `Thu tiền cước AWB ${foundShipment.masterTrackingNumber} (${effectiveWeight} kg) từ file Excel`,
         hub: (foundShipment.currentWarehouseHub || foundShipment.hub || 'SGN') as any,
         operator
       });
@@ -1258,57 +1286,59 @@ export class FinanceService {
   }
 
   /**
-   * Tạo File Mẫu Excel Thu Tiền Vận Đơn AWB (.xlsx)
+   * Tạo File Mẫu Excel Thu Tiền Vận Đơn AWB (.xlsx) - Hỗ trợ cột Trọng Lượng (Kg) để tự động tính cước
    */
   static generateReceiptExcelTemplate(): Buffer {
     const wb = XLSX.utils.book_new();
     const data = [
-      ['STT', 'Mã Vận Đơn (AWB) *', 'Số Tiền Thu (VNĐ) *', 'Hình Thức Thanh Toán', 'Người Nộp Tiền', 'Lý Do Thu / Ghi Chú'],
-      [1, '1Z861R320493609873', 4785000, 'TIEN_MAT', 'Công ty TNHH XNK Đông Dương', 'Thu tiền cước AWB tiền mặt tại quầy'],
-      [2, '1Z999AA10123456784', 5200000, 'CHUYEN_KHOAN', 'Đại Lý An Nam Logistics', 'Thu tiền cước AWB khách hợp đồng'],
-      [3, '1Z84Y8200443069921', 3150000, 'TIEN_MAT', 'Nguyễn Văn An', 'Thu tiền cước vận chuyển bưu cục']
+      ['STT', 'Mã Vận Đơn (AWB) *', 'Trọng Lượng (Kg) *', 'Số Tiền Thu (VNĐ) (Để trống = Tự tính cước)', 'Hình Thức Thanh Toán', 'Người Nộp Tiền', 'Lý Do Thu / Ghi Chú'],
+      [1, '1Z861R320493609873', 17.5, '', 'TIEN_MAT', 'Công ty TNHH XNK Đông Dương', 'Để trống Số Tiền -> Hệ thống tự động tính cước theo Kg'],
+      [2, '779988776655', 5.0, '', 'CHUYEN_KHOAN', 'Đại Lý An Nam Logistics', 'Tự động tính cước FedEx theo trọng lượng 5.0 Kg'],
+      [3, '1Z84Y8200443069921', 2.5, '', 'TIEN_MAT', 'Nguyễn Văn An', 'Tự động tính cước UPS theo trọng lượng 2.5 Kg']
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws['!cols'] = [
       { wch: 6 },
-      { wch: 26 },
+      { wch: 24 },
       { wch: 20 },
+      { wch: 38 },
       { wch: 22 },
-      { wch: 32 },
-      { wch: 40 }
+      { wch: 30 },
+      { wch: 46 }
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Thu_Tien_AWB');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
   }
 
   /**
-   * Tạo File Mẫu Excel Chi Phí Vận Đơn AWB (.xlsx)
+   * Tạo File Mẫu Excel Chi Phí Vận Đơn AWB (.xlsx) - Hỗ trợ cột Trọng Lượng (Kg) để tự động tính cước gốc
    */
   static generatePaymentExcelTemplate(): Buffer {
     const wb = XLSX.utils.book_new();
     const data = [
-      ['STT', 'Mã Vận Đơn (AWB) *', 'Mã Khoản Mục Chi *', 'Số Tiền Chi (VNĐ) *', 'Người / Đơn Vị Nhận *', 'Hình Thức Chi', 'Lý Do Chi Phí'],
-      [1, '1Z861R320493609873', 'EXP_CARRIER_COST', 3740000, 'UPS Express Worldwide', 'CHUYEN_KHOAN', 'Chi cước gốc mua hãng bay'],
-      [2, '1Z861R320493609873', 'EXP_CUSTOMS_CLEARANCE', 450000, 'Hải Quan Nội Bài', 'TIEN_MAT', 'Phí kiểm hóa và thông quan hải quan'],
-      [3, '1Z999AA10123456784', 'EXP_FIRST_MILE_TRUCKING', 250000, 'Đội Xe Tải PandaLex', 'TIEN_MAT', 'Phí xe tải lấy hàng từ kho đại lý'],
-      [4, '1Z84Y8200443069921', 'EXP_PACKAGING_SUPPLIES', 120000, 'Công ty Bao Bì Nam Long', 'TIEN_MAT', 'Mua thùng carton 5 lớp và màng PE']
+      ['STT', 'Mã Vận Đơn (AWB) *', 'Trọng Lượng (Kg) *', 'Mã Khoản Mục Chi *', 'Số Tiền Chi (VNĐ) (Để trống = Tự tính cước gốc)', 'Người / Đơn Vị Nhận', 'Hình Thức Chi', 'Lý Do Chi Phí'],
+      [1, '1Z861R320493609873', 17.5, 'EXP_CARRIER_COST', '', 'UPS Express Worldwide', 'CHUYEN_KHOAN', 'Để trống Số Tiền -> Tự tính cước gốc UPS 17.5 Kg'],
+      [2, '779988776655', 5.0, 'EXP_CARRIER_COST', '', 'FedEx Express VN', 'CHUYEN_KHOAN', 'Để trống Số Tiền -> Tự tính cước gốc FedEx 5.0 Kg'],
+      [3, '1Z861R320493609873', 17.5, 'EXP_CUSTOMS_CLEARANCE', 450000, 'Hải Quan Nội Bài', 'TIEN_MAT', 'Phí kiểm hóa và thông quan hải quan'],
+      [4, '1Z84Y8200443069921', 2.5, 'EXP_PACKAGING_SUPPLIES', 120000, 'Công ty Bao Bì Nam Long', 'TIEN_MAT', 'Mua thùng carton 5 lớp và màng PE']
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws['!cols'] = [
       { wch: 6 },
-      { wch: 26 },
-      { wch: 26 },
+      { wch: 24 },
       { wch: 20 },
-      { wch: 32 },
+      { wch: 26 },
+      { wch: 40 },
+      { wch: 28 },
       { wch: 18 },
-      { wch: 40 }
+      { wch: 44 }
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Chi_Phi_AWB');
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
   }
 
   /**
-   * Đọc và phân tích file Excel Thu Tiền AWB
+   * Đọc và phân tích file Excel Thu Tiền AWB (Tự động tính cước khi up Số AWB + Trọng lượng)
    */
   static parseExcelFileForReceipts(buffer: Buffer): {
     success: boolean;
@@ -1323,12 +1353,13 @@ export class FinanceService {
       const sheetName = wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
       const rawRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
-      if (!rawRows || rawRows.length < 2) {
+      if (!rawRows || rawRows.length < 1) {
         return { success: false, rows: [], validCount: 0, errorCount: 0, totalAmount: 0, errors: ['File Excel rỗng hoặc không có dữ liệu'] };
       }
 
       let headerIdx = -1;
       let colAwb = -1;
+      let colWeight = -1;
       let colAmount = -1;
       let colChannel = -1;
       let colPayer = -1;
@@ -1340,7 +1371,8 @@ export class FinanceService {
         if (awbIdx !== -1) {
           headerIdx = r;
           colAwb = awbIdx;
-          colAmount = row.findIndex(c => c.includes('tiền') || c.includes('cước') || c.includes('amount'));
+          colWeight = row.findIndex(c => c.includes('trọng lượng') || c.includes('cân nặng') || c.includes('weight') || c.includes('(kg)') || c === 'kg' || c.includes('số kg'));
+          colAmount = row.findIndex((c, idx) => idx !== colWeight && (c.includes('tiền') || c.includes('cước') || c.includes('amount') || c.includes('vnđ') || c.includes('vnd')));
           colChannel = row.findIndex(c => c.includes('kênh') || c.includes('hình thức') || c.includes('channel') || c.includes('method'));
           colPayer = row.findIndex(c => c.includes('người nộp') || c.includes('khách') || c.includes('payer'));
           colReason = row.findIndex(c => c.includes('lý do') || c.includes('ghi chú') || c.includes('reason') || c.includes('note'));
@@ -1349,12 +1381,23 @@ export class FinanceService {
       }
 
       if (headerIdx === -1 || colAwb === -1) {
-        headerIdx = 0;
-        colAwb = 1;
-        colAmount = 2;
-        colChannel = 3;
-        colPayer = 4;
-        colReason = 5;
+        // Hỗ trợ cả trường hợp file chỉ có 2 cột [AWB, Trọng lượng] không có tiêu đề chuẩn
+        const firstRowStr = String(rawRows[0]?.[0] || '').trim().toUpperCase();
+        const looksLikeAwbFirstCol = firstRowStr.startsWith('1Z') || /^\d{10,15}$/.test(firstRowStr);
+        if (looksLikeAwbFirstCol) {
+          headerIdx = -1; // Đọc từ dòng 0
+          colAwb = 0;
+          colWeight = 1;
+          colAmount = 2;
+        } else {
+          headerIdx = 0;
+          colAwb = 1;
+          colWeight = 2;
+          colAmount = 3;
+          colChannel = 4;
+          colPayer = 5;
+          colReason = 6;
+        }
       }
 
       const rows: any[] = [];
@@ -1381,18 +1424,53 @@ export class FinanceService {
           continue;
         }
 
-        let amount = 0;
-        if (colAmount !== -1 && row[colAmount]) {
-          amount = parseFloat(String(row[colAmount]).replace(/[^0-9.]/g, '')) || 0;
-        }
-        if (amount <= 0) {
-          amount = shipment.sellPrice || (shipment.chargeableWeightKg ? Math.round(shipment.chargeableWeightKg * 275000) : 275000);
+        // Đọc Trọng lượng (Kg) từ cột Trọng lượng (hoặc nhận diện thông minh nếu gõ số Kg < 5000 vào cột Số tiền)
+        let inputWeightKg = 0;
+        if (colWeight !== -1 && row[colWeight] !== undefined && String(row[colWeight]).trim() !== '') {
+          inputWeightKg = parseFloat(String(row[colWeight]).replace(/,/g, '.').replace(/[^0-9.]/g, '')) || 0;
         }
 
+        let amount = 0;
+        if (colAmount !== -1 && row[colAmount] !== undefined && String(row[colAmount]).trim() !== '') {
+          const parsedVal = parseFloat(String(row[colAmount]).replace(/,/g, '').replace(/[^0-9.]/g, '')) || 0;
+          if (parsedVal > 0 && parsedVal < 5000 && inputWeightKg === 0) {
+            // Người dùng nhập số Kg vào cột thứ 3 của file mẫu cũ
+            inputWeightKg = parsedVal;
+          } else {
+            amount = parsedVal;
+          }
+        }
+
+        const effectiveWeightKg = inputWeightKg > 0 ? inputWeightKg : (shipment.chargeableWeightKg || shipment.totalWeightKg || 1);
+        const destCountry = (shipment as any).destinationCountry || shipment.shipTo?.countryCode || (shipment as any).recipientCountry || 'US';
+
+        // Gọi Engine tự động tính cước từ Bảng giá Hãng + Quốc gia + Trọng lượng + Chính sách Khách hàng
+        const quote = RateRegistryService.calculateRateForAwb({
+          carrier: shipment.carrier,
+          destinationCountry: destCountry,
+          weightKg: effectiveWeightKg,
+          isDocument: shipment.contentsType === 'DOCUMENT',
+          customerCode: shipment.customerCode
+        });
+
+        let autoCalculated = false;
+        if (amount <= 0) {
+          autoCalculated = true;
+          if (quote) {
+            amount = quote.totalSellPrice;
+          } else {
+            amount = shipment.sellPrice || Math.round(effectiveWeightKg * 275000);
+          }
+        }
+
+        const chargeableWeightKg = quote ? quote.chargeableWeightKg : effectiveWeightKg;
         const channelRaw = colChannel !== -1 ? String(row[colChannel] || '').toUpperCase() : '';
         const channel = (channelRaw.includes('BANK') || channelRaw.includes('CHUYEN_KHOAN') || channelRaw.includes('CK')) ? 'BANK_TRANSFER' : 'CASH';
         const payerName = (colPayer !== -1 && row[colPayer]) ? String(row[colPayer]).trim() : (shipment.customerName || shipment.customerCode || 'Khách hàng');
-        const reason = (colReason !== -1 && row[colReason]) ? String(row[colReason]).trim() : `Thu tiền cước AWB ${shipment.masterTrackingNumber} từ file Excel`;
+        const defaultReason = autoCalculated
+          ? `Thu cước AWB ${shipment.masterTrackingNumber} (${chargeableWeightKg} kg - Zone ${quote?.zone || destCountry} - Tự động tính cước)`
+          : `Thu tiền cước AWB ${shipment.masterTrackingNumber} từ file Excel`;
+        const reason = (colReason !== -1 && row[colReason]) ? String(row[colReason]).trim() : defaultReason;
 
         totalAmount += amount;
         validCount++;
@@ -1403,6 +1481,14 @@ export class FinanceService {
           customerCode: shipment.customerCode || 'PDL-GUEST',
           customerName: shipment.customerName,
           carrier: shipment.carrier,
+          destinationCountry: destCountry,
+          zone: quote?.zone || '',
+          weightKg: chargeableWeightKg,
+          inputWeightKg: effectiveWeightKg,
+          autoCalculated,
+          baseRate: quote?.baseRate || 0,
+          fuelPercent: quote?.fuelSurchargePercent || 0,
+          costPrice: quote?.totalCostPrice || shipment.costPrice || Math.round(amount * 0.75),
           financialCategory: shipment.financialCategory,
           amount,
           channel,
@@ -1426,7 +1512,7 @@ export class FinanceService {
   }
 
   /**
-   * Đọc và phân tích file Excel Chi Phí AWB
+   * Đọc và phân tích file Excel Chi Phí AWB (Tự động tính cước gốc Hãng khi up Số AWB + Trọng lượng)
    */
   static parseExcelFileForPayments(buffer: Buffer): {
     success: boolean;
@@ -1441,12 +1527,13 @@ export class FinanceService {
       const sheetName = wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
       const rawRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
-      if (!rawRows || rawRows.length < 2) {
+      if (!rawRows || rawRows.length < 1) {
         return { success: false, rows: [], validCount: 0, errorCount: 0, totalAmount: 0, errors: ['File Excel rỗng hoặc không có dữ liệu'] };
       }
 
       let headerIdx = -1;
       let colAwb = -1;
+      let colWeight = -1;
       let colCategory = -1;
       let colAmount = -1;
       let colRecipient = -1;
@@ -1459,23 +1546,34 @@ export class FinanceService {
         if (awbIdx !== -1) {
           headerIdx = r;
           colAwb = awbIdx;
+          colWeight = row.findIndex(c => c.includes('trọng lượng') || c.includes('cân nặng') || c.includes('weight') || c.includes('(kg)') || c === 'kg' || c.includes('số kg'));
           colCategory = row.findIndex(c => c.includes('khoản mục') || c.includes('mục') || c.includes('danh mục') || c.includes('category'));
-          colAmount = row.findIndex(c => c.includes('tiền') || c.includes('chi') || c.includes('amount'));
+          colAmount = row.findIndex((c, idx) => idx !== colWeight && idx !== colCategory && (c.includes('tiền') || c.includes('chi') || c.includes('cước') || c.includes('amount')));
           colRecipient = row.findIndex(c => c.includes('người nhận') || c.includes('đơn vị') || c.includes('recipient'));
-          colMethod = row.findIndex(c => c.includes('hình thức') || c.includes('phương thức') || c.includes('kênh'));
-          colReason = row.findIndex(c => c.includes('lý do') || c.includes('ghi chú') || c.includes('reason') || c.includes('note'));
+          colMethod = row.findIndex((c, idx) => idx !== colAmount && (c.includes('hình thức') || c.includes('phương thức') || c.includes('kênh')));
+          colReason = row.findIndex((c, idx) => idx !== colAmount && (c.includes('lý do') || c.includes('ghi chú') || c.includes('reason') || c.includes('note')));
           break;
         }
       }
 
       if (headerIdx === -1 || colAwb === -1) {
-        headerIdx = 0;
-        colAwb = 1;
-        colCategory = 2;
-        colAmount = 3;
-        colRecipient = 4;
-        colMethod = 5;
-        colReason = 6;
+        const firstRowStr = String(rawRows[0]?.[0] || '').trim().toUpperCase();
+        const looksLikeAwbFirstCol = firstRowStr.startsWith('1Z') || /^\d{10,15}$/.test(firstRowStr);
+        if (looksLikeAwbFirstCol) {
+          headerIdx = -1;
+          colAwb = 0;
+          colWeight = 1;
+          colAmount = 2;
+        } else {
+          headerIdx = 0;
+          colAwb = 1;
+          colWeight = 2;
+          colCategory = 3;
+          colAmount = 4;
+          colRecipient = 5;
+          colMethod = 6;
+          colReason = 7;
+        }
       }
 
       const rows: any[] = [];
@@ -1502,6 +1600,11 @@ export class FinanceService {
           continue;
         }
 
+        let inputWeightKg = 0;
+        if (colWeight !== -1 && row[colWeight] !== undefined && String(row[colWeight]).trim() !== '') {
+          inputWeightKg = parseFloat(String(row[colWeight]).replace(/,/g, '.').replace(/[^0-9.]/g, '')) || 0;
+        }
+
         let catCode = colCategory !== -1 ? String(row[colCategory] || '').trim().toUpperCase() : 'EXP_CARRIER_COST';
         if (!catCode || catCode === 'EXP_OTHER') catCode = 'EXP_CARRIER_COST';
         if (catCode.includes('CUOC') || catCode.includes('HANG')) catCode = 'EXP_CARRIER_COST';
@@ -1511,13 +1614,37 @@ export class FinanceService {
         else if (catCode.includes('BOI_THUONG')) catCode = 'EXP_SHIPMENT_COMPENSATION';
 
         let amount = 0;
-        if (colAmount !== -1 && row[colAmount]) {
-          amount = parseFloat(String(row[colAmount]).replace(/[^0-9.]/g, '')) || 0;
-        }
-        if (amount <= 0) {
-          amount = shipment.costPrice || Math.round((shipment.sellPrice || 275000) * 0.75);
+        if (colAmount !== -1 && row[colAmount] !== undefined && String(row[colAmount]).trim() !== '') {
+          const parsedVal = parseFloat(String(row[colAmount]).replace(/,/g, '').replace(/[^0-9.]/g, '')) || 0;
+          if (parsedVal > 0 && parsedVal < 5000 && inputWeightKg === 0) {
+            inputWeightKg = parsedVal;
+          } else {
+            amount = parsedVal;
+          }
         }
 
+        const effectiveWeightKg = inputWeightKg > 0 ? inputWeightKg : (shipment.chargeableWeightKg || shipment.totalWeightKg || 1);
+        const destCountry = (shipment as any).destinationCountry || shipment.shipTo?.countryCode || (shipment as any).recipientCountry || 'US';
+
+        const quote = RateRegistryService.calculateRateForAwb({
+          carrier: shipment.carrier,
+          destinationCountry: destCountry,
+          weightKg: effectiveWeightKg,
+          isDocument: shipment.contentsType === 'DOCUMENT',
+          customerCode: shipment.customerCode
+        });
+
+        let autoCalculated = false;
+        if (amount <= 0) {
+          autoCalculated = true;
+          if (quote) {
+            amount = quote.totalCostPrice;
+          } else {
+            amount = shipment.costPrice || Math.round((shipment.sellPrice || 275000) * 0.75);
+          }
+        }
+
+        const chargeableWeightKg = quote ? quote.chargeableWeightKg : effectiveWeightKg;
         let recipientName = colRecipient !== -1 ? String(row[colRecipient] || '').trim() : '';
         if (!recipientName) {
           recipientName = shipment.carrier === 'FEDEX' ? 'FedEx Express VN' : 'UPS Express Worldwide';
@@ -1525,7 +1652,10 @@ export class FinanceService {
 
         const methodRaw = colMethod !== -1 ? String(row[colMethod] || '').toUpperCase() : '';
         const method = (methodRaw.includes('BANK') || methodRaw.includes('CHUYEN_KHOAN') || methodRaw.includes('CK')) ? 'BANK_TRANSFER' : 'CASH';
-        const reason = colReason !== -1 && row[colReason] ? String(row[colReason]).trim() : `Chi phí ${catCode} theo AWB ${shipment.masterTrackingNumber} từ file Excel`;
+        const defaultReason = autoCalculated
+          ? `Chi cước gốc ${shipment.carrier} theo AWB ${shipment.masterTrackingNumber} (${chargeableWeightKg} kg - Zone ${quote?.zone || destCountry} - Tự tính cước)`
+          : `Chi phí ${catCode} theo AWB ${shipment.masterTrackingNumber} từ file Excel`;
+        const reason = colReason !== -1 && row[colReason] ? String(row[colReason]).trim() : defaultReason;
 
         totalAmount += amount;
         validCount++;
@@ -1534,6 +1664,10 @@ export class FinanceService {
           awb: shipment.masterTrackingNumber,
           shipmentId: shipment.shipmentId,
           carrier: shipment.carrier,
+          destinationCountry: destCountry,
+          zone: quote?.zone || '',
+          weightKg: chargeableWeightKg,
+          autoCalculated,
           categoryCode: catCode,
           amount,
           recipientName,
@@ -1748,7 +1882,8 @@ export class FinanceService {
 
   /**
    * 9.1 Chi tiền hàng loạt theo danh sách / file Excel (Batch Payments)
-   * Yêu cầu bắt buộc: Mỗi dòng phải có số AWB hợp lệ trong hệ thống
+   * Yêu cầu bắt buộc: Mỗi dòng phải có số AWB hợp lệ trong hệ thống.
+   * Tự động tính cước gốc mua hãng từ Bảng giá + Quốc gia + Trọng lượng (Kg) nếu chưa nhập số tiền.
    */
   static createBatchPaymentVouchers(
     items: BatchPaymentItem[],
@@ -1783,9 +1918,30 @@ export class FinanceService {
         recipient = foundShipment.carrier === 'FEDEX' ? 'FedEx Express VN' : 'UPS Express Worldwide';
       }
 
-      let amount = it.amount;
+      const destCountry = (foundShipment as any).destinationCountry || foundShipment.shipTo?.countryCode || (foundShipment as any).recipientCountry || 'US';
+      const inputWeight = Number(it.weightKg || (it as any).chargeableWeightKg || 0);
+      const effectiveWeight = inputWeight > 0 ? inputWeight : (foundShipment.chargeableWeightKg || foundShipment.totalWeightKg || 1);
+
+      const quote = RateRegistryService.calculateRateForAwb({
+        carrier: foundShipment.carrier,
+        destinationCountry: destCountry,
+        weightKg: effectiveWeight,
+        isDocument: foundShipment.contentsType === 'DOCUMENT',
+        customerCode: foundShipment.customerCode
+      });
+
+      let amount = Number(it.amount || 0);
       if (!amount || amount <= 0) {
-        amount = foundShipment.costPrice || Math.round((foundShipment.sellPrice || 275000) * 0.75);
+        amount = quote ? quote.totalCostPrice : (foundShipment.costPrice || Math.round((foundShipment.sellPrice || 275000) * 0.75));
+      }
+
+      if (inputWeight > 0 && quote) {
+        foundShipment.totalWeightKg = inputWeight;
+        foundShipment.chargeableWeightKg = quote.chargeableWeightKg;
+        foundShipment.costPrice = amount;
+        if (!foundShipment.sellPrice) foundShipment.sellPrice = quote.totalSellPrice;
+        foundShipment.profit = (foundShipment.sellPrice || quote.totalSellPrice) - amount;
+        ShipmentRepository.save(foundShipment, `Cập nhật trọng lượng (${quote.chargeableWeightKg} kg) & tự động tính cước gốc từ Excel`);
       }
 
       const res = this.createPaymentVoucher({
@@ -1800,7 +1956,7 @@ export class FinanceService {
         paymentMethodName: it.methodName,
         bankAccount: it.bankAccount,
         referenceCode: it.referenceCode,
-        reason: it.reason || `Chi chi phí theo AWB ${foundShipment.masterTrackingNumber} từ file Excel`,
+        reason: it.reason || `Chi chi phí theo AWB ${foundShipment.masterTrackingNumber} (${effectiveWeight} kg) từ file Excel`,
         hub: (foundShipment.currentWarehouseHub || foundShipment.hub || 'SGN') as any,
         operator
       });
@@ -2092,9 +2248,9 @@ export class FinanceService {
   }
 
   /**
-   * 12. Tra cứu nhanh thông tin AWB phục vụ điền form Lập Phiếu Thu / Phiếu Chi
+   * 12. Tra cứu nhanh thông tin AWB phục vụ điền form Lập Phiếu Thu / Phiếu Chi (Hỗ trợ truyền Trọng Lượng mới để tự tính cước)
    */
-  static lookupAwbForVoucher(awb: string): { success: boolean; message: string; data?: any } {
+  static lookupAwbForVoucher(awb: string, overrideWeightKg?: number): { success: boolean; message: string; data?: any } {
     if (!awb || !awb.trim()) {
       return { success: false, message: 'Vui lòng cung cấp mã vận đơn' };
     }
@@ -2106,10 +2262,33 @@ export class FinanceService {
 
     const cust = s.customerCode ? CustomerService.getByCode(s.customerCode) : null;
     const isPaid = s.paymentStatus === 'PAID' || !!s.financialStatus?.isPaid;
+    const destCountry = (s as any).destinationCountry || s.shipTo?.countryCode || (s as any).recipientCountry || 'US';
+
+    const inputWeight = (overrideWeightKg !== undefined && overrideWeightKg > 0) ? Number(overrideWeightKg) : 0;
+    const effectiveWeight = inputWeight > 0 ? inputWeight : (s.chargeableWeightKg || s.totalWeightKg || 1);
+
+    const quote = RateRegistryService.calculateRateForAwb({
+      carrier: s.carrier,
+      destinationCountry: destCountry,
+      weightKg: effectiveWeight,
+      isDocument: s.contentsType === 'DOCUMENT',
+      customerCode: s.customerCode
+    });
+
+    // Nếu người dùng truyền trọng lượng mới -> lấy ngay giá tự tính từ biểu cước
+    const finalWeight = quote ? quote.chargeableWeightKg : effectiveWeight;
+    const finalSellPrice = inputWeight > 0 && quote
+      ? quote.totalSellPrice
+      : (s.sellPrice || (quote ? quote.totalSellPrice : Math.round(finalWeight * 275000)));
+    const finalCostPrice = inputWeight > 0 && quote
+      ? quote.totalCostPrice
+      : (s.costPrice || (quote ? quote.totalCostPrice : Math.round(finalSellPrice * 0.75)));
 
     return {
       success: true,
-      message: 'Tra cứu vận đơn thành công',
+      message: inputWeight > 0 && quote
+        ? `Đã tự động tính cước theo trọng lượng ${finalWeight} kg (Zone ${quote.zone})`
+        : 'Tra cứu vận đơn thành công',
       data: {
         shipmentId: s.shipmentId,
         trackingNumber: s.masterTrackingNumber,
@@ -2118,10 +2297,16 @@ export class FinanceService {
         payerPhone: (s.sender as any)?.phone || cust?.phone || '',
         carrier: s.carrier,
         serviceType: (s as any).serviceType || s.serviceCode || s.serviceName,
-        destinationCountry: (s as any).destinationCountry || s.shipTo?.countryCode || (s as any).recipientCountry || '',
-        chargeableWeightKg: s.chargeableWeightKg,
-        sellPrice: s.sellPrice || (s.chargeableWeightKg ? Math.round(s.chargeableWeightKg * 275000) : 275000),
-        costPrice: s.costPrice || Math.round((s.sellPrice || 275000) * 0.75),
+        destinationCountry: destCountry,
+        zone: quote?.zone || '',
+        chargeableWeightKg: finalWeight,
+        baseRate: quote?.baseRate || 0,
+        fuelSurchargePercent: quote?.fuelSurchargePercent || 0,
+        fuelSurchargeAmount: quote?.fuelSurchargeAmount || 0,
+        marginPercent: quote?.customerPolicyApplied?.marginPercent || 0,
+        sellPrice: finalSellPrice,
+        costPrice: finalCostPrice,
+        autoCalculated: Boolean(quote),
         paymentTerm: s.paymentTerm || (s.financialCategory === 'POSTPAID' ? 'POSTPAID' : 'IMMEDIATE'),
         financialCategory: s.financialCategory || 'IMMEDIATE',
         paymentStatus: s.paymentStatus || (isPaid ? 'PAID' : 'UNPAID'),
@@ -2132,6 +2317,1305 @@ export class FinanceService {
       }
     };
   }
+
+  /**
+   * 13. Tạo File Mẫu Excel Up Số AWB + Trọng Lượng (Kg) Tự Động Tính Giá Cước (.xlsx)
+   * Biểu phí Hải quan áp dụng: 1 loại hàng / 1 AWB (Không cộng dồn phí hàng 8k)
+   * - Hàng thông thường: Phí Hải quan 8.000 đ/kg (thay cho phí hàng thường)
+   * - Thực phẩm, mỹ phẩm: Trả Hải quan UPS/FedEx 32.000 đ/kg | Thu khách 40.000 đ/kg
+   * - Hàng thương hiệu: FedEx 35.000 đ/kg (thu khách 45k) | UPS: Chưa có giá (0đ)
+   * - Mi giả, Trầm hương, Tóc: Chưa có giá (0đ)
+   */
+  static generateAwbPricingExcelTemplate(): Buffer {
+    const wb = XLSX.utils.book_new();
+    const data = [
+      [
+        'STT',
+        'Mã Vận Đơn (AWB) *',
+        'Trọng Lượng (Kg) *',
+        'Quốc Gia Đến (Mã ISO: US, CA, DE, FR, GB, AU, JP, SG, KR...)',
+        'Hãng Bay (UPS / FEDEX)',
+        'Loại Hàng Hóa (HANG_THONG_THUONG / THUC_PHAM_MY_PHAM / HANG_THUONG_HIEU / MI_GIA / TRAM / TOC / TAI_LIEU)',
+        'Mã Khách Hàng (Tùy chọn: PDL-FRANK / PDL-GUEST)',
+        'Ghi Chú Nghiệp Vụ'
+      ],
+      [1, '1Z84Y8200492184701', 2.0, 'US', 'UPS', 'THUC_PHAM_MY_PHAM', 'PDL-FRANK', 'Mỹ phẩm đi Mỹ qua UPS: Trả Hải quan UPS 32k/kg | Thu khách 40k/kg | An ninh 150k'],
+      [2, '1Z84Y8200492184702', 1.5, 'CA', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Canada qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 40k/kg | An ninh 150k'],
+      [3, '771234567890', 3.0, 'DE', 'FEDEX', 'HANG_THUONG_HIEU', 'PDL-FRANK', 'Hàng thương hiệu đi Đức qua FedEx: Trả Hải quan FedEx 35k/kg | Thu khách 45k/kg | An ninh 150k'],
+      [4, '1Z84Y8200492184704', 0.5, 'FR', 'UPS', 'MI_GIA', 'PDL-FRANK', 'Hàng mi giả đi Pháp qua UPS: Trả HQ 0đ | Thu khách 40k/kg | An ninh 150k'],
+      [5, '1Z84Y8200492184705', 4.5, 'GB', 'UPS', 'TRAM', 'PDL-FRANK', 'Hàng trầm hương đi Anh qua UPS: Trả HQ 0đ | Thu khách 40k/kg | An ninh 150k'],
+      [6, '771234567891', 2.5, 'AU', 'FEDEX', 'TOC', 'PDL-FRANK', 'Hàng tóc đi Úc qua FedEx: Chưa có giá (0đ) | An ninh 150k'],
+      [7, '1Z84Y8200492184707', 5.0, 'JP', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Nhật qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 40k/kg | An ninh 150k'],
+      [8, '771234567892', 1.0, 'SG', 'FEDEX', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Singapore qua FedEx: Trả Hải quan FedEx 8k/kg | Thu khách 8k/kg | An ninh 150k'],
+      [9, '1Z84Y8200492184709', 8.0, 'KR', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Hàn Quốc qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 40k/kg | An ninh 150k'],
+      [10, '1Z84Y8200492184710', 21.0, 'US', 'UPS', 'THUC_PHAM_MY_PHAM', 'PDL-FRANK', 'Mỹ phẩm 21kg đi Mỹ qua UPS: Nấc 21-44kg | Trả Hải quan UPS 32k/kg | Thu khách 40k/kg | An ninh 150k']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [
+      { wch: 6 },
+      { wch: 24 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 16 },
+      { wch: 32 },
+      { wch: 20 },
+      { wch: 75 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Mau_10_Don_Hang_Test');
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  }
+
+  /**
+   * 14. Đọc File Excel (Số AWB + Trọng Lượng Kg) và Tự Động Tính Giá Gốc (Cost) + Giá Bán (Sell)
+   * Theo công thức: (Net + Phí biến động [giảm 50%] + Phí xử lý đơn) * FSC * VAT + Phí Hải quan (40k/kg mỹ phẩm) + Phí An ninh/AWB
+   */
+  static parseAndCalculateAwbPricingExcel(
+    fileBuffer: Buffer,
+    applyToShipments = false,
+    options?: {
+      defaultCountry?: string;
+      defaultCarrier?: string;
+      defaultCustomerCode?: string;
+      isDocument?: boolean;
+      defaultCargoType?: 'GENERAL' | 'COSMETICS' | 'DOCUMENT';
+      isCosmetics?: boolean;
+      customsFeePerKg?: number;
+      securityFeePerAwb?: number;
+      generalGoodsFeePerKg?: number;
+      vatPercent?: number;
+      surgeDiscountPercent?: number;
+      orderProcessingFee?: number;
+      deliveryFee?: number;
+      upsFuelPercent?: number;
+      fedexFuelPercent?: number;
+      fuelPercentOverride?: number;
+      marketMarkupPercent?: number;
+    }
+  ) {
+    const wb = XLSX.read(fileBuffer, { type: 'buffer' });
+    const firstSheetName = wb.SheetNames[0];
+    const ws = wb.Sheets[firstSheetName];
+    const rawRows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    if (!rawRows || rawRows.length === 0) {
+      return {
+        success: false,
+        totalRows: 0,
+        validCount: 0,
+        totalWeightKg: 0,
+        totalBaseRate: 0,
+        totalSurgeEmergencyFee: 0,
+        totalOrderProcessingFee: 0,
+        totalFuelSurchargeAmount: 0,
+        totalVatAmount: 0,
+        totalCustomsFeeAmount: 0,
+        totalSecurityFeeAmount: 0,
+        totalCostPrice: 0,
+        totalSellPrice: 0,
+        totalProfit: 0,
+        rows: [],
+        errors: ['File Excel rỗng hoặc không đúng định dạng']
+      };
+    }
+
+    let startIdx = 0;
+    let colAwb = 0;
+    let colWeight = 1;
+    let colCountry = 2;
+    let colCarrier = 3;
+    let colCargoType = -1;
+    let colGeneralGoodsFee = -1;
+    let colDeliveryFee = -1;
+    let colCustomer = 4;
+    let colSupplierSecurityFee = -1;
+
+    const firstRowStr = rawRows[0].map((c: any) => String(c || '').toLowerCase()).join('|');
+    if (firstRowStr.includes('awb') || firstRowStr.includes('vận đơn') || firstRowStr.includes('tracking') || firstRowStr.includes('stt')) {
+      startIdx = 1;
+      const headers = rawRows[0].map((c: any) => String(c || '').toLowerCase().trim());
+      const findCol = (keywords: string[], fallback: number) => {
+        const idx = headers.findIndex(h => keywords.some(k => h.includes(k)));
+        return idx >= 0 ? idx : fallback;
+      };
+      colAwb = findCol(['awb', 'vận đơn', 'tracking', 'mã đơn'], 1);
+      colWeight = findCol(['trọng lượng', 'weight', 'số kg', 'kg', 'kl'], 2);
+      colCountry = findCol(['quốc gia', 'country', 'nước', 'iso', 'zone'], 3);
+      colCarrier = findCol(['hãng', 'carrier', 'ups', 'fedex'], 4);
+      colCargoType = findCol(['loại hàng', 'mỹ phẩm', 'cosmetics', 'hàng hóa', 'cargo'], -1);
+      colGeneralGoodsFee = findCol(['phí hàng thường', 'phí hàng', 'hàng thường', 'goods fee', '8.000', '8k'], -1);
+      colDeliveryFee = findCol(['phí phát', 'phát hàng', 'giao hàng', 'delivery', 'xử lý', 'processing', 'ipf'], -1);
+      colCustomer = findCol(['khách hàng', 'customer', 'mã kh', 'đại lý'], 5);
+      colSupplierSecurityFee = findCol(['an ninh ncc', 'an ninh trả ncc', 'an ninh ncc', 'security ncc', 'phí an ninh ncc', 'an ninh viettel'], -1);
+    }
+
+    const parsedRows: any[] = [];
+    const errors: string[] = [];
+    let totalWeightKg = 0;
+    let totalBaseRate = 0;
+    let totalSurgeEmergencyFee = 0;
+    let totalOrderProcessingFee = 0;
+    let totalFuelSurchargeAmount = 0;
+    let totalVatAmount = 0;
+    let totalCustomsFeeAmount = 0;
+    let totalSecurityFeeAmount = 0;
+    let totalGeneralGoodsFeeAmount = 0;
+    let totalCostPrice = 0;
+    let totalSellPrice = 0;
+    let totalProfit = 0;
+    let updatedShipmentsCount = 0;
+
+    const defCountry = (options?.defaultCountry || 'US').trim().toUpperCase();
+    const defCarrier = (options?.defaultCarrier || 'AUTO').trim().toUpperCase();
+    const defCust = (options?.defaultCustomerCode || 'PDL-GUEST').trim().toUpperCase();
+    const defIsDoc = Boolean(options?.isDocument);
+    const defIsCosmetics = Boolean(options?.isCosmetics || options?.defaultCargoType === 'COSMETICS');
+    const defCustomsFeePerKg = options?.customsFeePerKg !== undefined
+      ? Number(options.customsFeePerKg)
+      : (defIsCosmetics ? 40000 : 0);
+    const defSecurityFeePerAwb = options?.securityFeePerAwb !== undefined
+      ? Number(options.securityFeePerAwb)
+      : 150000;
+    const defGeneralGoodsFeePerKg = options?.generalGoodsFeePerKg !== undefined
+      ? Number(options.generalGoodsFeePerKg)
+      : 8000;
+    const defVatPercent = options?.vatPercent !== undefined ? Number(options.vatPercent) : 8;
+    const defSurgeDiscount = options?.surgeDiscountPercent !== undefined ? Number(options.surgeDiscountPercent) : 50;
+
+    for (let i = startIdx; i < rawRows.length; i++) {
+      const r = rawRows[i];
+      if (!r || r.length === 0) continue;
+
+      const rawAwb = String(r[colAwb] ?? '').trim().toUpperCase();
+      const rawWeightStr = String(r[colWeight] ?? '').replace(/,/g, '').replace(/[^0-9.]/g, '').trim();
+      const rawCountry = colCountry >= 0 && colCountry < r.length ? String(r[colCountry] ?? '').trim().toUpperCase() : '';
+      const rawCarrier = colCarrier >= 0 && colCarrier < r.length ? String(r[colCarrier] ?? '').trim().toUpperCase() : '';
+      const rawCargoTypeStr = colCargoType >= 0 && colCargoType < r.length ? String(r[colCargoType] ?? '').trim().toUpperCase() : '';
+      const rawCustomer = colCustomer >= 0 && colCustomer < r.length ? String(r[colCustomer] ?? '').trim().toUpperCase() : '';
+
+      if (!rawAwb && !rawWeightStr) continue;
+
+      const rowNum = i + 1;
+      if (!rawAwb) {
+        parsedRows.push({
+          rowNum,
+          awb: '',
+          valid: false,
+          error: 'Thiếu số AWB'
+        });
+        errors.push(`Dòng ${rowNum}: Thiếu số AWB`);
+        continue;
+      }
+
+      const existingShipment = ShipmentRepository.getById(rawAwb);
+      const inputWeight = parseFloat(rawWeightStr) || 0;
+      const effectiveWeight = inputWeight > 0
+        ? inputWeight
+        : (existingShipment?.chargeableWeightKg || existingShipment?.totalWeightKg || 1);
+
+      const detectedCarrier = existingShipment?.carrier
+        || (rawCarrier.includes('FEDEX') ? 'FEDEX' : rawCarrier.includes('UPS') ? 'UPS' : '')
+        || (defCarrier === 'UPS' || defCarrier === 'FEDEX' ? defCarrier : '')
+        || (rawAwb.startsWith('1Z') ? 'UPS' : 'FEDEX');
+
+      const destCountry = rawCountry
+        || (existingShipment as any)?.destinationCountry
+        || existingShipment?.shipTo?.countryCode
+        || (existingShipment as any)?.recipientCountry
+        || defCountry
+        || 'US';
+
+      const custCode = rawCustomer || existingShipment?.customerCode || defCust || 'PDL-GUEST';
+      const custObj = CustomerService.getByCode(custCode);
+      const custName = existingShipment?.customerName || custObj?.customerName || (custObj as any)?.name || 'Khách vãng lai';
+
+      // Nhận diện loại hàng hóa theo Danh mục Biểu phí Hải quan:
+      // Quy tắc: Phí chỉ áp dụng cho 1 loại / 1 AWB duy nhất (Hải quan UPS vs Hải quan FedEx)
+      const cargoRate = CustomsCargoConfigService.getCargoRate(
+        rawCargoTypeStr || (defIsCosmetics ? 'COSMETICS_FOOD' : (defIsDoc ? 'DOCUMENT' : 'GENERAL')),
+        detectedCarrier
+      );
+      const cargoInfo = cargoRate.cargoType;
+      const isCosmeticsRow = cargoInfo.code === 'COSMETICS_FOOD';
+      const cargoTypeLabel = cargoInfo.code;
+      const cargoTypeDisplayName = cargoInfo.displayName;
+      const customsBeneficiary = detectedCarrier === 'FEDEX' ? 'Hải quan FedEx' : 'Hải quan UPS';
+
+      let rowDeliveryVal = NaN;
+      if (colDeliveryFee >= 0 && colDeliveryFee < r.length) {
+        const dStr = String(r[colDeliveryFee] ?? '').replace(/,/g, '').replace(/[^0-9.]/g, '').trim();
+        if (dStr) rowDeliveryVal = Number(dStr);
+      }
+      const isUsDest = destCountry === 'US' || destCountry === 'USA';
+      const baseUsDeliveryFee = 58750;
+      const viettelDeliveryDiscountPercent = (options as any)?.viettelDeliveryDiscountPercent !== undefined 
+        ? Number((options as any).viettelDeliveryDiscountPercent) 
+        : 40;
+
+      // Phí phát hàng Viettel Cost (giảm 40% còn 35.250 đ)
+      const supplierOrderProcFee = !isNaN(rowDeliveryVal) && rowDeliveryVal >= 0
+        ? rowDeliveryVal
+        : (detectedCarrier === 'UPS' && isUsDest ? Math.round(baseUsDeliveryFee * (1 - viettelDeliveryDiscountPercent / 100)) : ((options as any)?.supplierDeliveryFee || 0));
+
+      // Phí phát hàng Thu Khách (mặc định 58.750 đ nếu đi US)
+      const customerOrderProcFee = !isNaN(rowDeliveryVal) && rowDeliveryVal >= 0
+        ? rowDeliveryVal
+        : (detectedCarrier === 'UPS' && isUsDest ? ((options as any)?.customerDeliveryFee || baseUsDeliveryFee) : (options?.deliveryFee || options?.orderProcessingFee || 0));
+
+      // Đơn giá Hải quan (đ/kg) theo Biểu phí Hải quan UPS / FedEx
+      const supplierCustomsFeePerKg = cargoRate.supplierFeePerKg;
+      const customerCustomsFeePerKg = cargoRate.customerFeePerKg;
+
+      // Phí an ninh trả NCC (nếu có phát sinh)
+      let rowSuppSecurityVal = NaN;
+      if (colSupplierSecurityFee >= 0 && colSupplierSecurityFee < r.length) {
+        const sStr = String(r[colSupplierSecurityFee] ?? '').replace(/,/g, '').replace(/[^0-9.]/g, '').trim();
+        if (sStr) rowSuppSecurityVal = Number(sStr);
+      }
+      const supplierSecurityFeeAmount = !isNaN(rowSuppSecurityVal) && rowSuppSecurityVal >= 0
+        ? rowSuppSecurityVal
+        : ((options as any)?.supplierSecurityFeePerAwb !== undefined ? Number((options as any).supplierSecurityFeePerAwb) : 0);
+
+      // Tỷ lệ Phụ Phí Xăng Dầu (FSC %) do người dùng cấu hình cho từng lần up
+      const fscRaw = detectedCarrier === 'FEDEX'
+        ? (options?.fedexFuelPercent !== undefined ? options.fedexFuelPercent : options?.fuelPercentOverride)
+        : (options?.upsFuelPercent !== undefined ? options.upsFuelPercent : options?.fuelPercentOverride);
+      const fscOverride = fscRaw !== undefined && !isNaN(Number(fscRaw)) ? Number(fscRaw) : undefined;
+
+      // 1. Tính Cước Chi Trả Nhà Cung Cấp Viettel (Cost):
+      // - Biểu cước Viettel (ups_viettel_2026)
+      // - Phí Phát Hàng Tại Mỹ được giảm 40% (35.250 đ)
+      // - Phí Hải quan: Đơn giá theo loại hàng & hãng (Hải quan UPS / FedEx)
+      // - Phí An ninh: Phí an ninh trả NCC nếu có phát sinh
+      const supplierQuote = RateRegistryService.calculateRateForAwb({
+        carrier: detectedCarrier,
+        destinationCountry: destCountry,
+        weightKg: effectiveWeight,
+        isDocument: existingShipment ? existingShipment.contentsType === 'DOCUMENT' : (cargoInfo.code === 'DOCUMENT'),
+        customerCode: 'PDL-SUPPLIER-VIETTEL',
+        isCosmetics: isCosmeticsRow,
+        cargoType: cargoInfo.code,
+        customsFeePerKg: supplierCustomsFeePerKg,
+        securityFeePerAwb: supplierSecurityFeeAmount,
+        vatPercent: defVatPercent,
+        surgeDiscountPercent: defSurgeDiscount,
+        orderProcessingFee: supplierOrderProcFee,
+        deliveryFee: supplierOrderProcFee,
+        fuelPercentOverride: fscOverride,
+        rateTableId: detectedCarrier === 'UPS' ? 'ups_viettel_2026' : undefined
+      });
+
+      // 2. Tính Cước Thu Khách Hàng (Sell):
+      // - Biểu cước Khách Frank (ups_frank_2026) hoặc bảng giá khách
+      // - Phí Hải quan Khách: Đơn giá theo loại hàng & hãng
+      // - Phí An ninh: 150.000 đ / 1 đơn hàng (AWB)
+      const customerQuote = RateRegistryService.calculateRateForAwb({
+        carrier: detectedCarrier,
+        destinationCountry: destCountry,
+        weightKg: effectiveWeight,
+        isDocument: existingShipment ? existingShipment.contentsType === 'DOCUMENT' : (cargoInfo.code === 'DOCUMENT'),
+        customerCode: custCode,
+        isCosmetics: isCosmeticsRow,
+        cargoType: cargoInfo.code,
+        customsFeePerKg: customerCustomsFeePerKg,
+        securityFeePerAwb: defSecurityFeePerAwb,
+        vatPercent: defVatPercent,
+        surgeDiscountPercent: defSurgeDiscount,
+        orderProcessingFee: customerOrderProcFee,
+        deliveryFee: customerOrderProcFee,
+        fuelPercentOverride: fscOverride,
+        rateTableId: (detectedCarrier === 'UPS' && (custCode.toUpperCase().includes('FRANK') || custCode.toUpperCase().includes('GUEST') || defCust.toUpperCase().includes('FRANK'))) ? 'ups_frank_2026' : undefined
+      });
+
+      const chargeableWeightKg = customerQuote ? customerQuote.chargeableWeightKg : (supplierQuote ? supplierQuote.chargeableWeightKg : effectiveWeight);
+      // Quy tắc tính phí hải quan: Nếu dưới 1 kg thì làm tròn thành 1 kg để tính
+      const customsWeightKg = chargeableWeightKg > 0 ? Math.max(1, chargeableWeightKg) : 0;
+
+      // (A) CƯỚC TRẢ HÃNG VIETTEL: Net + Biến Động + Phát Hàng + FSC + VAT 8%
+      const supplierCarrierFreight = supplierQuote?.totalAfterVat ?? (supplierQuote ? ((supplierQuote.subtotalBeforeVat || 0) + (supplierQuote.vatAmount || 0)) : 0);
+      // (B) PHÍ TRẢ HẢI QUAN (UPS/FEDEX): Áp dụng 1 loại hàng duy nhất / 1 AWB (Không cộng dồn, dưới 1kg tính 1kg)
+      const supplierCustomsFeeAmount = supplierQuote?.customsFeeAmount !== undefined ? supplierQuote.customsFeeAmount : Math.round(customsWeightKg * supplierCustomsFeePerKg);
+      // (C) TỔNG CHI TRẢ CHI PHÍ = Cước Trả Hãng Viettel + Phí Trả Hải Quan + Phí An Ninh Trả NCC
+      const supplierCostPrice = supplierCarrierFreight + supplierCustomsFeeAmount + supplierSecurityFeeAmount;
+
+      // (D) CƯỚC HÃNG THU KHÁCH: Net Frank/Khách + Biến Động + Phát Hàng + FSC + VAT 8%
+      const customerCarrierFreight = customerQuote?.totalAfterVat ?? (customerQuote ? ((customerQuote.subtotalBeforeVat || 0) + (customerQuote.vatAmount || 0)) : 0);
+      // (E) PHÍ BIẾN ĐỘNG THỊ TRƯỜNG (% tự setup): Tính theo % trên cước vận chuyển hãng
+      const marketMarkupPercent = options?.marketMarkupPercent !== undefined ? Number(options.marketMarkupPercent) : 0;
+      const marketMarkupAmount = Math.round((customerCarrierFreight * marketMarkupPercent) / 100);
+      // (F) PHÍ HẢI QUAN THU KHÁCH: Áp dụng 1 loại hàng duy nhất / 1 AWB (Dưới 1kg tính 1kg)
+      const customerCustomsFeeAmount = customerQuote?.customsFeeAmount !== undefined ? customerQuote.customsFeeAmount : Math.round(customsWeightKg * customerCustomsFeePerKg);
+      // (G) PHÍ AN NINH THU KHÁCH: 150.000 đ / 1 AWB
+      const customerSecurityFeeAmount = customerQuote?.securityFeeAmount !== undefined ? customerQuote.securityFeeAmount : defSecurityFeePerAwb;
+      // (H) TỔNG THU KHÁCH HÀNG = Cước Hãng + Phí Biến Động Thị Trường + Phí Hải Quan + Phí An Ninh
+      const customerSellPrice = customerCarrierFreight + marketMarkupAmount + customerCustomsFeeAmount + customerSecurityFeeAmount;
+
+      // (I) LỢI NHUẬN GỘP = Tổng Thu Khách - Tổng Chi Trả Chi Phí
+      const profit = customerSellPrice - supplierCostPrice;
+      const zone = customerQuote?.zone || supplierQuote?.zone || '10';
+
+      const baseRate = customerQuote ? customerQuote.baseRate : Math.round(chargeableWeightKg * 150000);
+      const surgeEmergencyFee = customerQuote?.surgeEmergencyFee || 0;
+      const ipfFee = customerQuote?.deliveryFee !== undefined ? customerQuote.deliveryFee : (customerQuote?.orderProcessingFee !== undefined ? customerQuote.orderProcessingFee : customerOrderProcFee);
+      const fuelSurchargePercent = customerQuote?.fuelSurchargePercent || 52.5;
+      const fuelSurchargeAmount = customerQuote?.fuelSurchargeAmount || 0;
+      const vatPercent = customerQuote?.vatPercent !== undefined ? customerQuote.vatPercent : defVatPercent;
+      const vatAmount = customerQuote?.vatAmount || 0;
+      const customsFeeAmount = customerCustomsFeeAmount;
+      const securityFeeAmount = customerSecurityFeeAmount;
+
+      totalWeightKg += chargeableWeightKg;
+      totalBaseRate += baseRate;
+      totalSurgeEmergencyFee += surgeEmergencyFee;
+      totalOrderProcessingFee += ipfFee;
+      totalFuelSurchargeAmount += fuelSurchargeAmount;
+      totalVatAmount += vatAmount;
+      totalCustomsFeeAmount += (customsFeeAmount || 0);
+      totalSecurityFeeAmount += (securityFeeAmount || 0);
+      totalCostPrice += supplierCostPrice;
+      totalSellPrice += customerSellPrice;
+      totalProfit += profit;
+
+      let statusNote = existingShipment ? 'Đã có trên hệ thống' : 'AWB mới (Tự tính cước)';
+
+      if (applyToShipments) {
+        if (existingShipment) {
+          existingShipment.totalWeightKg = effectiveWeight;
+          existingShipment.chargeableWeightKg = chargeableWeightKg;
+          existingShipment.costPrice = supplierCostPrice;
+          existingShipment.sellPrice = customerSellPrice;
+          existingShipment.profit = profit;
+          if (rawCountry && existingShipment.shipTo) {
+            existingShipment.shipTo.countryCode = rawCountry;
+          }
+          if (rawCustomer) {
+            existingShipment.customerCode = custCode;
+            existingShipment.customerName = custName;
+          }
+          ShipmentRepository.save(existingShipment, `Cập nhật trọng lượng (${chargeableWeightKg}kg) & giá cước (${customerSellPrice.toLocaleString('vi-VN')}đ) từ Tool Tính Giá Excel`);
+          statusNote = 'Đã cập nhật giá vào đơn';
+          updatedShipmentsCount++;
+        } else {
+          const nowIso = new Date().toISOString();
+          const newShp: any = {
+            id: `SHP-${Date.now()}-${rowNum}`,
+            shipmentId: `SHP-${Date.now()}-${rowNum}`,
+            shipmentNumber: `PDL-${Date.now().toString().slice(-6)}-${rowNum}`,
+            masterTrackingNumber: rawAwb,
+            carrier: detectedCarrier,
+            serviceCode: detectedCarrier === 'UPS' ? 'SAVER' : 'IP',
+            serviceName: customerQuote?.serviceName || (detectedCarrier === 'UPS' ? 'UPS Worldwide Saver' : 'FedEx Intl Priority'),
+            customerCode: custCode,
+            customerName: custName,
+            financialCategory: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : custObj?.financialCategory === 'PREPAID_WALLET' ? 'WALLET' : 'IMMEDIATE',
+            paymentTerm: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : 'PREPAID',
+            paymentStatus: 'UNPAID',
+            status: 'INBOUND_RECEIVED',
+            hub: 'SGN',
+            currentWarehouseHub: 'SGN',
+            totalPieces: 1,
+            totalWeightKg: effectiveWeight,
+            volumetricWeightKg: effectiveWeight,
+            chargeableWeightKg,
+            costPrice: supplierCostPrice,
+            sellPrice: customerSellPrice,
+            profit,
+            destinationCountry: destCountry,
+            shipFrom: {
+              contactName: custName,
+              companyName: custName,
+              city: 'HO CHI MINH',
+              countryCode: 'VN',
+              phone: custObj?.phone || '0909000111'
+            },
+            shipTo: {
+              contactName: 'CONSIGNEE ' + destCountry,
+              city: destCountry,
+              countryCode: destCountry,
+              phone: '0000000000'
+            },
+            pieces: [
+              {
+                pieceNumber: 1,
+                trackingNumber: rawAwb,
+                weightKg: effectiveWeight,
+                lengthCm: 25,
+                widthCm: 20,
+                heightCm: 15,
+                inboundStatus: 'INBOUNDED'
+              }
+            ],
+            createdAt: nowIso
+          };
+          ShipmentRepository.save(newShp, `Khởi tạo tự động từ Tool Tính Giá Excel (${chargeableWeightKg}kg)`);
+          statusNote = 'Đã tạo đơn & lưu giá mới';
+          updatedShipmentsCount++;
+        }
+      }
+
+      parsedRows.push({
+        rowNum,
+        awb: rawAwb,
+        carrier: detectedCarrier,
+        destinationCountry: destCountry,
+        zone,
+        cargoType: cargoTypeLabel,
+        cargoTypeDisplayName,
+        customsBeneficiary,
+        isCosmetics: isCosmeticsRow,
+        customerCode: custCode,
+        customerName: custName,
+        inputWeightKg: effectiveWeight,
+        weightKg: effectiveWeight,
+        chargeableWeightKg,
+
+        // Cước và Phí Chi Trả (Supplier - Viettel & Hải Quan)
+        supplierCarrierFreight,
+        supplierBaseRate: supplierQuote?.baseRate || 0,
+        supplierSurgeEmergencyFee: supplierQuote?.surgeEmergencyFee || 0,
+        supplierDeliveryFee: supplierQuote?.deliveryFee || 0,
+        supplierFuelSurchargeAmount: supplierQuote?.fuelSurchargeAmount || 0,
+        supplierVatAmount: supplierQuote?.vatAmount || 0,
+        supplierCustomsFeePerKg,
+        supplierCustomsFeeAmount,
+        supplierSecurityFeeAmount,
+        supplierSecurityFeePerAwb: supplierSecurityFeeAmount,
+        supplierCostPrice,
+
+        // Cước và Phí Thu Khách Hàng (Customer - Frank)
+        customerCarrierFreight,
+        customerBaseRate: customerQuote?.baseRate || 0,
+        customerSurgeEmergencyFee: customerQuote?.surgeEmergencyFee || 0,
+        customerDeliveryFee: customerQuote?.deliveryFee || 0,
+        customerFuelSurchargeAmount: customerQuote?.fuelSurchargeAmount || 0,
+        customerVatAmount: customerQuote?.vatAmount || 0,
+        marketMarkupPercent,
+        marketMarkupAmount,
+        customerCustomsFeePerKg,
+        customerCustomsFeeAmount,
+        customerSecurityFeePerAwb: defSecurityFeePerAwb,
+        customerSecurityFeeAmount,
+        customerSellPrice,
+
+        // Tương thích ngược cho các bảng và form cũ
+        baseRate,
+        surgeEmergencyFee,
+        orderProcessingFee: ipfFee,
+        deliveryFee: ipfFee,
+        ipfFee,
+        fuelSurchargePercent,
+        fuelSurchargeAmount,
+        vatPercent,
+        vatAmount,
+        customsFeePerKg: customerCustomsFeePerKg,
+        customsFeeAmount,
+        generalGoodsFeePerKg: supplierCustomsFeePerKg,
+        generalGoodsFeeAmount: supplierCustomsFeeAmount,
+        airFeeAmount: 0,
+        securityFeePerAwb: defSecurityFeePerAwb,
+        securityFeeAmount,
+        costPrice: supplierCostPrice,
+        sellPrice: customerSellPrice,
+        profit,
+        marginPercent: customerQuote?.customerPolicyApplied?.marginPercent || 0,
+        existedInSystem: Boolean(existingShipment),
+        statusNote,
+        valid: true
+      });
+    }
+
+    return {
+      success: parsedRows.some(r => r.valid),
+      appliedToShipments: applyToShipments,
+      updatedShipmentsCount,
+      totalRows: parsedRows.length,
+      validCount: parsedRows.filter(r => r.valid).length,
+      errorCount: errors.length,
+      totalWeightKg: Math.round(totalWeightKg * 100) / 100,
+      totalBaseRate,
+      totalSurgeEmergencyFee,
+      totalOrderProcessingFee,
+      totalDeliveryFee: totalOrderProcessingFee,
+      totalFuelSurchargeAmount,
+      totalVatAmount,
+      totalCustomsFeeAmount,
+      totalSecurityFeeAmount,
+      totalGeneralGoodsFeeAmount,
+      totalCostPrice,
+      totalSellPrice,
+      totalProfit,
+      rows: parsedRows,
+      errors
+    };
+  }
+
+  /**
+   * 15. Tính lại giá cước tức thì cho 1 dòng AWB trong Tool Tính Giá Excel khi người dùng chỉnh sửa Số Kg / Quốc gia / Hãng / Mã KH / Loại Hàng / Phí Hàng
+   */
+  static recalculateSingleAwbRow(params: {
+    awb: string;
+    weightKg: number;
+    carrier?: string;
+    destinationCountry?: string;
+    countryCode?: string;
+    customerCode?: string;
+    isDocument?: boolean;
+    cargoType?: string;
+    isCosmetics?: boolean;
+    customsFeePerKg?: number;
+    supplierCustomsFeePerKg?: number;
+    securityFeePerAwb?: number;
+    supplierSecurityFeeAmount?: number;
+    supplierSecurityFeePerAwb?: number;
+    generalGoodsFeePerKg?: number;
+    vatPercent?: number;
+    surgeDiscountPercent?: number;
+    orderProcessingFee?: number;
+    deliveryFee?: number;
+    fuelPercentOverride?: number;
+    fuelSurchargePercent?: number;
+  }) {
+    const cleanAwb = String(params.awb || '').trim().toUpperCase();
+    const existingShipment = cleanAwb ? ShipmentRepository.getById(cleanAwb) : undefined;
+    const effectiveWeight = Number(params.weightKg) > 0 ? Number(params.weightKg) : 1;
+    const detectedCarrier = (params.carrier || existingShipment?.carrier || (cleanAwb.startsWith('1Z') ? 'UPS' : 'FEDEX')).toUpperCase();
+    const destCountry = (params.destinationCountry || params.countryCode || (existingShipment as any)?.destinationCountry || existingShipment?.shipTo?.countryCode || 'US').toUpperCase();
+    const custCode = (params.customerCode || existingShipment?.customerCode || 'PDL-GUEST').toUpperCase();
+    const custObj = CustomerService.getByCode(custCode);
+    const custName = existingShipment?.customerName || custObj?.customerName || (custObj as any)?.name || 'Khách vãng lai';
+
+    // Tỷ lệ Phụ Phí Xăng Dầu (FSC %)
+    const fscRaw = params.fuelPercentOverride !== undefined ? params.fuelPercentOverride : params.fuelSurchargePercent;
+    const fscOverride = fscRaw !== undefined && !isNaN(Number(fscRaw)) ? Number(fscRaw) : undefined;
+
+    // Nhận diện loại hàng theo Biểu phí Hải quan UPS / FedEx
+    const cargoRate = CustomsCargoConfigService.getCargoRate(
+      params.cargoType || (params.isCosmetics ? 'COSMETICS_FOOD' : (params.isDocument ? 'DOCUMENT' : 'GENERAL')),
+      detectedCarrier
+    );
+    const cargoInfo = cargoRate.cargoType;
+    const isCosmetics = cargoInfo.code === 'COSMETICS_FOOD' || Boolean(params.isCosmetics);
+    const customsBeneficiary = detectedCarrier === 'FEDEX' ? 'Hải quan FedEx' : 'Hải quan UPS';
+    const isUsDest = destCountry === 'US' || destCountry === 'USA';
+    const baseUsDeliveryFee = 58750;
+
+    // Phí phát hàng tại Mỹ: Viettel Post đang được áp dụng giảm 40% (58.750 đ * 0.6 = 35.250 đ)
+    const viettelDeliveryDiscountPercent = (params as any).viettelDeliveryDiscountPercent !== undefined 
+      ? Number((params as any).viettelDeliveryDiscountPercent) 
+      : 40;
+    const supplierDeliveryFee = (params as any).supplierDeliveryFee !== undefined
+      ? Number((params as any).supplierDeliveryFee)
+      : (detectedCarrier === 'UPS' && isUsDest ? Math.round(baseUsDeliveryFee * (1 - viettelDeliveryDiscountPercent / 100)) : 0);
+
+    const deliveryInput = (params as any).deliveryFee !== undefined ? Number((params as any).deliveryFee) : (params.orderProcessingFee !== undefined ? Number(params.orderProcessingFee) : undefined);
+    const customerDeliveryFee = deliveryInput !== undefined 
+      ? deliveryInput 
+      : ((params as any).customerDeliveryFee !== undefined 
+        ? Number((params as any).customerDeliveryFee) 
+        : (detectedCarrier === 'UPS' && isUsDest ? baseUsDeliveryFee : 0));
+
+    const vatPercent = params.vatPercent !== undefined ? Number(params.vatPercent) : 8;
+    const surgeDiscountPercent = params.surgeDiscountPercent !== undefined ? Number(params.surgeDiscountPercent) : 50;
+
+    // Đơn giá Hải quan (đ/kg)
+    const supplierCustomsFeePerKg = params.supplierCustomsFeePerKg !== undefined
+      ? Number(params.supplierCustomsFeePerKg)
+      : cargoRate.supplierFeePerKg;
+    const customerCustomsFeePerKg = params.customsFeePerKg !== undefined
+      ? Number(params.customsFeePerKg)
+      : cargoRate.customerFeePerKg;
+
+    // 1. Tính Cước Chi Trả Nhà Cung Cấp Viettel (Cost):
+    // Phí phát hàng tại Mỹ trả Viettel được giảm 40% (35.250 đ)
+    const supplierQuote = RateRegistryService.calculateRateForAwb({
+      carrier: detectedCarrier,
+      destinationCountry: destCountry,
+      weightKg: effectiveWeight,
+      isDocument: Boolean(params.isDocument || cargoInfo.code === 'DOCUMENT'),
+      customerCode: 'PDL-SUPPLIER-VIETTEL',
+      isCosmetics,
+      cargoType: cargoInfo.code,
+      customsFeePerKg: supplierCustomsFeePerKg,
+      securityFeePerAwb: 0,
+      vatPercent,
+      surgeDiscountPercent,
+      orderProcessingFee: supplierDeliveryFee,
+      deliveryFee: supplierDeliveryFee,
+      fuelPercentOverride: fscOverride,
+      rateTableId: detectedCarrier === 'UPS' ? 'ups_viettel_2026' : undefined
+    });
+
+    // 2. Tính Cước Thu Khách Hàng (Sell):
+    const customerQuote = RateRegistryService.calculateRateForAwb({
+      carrier: detectedCarrier,
+      destinationCountry: destCountry,
+      weightKg: effectiveWeight,
+      isDocument: Boolean(params.isDocument || cargoInfo.code === 'DOCUMENT'),
+      customerCode: custCode,
+      isCosmetics,
+      cargoType: cargoInfo.code,
+      customsFeePerKg: customerCustomsFeePerKg,
+      securityFeePerAwb: params.securityFeePerAwb !== undefined ? Number(params.securityFeePerAwb) : 150000,
+      vatPercent,
+      surgeDiscountPercent,
+      orderProcessingFee: customerDeliveryFee,
+      deliveryFee: customerDeliveryFee,
+      fuelPercentOverride: fscOverride,
+      rateTableId: (detectedCarrier === 'UPS' && (custCode.toUpperCase().includes('FRANK') || custCode.toUpperCase().includes('GUEST'))) ? 'ups_frank_2026' : undefined
+    });
+
+    const chargeableWeightKg = customerQuote ? customerQuote.chargeableWeightKg : (supplierQuote ? supplierQuote.chargeableWeightKg : effectiveWeight);
+    // Quy tắc tính phí hải quan: Nếu dưới 1 kg thì làm tròn thành 1 kg để tính
+    const customsWeightKg = chargeableWeightKg > 0 ? Math.max(1, chargeableWeightKg) : 0;
+
+    const inputSuppSecurity = (params as any).supplierSecurityFeeAmount !== undefined
+      ? Number((params as any).supplierSecurityFeeAmount)
+      : ((params as any).supplierSecurityFeePerAwb !== undefined ? Number((params as any).supplierSecurityFeePerAwb) : 0);
+    const supplierSecurityFeeAmount = !isNaN(inputSuppSecurity) && inputSuppSecurity >= 0 ? inputSuppSecurity : 0;
+
+    // (A) CƯỚC TRẢ HÃNG VIETTEL: Net + Biến Động + Phát Hàng + FSC + VAT 8%
+    const supplierCarrierFreight = supplierQuote?.totalAfterVat ?? (supplierQuote ? ((supplierQuote.subtotalBeforeVat || 0) + (supplierQuote.vatAmount || 0)) : 0);
+    // (B) PHÍ TRẢ HẢI QUAN (UPS/FEDEX): Áp dụng 1 loại hàng duy nhất / 1 AWB (Không cộng dồn, dưới 1kg tính 1kg)
+    const supplierCustomsFeeAmount = supplierQuote?.customsFeeAmount !== undefined ? supplierQuote.customsFeeAmount : Math.round(customsWeightKg * supplierCustomsFeePerKg);
+    // (C) TỔNG CHI TRẢ CHI PHÍ = Cước Trả Hãng Viettel + Phí Trả Hải Quan + Phí An Ninh Trả NCC
+    const supplierCostPrice = supplierCarrierFreight + supplierCustomsFeeAmount + supplierSecurityFeeAmount;
+
+    // (D) CƯỚC HÃNG THU KHÁCH: Net Frank/Khách + Biến Động + Phát Hàng + FSC + VAT 8%
+    const customerCarrierFreight = customerQuote?.totalAfterVat ?? (customerQuote ? ((customerQuote.subtotalBeforeVat || 0) + (customerQuote.vatAmount || 0)) : 0);
+    // (E) PHÍ BIẾN ĐỘNG THỊ TRƯỜNG (% tự setup): Tính theo % trên cước vận chuyển hãng
+    const marketMarkupPercent = (params as any).marketMarkupPercent !== undefined
+      ? Number((params as any).marketMarkupPercent)
+      : ((params as any).marginPercent !== undefined ? Number((params as any).marginPercent) : 0);
+    const marketMarkupAmount = Math.round((customerCarrierFreight * marketMarkupPercent) / 100);
+    // (F) PHÍ HẢI QUAN THU KHÁCH: Áp dụng 1 loại hàng duy nhất / 1 AWB (Dưới 1kg tính 1kg)
+    const customerCustomsFeeAmount = customerQuote?.customsFeeAmount !== undefined ? customerQuote.customsFeeAmount : Math.round(customsWeightKg * customerCustomsFeePerKg);
+    // (G) PHÍ AN NINH THU KHÁCH: 150.000 đ / 1 AWB
+    const customerSecurityFeeAmount = customerQuote?.securityFeeAmount !== undefined ? customerQuote.securityFeeAmount : 150000;
+    // (H) TỔNG THU KHÁCH HÀNG = Cước Hãng + Phí Biến Động Thị Trường + Phí Hải Quan + Phí An Ninh
+    const customerSellPrice = customerCarrierFreight + marketMarkupAmount + customerCustomsFeeAmount + customerSecurityFeeAmount;
+
+    // (I) LỢI NHUẬN GỘP = Tổng Thu Khách - Tổng Chi Trả Chi Phí
+    const profit = customerSellPrice - supplierCostPrice;
+
+    const cargoTypeDisplayName = cargoInfo.displayName;
+
+    const baseRate = customerQuote ? customerQuote.baseRate : Math.round(chargeableWeightKg * 150000);
+    const surgeEmergencyFee = customerQuote?.surgeEmergencyFee || 0;
+    const ipfFee = customerQuote?.deliveryFee !== undefined ? customerQuote.deliveryFee : (customerQuote?.orderProcessingFee !== undefined ? customerQuote.orderProcessingFee : customerDeliveryFee);
+    const fuelSurchargePercent = customerQuote?.fuelSurchargePercent || 52.5;
+    const fuelSurchargeAmount = customerQuote?.fuelSurchargeAmount || 0;
+    const vatAmount = customerQuote?.vatAmount || 0;
+    const customsFeeAmount = customerCustomsFeeAmount;
+    const securityFeeAmount = customerSecurityFeeAmount;
+
+    return {
+      success: true,
+      row: {
+        awb: cleanAwb || 'AWB-MOI',
+        carrier: detectedCarrier,
+        destinationCountry: destCountry,
+        zone: customerQuote?.zone || supplierQuote?.zone || '10',
+        cargoType: cargoInfo.code,
+        cargoTypeDisplayName,
+        customsBeneficiary,
+        isCosmetics,
+        customerCode: custCode,
+        customerName: custName,
+        inputWeightKg: effectiveWeight,
+        weightKg: effectiveWeight,
+        chargeableWeightKg,
+
+        // Cước và Phí Chi Trả (Supplier - Viettel & Hải Quan)
+        supplierCarrierFreight,
+        supplierBaseRate: supplierQuote?.baseRate || 0,
+        supplierSurgeEmergencyFee: supplierQuote?.surgeEmergencyFee || 0,
+        supplierDeliveryFee: supplierQuote?.deliveryFee || 0,
+        supplierFuelSurchargeAmount: supplierQuote?.fuelSurchargeAmount || 0,
+        supplierVatAmount: supplierQuote?.vatAmount || 0,
+        supplierCustomsFeePerKg,
+        supplierCustomsFeeAmount,
+        supplierSecurityFeeAmount,
+        supplierSecurityFeePerAwb: supplierSecurityFeeAmount,
+        supplierCostPrice,
+
+        // Cước và Phí Thu Khách Hàng (Customer - Frank)
+        customerCarrierFreight,
+        customerBaseRate: customerQuote?.baseRate || 0,
+        customerSurgeEmergencyFee: customerQuote?.surgeEmergencyFee || 0,
+        customerDeliveryFee: customerQuote?.deliveryFee || 0,
+        customerFuelSurchargeAmount: customerQuote?.fuelSurchargeAmount || 0,
+        customerVatAmount: customerQuote?.vatAmount || 0,
+        marketMarkupPercent,
+        marketMarkupAmount,
+        customerCustomsFeePerKg,
+        customerCustomsFeeAmount,
+        customerSecurityFeePerAwb: 150000,
+        customerSecurityFeeAmount,
+        customerSellPrice,
+
+        // Tương thích ngược
+        baseRate,
+        surgeEmergencyFee,
+        orderProcessingFee: ipfFee,
+        deliveryFee: ipfFee,
+        ipfFee,
+        fuelSurchargePercent,
+        fuelSurchargeAmount,
+        vatPercent,
+        vatAmount,
+        customsFeePerKg: customerCustomsFeePerKg,
+        customsFeeAmount,
+        generalGoodsFeePerKg: supplierCustomsFeePerKg,
+        generalGoodsFeeAmount: supplierCustomsFeeAmount,
+        airFeeAmount: 0,
+        securityFeePerAwb: 150000,
+        securityFeeAmount,
+        costPrice: supplierCostPrice,
+        sellPrice: customerSellPrice,
+        profit,
+        marginPercent: customerQuote?.customerPolicyApplied?.marginPercent || 0,
+        existedInSystem: Boolean(existingShipment),
+        statusNote: existingShipment ? 'Đã có trên hệ thống' : 'Tự tính cước theo biểu giá',
+        valid: true
+      }
+    };
+  }
+
+  /**
+   * 16. Xuất Danh Sách Kết Quả Tính Giá AWB Ra File Excel (.xlsx) Chuẩn Đẹp:
+   * Bóc tách riêng Cước Hãng, Phí Hải Quan, Phí An Ninh, Tổng Cost, Tổng Sell, Lợi Nhuận Gộp
+   */
+  static exportAwbPricingResultToExcel(rows: any[]): Buffer {
+    const validRows = (rows || []).filter(r => r && r.valid !== false);
+    const aoa: any[][] = [
+      ['PANDALEX EXPRESS - BẢNG TỔNG HỢP ĐỐI SOÁT & TÍNH GIÁ CƯỚC VẬN ĐƠN AWB HÀNG LOẠT'],
+      [`Ngày kết xuất: ${new Date().toLocaleDateString('vi-VN')} | Đơn vị tiền tệ: VNĐ | Phí chỉ áp dụng 1 loại hàng / 1 AWB`],
+      [],
+      [
+        'STT',
+        'Mã Vận Đơn (AWB)',
+        'Hãng Bay',
+        'Quốc Gia Đến',
+        'Vùng (Zone)',
+        'Loại Hàng Hóa',
+        'Mã Khách Hàng',
+        'Trọng Lượng (Kg)',
+        'Cước Net Khách (VNĐ)',
+        'Phí Biến Động Khẩn Cấp - Hãng UPS (VNĐ)',
+        'Phí Phát Hàng (VNĐ)',
+        'Phụ Phí Xăng FSC (VNĐ)',
+        'Thuế VAT 8% (VNĐ)',
+        'TỔNG CƯỚC HÃNG KHÁCH (VNĐ)',
+        'Tỷ Lệ Phí Biến Động Thị Trường (%)',
+        'Tiền Phí Biến Động Thị Trường (VNĐ)',
+        'Đơn Vị Thụ Hưởng Hải Quan',
+        'PHÍ HẢI QUAN (VNĐ)',
+        'PHÍ AN NINH THU KHÁCH (VNĐ)',
+        'PHÍ AN NINH TRẢ NCC (VNĐ)',
+        'TỔNG CHI TRẢ - COST (VNĐ)',
+        'TỔNG THU KHÁCH - SELL (VNĐ)',
+        'LỢI NHUẬN GỘP (VNĐ)',
+        'Ghi Chú / Trạng Thái'
+      ]
+    ];
+
+    let sumWeight = 0, sumBase = 0, sumSurge = 0, sumDelivery = 0, sumFsc = 0, sumVat = 0;
+    let sumCarrierKhach = 0, sumMarketMarkup = 0, sumCustoms = 0, sumSecurity = 0, sumSuppSecurity = 0, sumCost = 0, sumSell = 0, sumProfit = 0;
+
+    validRows.forEach((r, idx) => {
+      const w = Number(r.chargeableWeightKg || r.weightKg || 0);
+      const base = Number(r.customerBaseRate !== undefined ? r.customerBaseRate : (r.baseRate || 0));
+      const surge = Number(r.customerSurgeEmergencyFee !== undefined ? r.customerSurgeEmergencyFee : (r.surgeEmergencyFee || 0));
+      const delivery = Number(r.customerDeliveryFee !== undefined ? r.customerDeliveryFee : (r.deliveryFee || r.orderProcessingFee || r.ipfFee || 0));
+      const fsc = Number(r.customerFuelSurchargeAmount !== undefined ? r.customerFuelSurchargeAmount : (r.fuelSurchargeAmount || 0));
+      const vat = Number(r.customerVatAmount !== undefined ? r.customerVatAmount : (r.vatAmount || 0));
+      const carrierKhach = Number(r.customerCarrierFreight !== undefined ? r.customerCarrierFreight : (base + surge + delivery + fsc + vat));
+      const marketMarkupPct = Number(r.marketMarkupPercent || 0);
+      const marketMarkupAmount = Number(r.marketMarkupAmount !== undefined ? r.marketMarkupAmount : Math.round(carrierKhach * (marketMarkupPct / 100)));
+      const customs = Number(r.customerCustomsFeeAmount !== undefined ? r.customerCustomsFeeAmount : (r.customsFeeAmount || 0));
+      const security = Number(r.customerSecurityFeeAmount !== undefined ? r.customerSecurityFeeAmount : (r.securityFeeAmount || 150000));
+      const suppSecurity = Number(r.supplierSecurityFeeAmount !== undefined ? r.supplierSecurityFeeAmount : (r.supplierSecurityFeePerAwb || 0));
+      const cost = Number(r.supplierCostPrice !== undefined ? r.supplierCostPrice : (r.costPrice || 0));
+      const sell = Number(r.customerSellPrice !== undefined ? r.customerSellPrice : (carrierKhach + marketMarkupAmount + customs + security));
+      const profit = Number(r.profit !== undefined ? r.profit : (sell - cost));
+
+      sumWeight += w;
+      sumBase += base;
+      sumSurge += surge;
+      sumDelivery += delivery;
+      sumFsc += fsc;
+      sumVat += vat;
+      sumCarrierKhach += carrierKhach;
+      sumMarketMarkup += marketMarkupAmount;
+      sumCustoms += customs;
+      sumSecurity += security;
+      sumSuppSecurity += suppSecurity;
+      sumCost += cost;
+      sumSell += sell;
+      sumProfit += profit;
+
+      aoa.push([
+        idx + 1,
+        r.awb || '',
+        r.carrier || 'UPS',
+        r.destinationCountry || 'US',
+        r.zone || '',
+        r.cargoTypeDisplayName || (r.isCosmetics ? 'Thực Phẩm, Mỹ Phẩm' : 'Hàng Thông Thường'),
+        r.customerCode || 'PDL-GUEST',
+        w,
+        base,
+        surge,
+        delivery,
+        fsc,
+        vat,
+        carrierKhach,
+        `${marketMarkupPct}%`,
+        marketMarkupAmount,
+        r.customsBeneficiary || (r.carrier === 'FEDEX' ? 'Hải quan FedEx' : 'Hải quan UPS'),
+        customs,
+        security,
+        suppSecurity,
+        cost,
+        sell,
+        profit,
+        r.statusNote || 'Đã tính giá'
+      ]);
+    });
+
+    const totalRowIdx = aoa.length + 1;
+    aoa.push([
+      'TỔNG CỘNG',
+      `${validRows.length} vận đơn AWB`,
+      '', '', '', '', '',
+      Math.round(sumWeight * 100) / 100,
+      sumBase, sumSurge, sumDelivery, sumFsc, sumVat,
+      sumCarrierKhach,
+      '',
+      sumMarketMarkup,
+      '',
+      sumCustoms,
+      sumSecurity,
+      sumSuppSecurity,
+      sumCost,
+      sumSell,
+      sumProfit,
+      ''
+    ]);
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    // Gắn công thức Excel chuẩn vào các dòng:
+    // N: TỔNG CƯỚC HÃNG KHÁCH = I# + J# + K# + L# + M#
+    // P: TIỀN PHÍ BIẾN ĐỘNG THỊ TRƯỜNG = ROUND(N# * O#, 0)
+    // V: TỔNG THU KHÁCH = N# + P# + R# + S#
+    // W: LỢI NHUẬN GỘP = V# - U#
+    validRows.forEach((r, idx) => {
+      const rowIdx = idx + 5;
+      const carrierKhach = Number(r.customerCarrierFreight || 0);
+      const marketMarkupAmount = Number(r.marketMarkupAmount || 0);
+      const sell = Number(r.customerSellPrice || r.sellPrice || 0);
+      const cost = Number(r.supplierCostPrice || r.costPrice || 0);
+      const profit = Number(r.profit !== undefined ? r.profit : (sell - cost));
+
+      ws[`N${rowIdx}`] = { t: 'n', f: `I${rowIdx}+J${rowIdx}+K${rowIdx}+L${rowIdx}+M${rowIdx}`, v: carrierKhach };
+      ws[`P${rowIdx}`] = { t: 'n', f: `ROUND(N${rowIdx}*O${rowIdx},0)`, v: marketMarkupAmount };
+      ws[`V${rowIdx}`] = { t: 'n', f: `N${rowIdx}+P${rowIdx}+R${rowIdx}+S${rowIdx}`, v: sell };
+      ws[`W${rowIdx}`] = { t: 'n', f: `V${rowIdx}-U${rowIdx}`, v: profit };
+    });
+
+    if (validRows.length > 0) {
+      const fCols: Record<string, number> = {
+        H: Math.round(sumWeight * 100) / 100,
+        I: sumBase, J: sumSurge, K: sumDelivery, L: sumFsc, M: sumVat,
+        N: sumCarrierKhach, P: sumMarketMarkup, R: sumCustoms, S: sumSecurity,
+        T: sumSuppSecurity, U: sumCost, V: sumSell, W: sumProfit
+      };
+      for (const [colLetter, val] of Object.entries(fCols)) {
+        ws[`${colLetter}${totalRowIdx}`] = { t: 'n', f: `SUM(${colLetter}5:${colLetter}${totalRowIdx - 1})`, v: val };
+      }
+    }
+
+    ws['!cols'] = [
+      { wch: 6 },  // A: STT
+      { wch: 22 }, // B: AWB
+      { wch: 10 }, // C: Carrier
+      { wch: 14 }, // D: Dest Country
+      { wch: 12 }, // E: Zone
+      { wch: 28 }, // F: Cargo Type
+      { wch: 15 }, // G: Cust Code
+      { wch: 16 }, // H: Weight
+      { wch: 18 }, // I: Base Rate
+      { wch: 20 }, // J: Phí Biến Động Hãng UPS
+      { wch: 18 }, // K: Delivery
+      { wch: 18 }, // L: FSC
+      { wch: 16 }, // M: VAT
+      { wch: 22 }, // N: Tổng Cước Hãng
+      { wch: 16 }, // O: % Biến Động Thị Trường
+      { wch: 20 }, // P: Tiền Biến Động Thị Trường
+      { wch: 22 }, // Q: Đơn vị Hải Quan
+      { wch: 18 }, // R: Customs Fee
+      { wch: 18 }, // S: Security Fee Thu Khách
+      { wch: 18 }, // T: Security Fee Trả NCC
+      { wch: 22 }, // U: Cost Trả NCC
+      { wch: 22 }, // V: Sell Thu Khách
+      { wch: 18 }, // W: LỢI NHUẬN GỘP
+      { wch: 24 }  // X: Note
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Bang_Tong_Hop_Chi_Phi_AWB');
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  }
+
+  /**
+   * 17. Xuất Bảng Kê Cước Thu Khách Hàng (.xlsx) - Đầy đủ tất cả các loại phí (Không lộ giá vốn Viettel/Hải quan)
+   * Tách bạch rõ: Cước Hãng Khách + Phí Hải Quan Thu Khách + Phí An Ninh Hàng Không
+   */
+  static exportCustomerPricingExcel(rows: any[]): Buffer {
+    const validRows = (rows || []).filter(r => r && r.valid !== false);
+    const wb = XLSX.utils.book_new();
+    const aoa: any[][] = [
+      ['PANDALEX EXPRESS - BẢNG KÊ CƯỚC VẬN CHUYỂN QUỐC TẾ THU KHÁCH HÀNG'],
+      [`Khách hàng: FRANK | Biểu cước: UPS FRANK 2026 | Ngày xuất: ${new Date().toLocaleDateString('vi-VN')} | Đơn vị tiền tệ: VNĐ`],
+      [],
+      [
+        'STT',
+        'Mã Vận Đơn (AWB)',
+        'Hãng Bay',
+        'Nước Đến',
+        'Vùng (Zone)',
+        'Loại Hàng Hóa',
+        'Trọng Lượng (Kg)',
+        'Cước Net Khách (VNĐ)',
+        'Phí Biến Động Khẩn Cấp - Hãng UPS (VNĐ)',
+        'Phí Phát Hàng (VNĐ)',
+        'Tỷ Lệ Xăng FSC (%)',
+        'Phụ Phí Xăng FSC (VNĐ)',
+        'Thuế VAT 8% (VNĐ)',
+        'CƯỚC VẬN CHUYỂN HÃNG (VNĐ)',
+        'Tỷ Lệ Phí Biến Động Thị Trường (%)',
+        'Tiền Phí Biến Động Thị Trường (VNĐ)',
+        'Đơn Giá Hải Quan (đ/kg)',
+        'PHÍ HẢI QUAN THU KHÁCH (VNĐ)',
+        'PHÍ AN NINH (150k/AWB)',
+        'TỔNG TIỀN THANH TOÁN (VNĐ)',
+        'Ghi Chú'
+      ]
+    ];
+
+    let sumKg = 0, sumBase = 0, sumSur = 0, sumDel = 0, sumFsc = 0, sumVat = 0;
+    let sumCarrierKhach = 0, sumMarketMarkup = 0, sumHq = 0, sumSec = 0, sumTot = 0;
+
+    validRows.forEach((r, idx) => {
+      const w = Number(r.chargeableWeightKg || r.weightKg || 0);
+      const base = Number(r.customerBaseRate !== undefined ? r.customerBaseRate : (r.baseRate || 0));
+      const sur = Number(r.customerSurgeEmergencyFee !== undefined ? r.customerSurgeEmergencyFee : (r.surgeEmergencyFee || 0));
+      const del = Number(r.customerDeliveryFee !== undefined ? r.customerDeliveryFee : (r.deliveryFee || r.orderProcessingFee || r.ipfFee || 0));
+      const fscPct = Number(r.fuelSurchargePercent !== undefined ? r.fuelSurchargePercent : (r.carrier === 'FEDEX' ? 23.5 : 52.5));
+      const fsc = Number(r.customerFuelSurchargeAmount !== undefined ? r.customerFuelSurchargeAmount : (r.fuelSurchargeAmount || 0));
+      const vat = Number(r.customerVatAmount !== undefined ? r.customerVatAmount : (r.vatAmount || 0));
+      const carrierKhach = Number(r.customerCarrierFreight !== undefined ? r.customerCarrierFreight : (base + sur + del + fsc + vat));
+      const marketMarkupPct = Number(r.marketMarkupPercent || 0);
+      const marketMarkupAmount = Number(r.marketMarkupAmount !== undefined ? r.marketMarkupAmount : Math.round(carrierKhach * (marketMarkupPct / 100)));
+
+      const cargoRate = CustomsCargoConfigService.getCargoRate(r.cargoType || (r.isCosmetics ? 'COSMETICS_FOOD' : undefined), r.carrier || 'UPS');
+      const hqPerKg = Number(r.customerCustomsFeePerKg !== undefined ? r.customerCustomsFeePerKg : cargoRate.customerFeePerKg);
+      const customsWeight = w > 0 ? Math.max(1, w) : 0;
+      const hq = Number(r.customerCustomsFeeAmount !== undefined ? r.customerCustomsFeeAmount : Math.round(customsWeight * hqPerKg));
+      const sec = Number(r.customerSecurityFeeAmount !== undefined ? r.customerSecurityFeeAmount : (r.securityFeeAmount !== undefined ? r.securityFeeAmount : 150000));
+      const tot = Number(r.customerSellPrice !== undefined ? r.customerSellPrice : (carrierKhach + marketMarkupAmount + hq + sec));
+
+      sumKg += w;
+      sumBase += base;
+      sumSur += sur;
+      sumDel += del;
+      sumFsc += fsc;
+      sumVat += vat;
+      sumCarrierKhach += carrierKhach;
+      sumMarketMarkup += marketMarkupAmount;
+      sumHq += hq;
+      sumSec += sec;
+      sumTot += tot;
+
+      aoa.push([
+        idx + 1,
+        r.awb || '',
+        r.carrier || 'UPS',
+        r.destinationCountry || 'US',
+        r.zone || '',
+        r.cargoTypeDisplayName || cargoRate.cargoType.displayName,
+        w,
+        base,
+        sur,
+        del,
+        `${fscPct}%`,
+        fsc,
+        vat,
+        carrierKhach,
+        `${marketMarkupPct}%`,
+        marketMarkupAmount,
+        hqPerKg,
+        hq,
+        sec,
+        tot,
+        r.statusNote || r.note || ''
+      ]);
+    });
+
+    const totalRowIdx = aoa.length + 1;
+    aoa.push([
+      'TỔNG CỘNG',
+      `${validRows.length} vận đơn AWB`,
+      '', '', '', '',
+      Math.round(sumKg * 100) / 100,
+      sumBase, sumSur, sumDel,
+      '', // Tỷ lệ FSC
+      sumFsc, sumVat,
+      sumCarrierKhach,
+      '', // % Biến động TT
+      sumMarketMarkup,
+      '', // Đơn giá HQ
+      sumHq, sumSec, sumTot,
+      ''
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    // Gắn công thức Excel:
+    // Cột N (Cước Vận Chuyển Hãng) = H# + I# + J# + L# + M#
+    // Cột P (Tiền Phí Biến Động Thị Trường) = ROUND(N# * O#, 0)
+    // Cột R (Phí Hải Quan) = IF(G#<1, 1, G#) * Q# (Dưới 1kg làm tròn 1kg)
+    // Cột T (Tổng Tiền Thanh Toán) = N# + P# + R# + S#
+    validRows.forEach((r, idx) => {
+      const rowNum = idx + 5;
+      const carrierKhach = Number(r.customerCarrierFreight || 0);
+      const marketMarkupAmount = Number(r.marketMarkupAmount || 0);
+      const hq = Number(r.customerCustomsFeeAmount || 0);
+      const tot = Number(r.customerSellPrice || r.sellPrice || 0);
+      ws[`N${rowNum}`] = { t: 'n', f: `H${rowNum}+I${rowNum}+J${rowNum}+L${rowNum}+M${rowNum}`, v: carrierKhach };
+      ws[`P${rowNum}`] = { t: 'n', f: `ROUND(N${rowNum}*O${rowNum},0)`, v: marketMarkupAmount };
+      ws[`R${rowNum}`] = { t: 'n', f: `IF(G${rowNum}<1,1,G${rowNum})*Q${rowNum}`, v: hq };
+      ws[`T${rowNum}`] = { t: 'n', f: `N${rowNum}+P${rowNum}+R${rowNum}+S${rowNum}`, v: tot };
+    });
+
+    if (validRows.length > 0) {
+      const fCols: Record<string, number> = {
+        G: Math.round(sumKg * 100) / 100,
+        H: sumBase, I: sumSur, J: sumDel, L: sumFsc, M: sumVat,
+        N: sumCarrierKhach, P: sumMarketMarkup, R: sumHq, S: sumSec, T: sumTot
+      };
+      for (const [col, val] of Object.entries(fCols)) {
+        ws[`${col}${totalRowIdx}`] = { t: 'n', f: `SUM(${col}5:${col}${totalRowIdx - 1})`, v: val };
+      }
+    }
+
+    ws['!cols'] = [
+      { wch: 6 },  // STT (A)
+      { wch: 22 }, // AWB (B)
+      { wch: 10 }, // Carrier (C)
+      { wch: 12 }, // Dest (D)
+      { wch: 12 }, // Zone (E)
+      { wch: 28 }, // Cargo Type (F)
+      { wch: 16 }, // Weight (G)
+      { wch: 20 }, // Base Rate (H)
+      { wch: 20 }, // Phí Biến Động Hãng UPS (I)
+      { wch: 18 }, // Delivery (J)
+      { wch: 18 }, // Tỷ Lệ FSC (%) (K)
+      { wch: 20 }, // Tiền Phụ Phí FSC (L)
+      { wch: 16 }, // VAT (M)
+      { wch: 24 }, // CƯỚC VẬN CHUYỂN HÃNG (N)
+      { wch: 16 }, // % Biến Động Thị Trường (O)
+      { wch: 20 }, // Tiền Biến Động Thị Trường (P)
+      { wch: 18 }, // Đơn giá HQ (Q)
+      { wch: 22 }, // PHÍ HẢI QUAN (R)
+      { wch: 20 }, // PHÍ AN NINH (S)
+      { wch: 26 }, // TỔNG TIỀN THANH TOÁN (T)
+      { wch: 30 }  // Ghi Chú (U)
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Bang_Ke_Thu_Tien_Khach_Hang');
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  }
+
+  /**
+   * 18. Xuất Bảng Kê Chi Trả Cước Cho Nhà Cung Cấp & Hải Quan (.xlsx)
+   * Phân định rõ 2 khoản chi trả:
+   * (1) Cước Vận Chuyển Hãng (Viettel Post): Net + Biến Động + Phát Hàng + FSC + VAT 8%
+   * (2) Phí Hải Quan Thông Quan (Hải quan UPS / Hải quan FedEx): Áp dụng đúng 1 loại hàng / 1 AWB
+   */
+  static exportSupplierPricingExcel(rows: any[]): Buffer {
+    const validRows = (rows || []).filter(r => r && r.valid !== false);
+    const wb = XLSX.utils.book_new();
+    const aoa: any[][] = [
+      ['PANDALEX EXPRESS - BẢNG KÊ CHI TRẢ CHI PHÍ ĐỐI SOÁT (CƯỚC HÃNG VIETTEL & PHÍ HẢI QUAN)'],
+      [`Đối tác: VIETTEL POST (Dịch vụ UPS/FedEx) & HẢI QUAN UPS / HẢI QUAN FEDEX | Ngày xuất: ${new Date().toLocaleDateString('vi-VN')} | Đơn vị tiền tệ: VNĐ`],
+      [],
+      [
+        'STT',
+        'Mã Vận Đơn (AWB)',
+        'Hãng Vận Chuyển',
+        'Nước Đến',
+        'Vùng (Zone)',
+        'Loại Hàng Hóa',
+        'Trọng Lượng (Kg)',
+        'Cước Net Viettel (VNĐ)',
+        'Phí Biến Động - Giảm 50% (VNĐ)',
+        'Phí Phát Hàng (VNĐ)',
+        'Tỷ Lệ Xăng FSC (%)',
+        'Phụ Phí Xăng FSC (VNĐ)',
+        'Thuế VAT 8% (VNĐ)',
+        'TỔNG CƯỚC TRẢ HÃNG VIETTEL (VNĐ)',
+        'Đơn Vị Thụ Hưởng Hải Quan',
+        'Đơn Giá Hải Quan (đ/kg)',
+        'THÀNH TIỀN PHÍ HẢI QUAN (VNĐ)',
+        'PHÍ AN NINH TRẢ NCC (VNĐ)',
+        'TỔNG CHI TRẢ NCC - COST (VNĐ)',
+        'TỔNG THU KHÁCH - SELL (VNĐ)',
+        'LỢI NHUẬN GỘP (VNĐ)',
+        'Ghi Chú Đối Soát'
+      ]
+    ];
+
+    let sumKg = 0, sumBase = 0, sumSur = 0, sumDel = 0, sumFsc = 0, sumVat = 0;
+    let sumCarrierViettel = 0, sumHq = 0, sumSuppSecurity = 0, sumTot = 0, sumSell = 0, sumProfit = 0;
+
+    validRows.forEach((r, idx) => {
+      const w = Number(r.chargeableWeightKg || r.weightKg || 0);
+      const base = Number(r.supplierBaseRate !== undefined ? r.supplierBaseRate : (r.baseRate || 0));
+      const sur = Number(r.supplierSurgeEmergencyFee !== undefined ? r.supplierSurgeEmergencyFee : (r.surgeEmergencyFee || 0));
+      const del = Number(r.supplierDeliveryFee !== undefined ? r.supplierDeliveryFee : (r.deliveryFee || r.orderProcessingFee || r.ipfFee || 0));
+      const fscPct = Number(r.fuelSurchargePercent !== undefined ? r.fuelSurchargePercent : (r.carrier === 'FEDEX' ? 23.5 : 52.5));
+      const fsc = Number(r.supplierFuelSurchargeAmount !== undefined ? r.supplierFuelSurchargeAmount : (r.fuelSurchargeAmount || 0));
+      const vat = Number(r.supplierVatAmount !== undefined ? r.supplierVatAmount : (r.vatAmount || 0));
+      const carrierViettel = Number(r.supplierCarrierFreight !== undefined ? r.supplierCarrierFreight : (base + sur + del + fsc + vat));
+
+      const cargoRate = CustomsCargoConfigService.getCargoRate(r.cargoType || (r.isCosmetics ? 'COSMETICS_FOOD' : undefined), r.carrier || 'UPS');
+      const hqPerKg = Number(r.supplierCustomsFeePerKg !== undefined ? r.supplierCustomsFeePerKg : cargoRate.supplierFeePerKg);
+      const customsWeight = w > 0 ? Math.max(1, w) : 0;
+      const hq = Number(r.supplierCustomsFeeAmount !== undefined ? r.supplierCustomsFeeAmount : Math.round(customsWeight * hqPerKg));
+      const suppSecurity = Number(r.supplierSecurityFeeAmount !== undefined ? r.supplierSecurityFeeAmount : (r.supplierSecurityFeePerAwb || 0));
+      const tot = Number(r.supplierCostPrice !== undefined ? r.supplierCostPrice : (carrierViettel + hq + suppSecurity));
+      const sell = Number(r.customerSellPrice !== undefined ? r.customerSellPrice : (r.sellPrice || 0));
+      const profit = Number(r.profit !== undefined ? r.profit : (sell - tot));
+      const beneficiary = r.customsBeneficiary || (r.carrier === 'FEDEX' ? 'Hải quan FedEx' : 'Hải quan UPS');
+
+      sumKg += w;
+      sumBase += base;
+      sumSur += sur;
+      sumDel += del;
+      sumFsc += fsc;
+      sumVat += vat;
+      sumCarrierViettel += carrierViettel;
+      sumHq += hq;
+      sumSuppSecurity += suppSecurity;
+      sumTot += tot;
+      sumSell += sell;
+      sumProfit += profit;
+
+      aoa.push([
+        idx + 1,
+        r.awb || '',
+        r.carrier || 'UPS',
+        r.destinationCountry || 'US',
+        r.zone || '',
+        r.cargoTypeDisplayName || cargoRate.cargoType.displayName,
+        w,
+        base,
+        sur,
+        del,
+        `${fscPct}%`,
+        fsc,
+        vat,
+        carrierViettel,
+        beneficiary,
+        hqPerKg,
+        hq,
+        suppSecurity,
+        tot,
+        sell,
+        profit,
+        r.statusNote || r.note || ''
+      ]);
+    });
+
+    const totalRowIdx = aoa.length + 1;
+    aoa.push([
+      'TỔNG CỘNG',
+      `${validRows.length} vận đơn AWB`,
+      '', '', '', '',
+      Math.round(sumKg * 100) / 100,
+      sumBase, sumSur, sumDel,
+      '', // Tỷ lệ FSC
+      sumFsc, sumVat,
+      sumCarrierViettel,
+      '', '',
+      sumHq,
+      sumSuppSecurity,
+      sumTot,
+      sumSell,
+      sumProfit,
+      ''
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    // Gắn công thức Excel:
+    // Cột N (Tổng Cước Trả Hãng Viettel) = SUM(H#:J#) + L# + M#
+    // Cột Q (Thành Tiền Phí Hải Quan) = IF(G#<1, 1, G#) * P# (Dưới 1kg tính tròn 1kg)
+    // Cột S (Tổng Chi Trả Chi Phí) = N# + Q# + R#
+    // Cột U (Lợi Nhuận Gộp) = T# - S#
+    validRows.forEach((r, idx) => {
+      const rowNum = idx + 5;
+      const carrierViettel = Number(r.supplierCarrierFreight || 0);
+      const hq = Number(r.supplierCustomsFeeAmount || 0);
+      const tot = Number(r.supplierCostPrice || r.costPrice || 0);
+      const sell = Number(r.customerSellPrice || r.sellPrice || 0);
+      const profit = Number(r.profit !== undefined ? r.profit : (sell - tot));
+      ws[`N${rowNum}`] = { t: 'n', f: `SUM(H${rowNum}:J${rowNum})+L${rowNum}+M${rowNum}`, v: carrierViettel };
+      ws[`Q${rowNum}`] = { t: 'n', f: `IF(G${rowNum}<1,1,G${rowNum})*P${rowNum}`, v: hq };
+      ws[`S${rowNum}`] = { t: 'n', f: `N${rowNum}+Q${rowNum}+R${rowNum}`, v: tot };
+      ws[`U${rowNum}`] = { t: 'n', f: `T${rowNum}-S${rowNum}`, v: profit };
+    });
+
+    if (validRows.length > 0) {
+      const fCols: Record<string, number> = {
+        G: Math.round(sumKg * 100) / 100,
+        H: sumBase, I: sumSur, J: sumDel, L: sumFsc, M: sumVat,
+        N: sumCarrierViettel, Q: sumHq, R: sumSuppSecurity, S: sumTot,
+        T: sumSell, U: sumProfit
+      };
+      for (const [col, val] of Object.entries(fCols)) {
+        ws[`${col}${totalRowIdx}`] = { t: 'n', f: `SUM(${col}5:${col}${totalRowIdx - 1})`, v: val };
+      }
+    }
+
+    ws['!cols'] = [
+      { wch: 6 },  // A: STT
+      { wch: 22 }, // B: AWB
+      { wch: 10 }, // C: Carrier
+      { wch: 12 }, // D: Dest
+      { wch: 12 }, // E: Zone
+      { wch: 28 }, // F: Cargo Type
+      { wch: 16 }, // G: Weight
+      { wch: 20 }, // H: Base Rate
+      { wch: 18 }, // I: Surge
+      { wch: 18 }, // J: Delivery
+      { wch: 18 }, // K: Tỷ Lệ FSC (%)
+      { wch: 20 }, // L: Tiền FSC
+      { wch: 16 }, // M: VAT
+      { wch: 24 }, // N: TỔNG CƯỚC TRẢ HÃNG VIETTEL
+      { wch: 24 }, // O: ĐƠN VỊ THỤ HƯỞNG HẢI QUAN
+      { wch: 18 }, // P: Đơn giá HQ
+      { wch: 22 }, // Q: THÀNH TIỀN PHÍ HẢI QUAN
+      { wch: 20 }, // R: PHÍ AN NINH TRẢ NCC
+      { wch: 24 }, // S: TỔNG CHI TRẢ NCC (COST)
+      { wch: 24 }, // T: TỔNG THU KHÁCH (SELL)
+      { wch: 20 }, // U: LỢI NHUẬN GỘP
+      { wch: 30 }  // V: Ghi Chú
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Bang_Ke_Chi_Tra_NCC_Va_HQ');
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  }
 }
 
 FinanceService.init();
+

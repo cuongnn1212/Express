@@ -113,5 +113,20 @@
     "createdAt": "2026-10-12T01:25:32.676Z",
     "salt": "8c8b90f94fc8adaae6f5bcdbf5d048a5",
     "passwordHash": "87068176fcc92af642bcc3b86e8629f0e3415ffae16e22e5c3d671d785dc2ffa33d9fcc78dc5aecec4afaf1a281ff341a5d7b264db1ae59e061683e7c81c1490"
+  },
+  {
+    "id": "usr_partner_warehouse",
+    "username": "doitac_kho",
+    "fullName": "Đại Diện Kho Đối Tác (Kho Vệ Tinh - Không Xem Giá)",
+    "email": "partner.warehouse@pandalex.vn",
+    "phone": "0988777999",
+    "role": "WAREHOUSE_PARTNER",
+    "hub": "SGN",
+    "walletBalance": 0,
+    "creditLimit": 0,
+    "isActive": true,
+    "createdAt": "2026-10-15T02:41:05.413Z",
+    "salt": "8036841680c61bce8af9e041f23d25df",
+    "passwordHash": "49f1a6099a296e74d641b2d04a52ee99480f53bb621ae8ffa9464a5931d6a0495fea1eeb6bfa375b62e95ac6811b8f0e8d6173587a875946f90c4d55c97a8d55"
   }
 ]

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PandaLex Mobile Inbound - Trạm Nhận Hàng Camera 2-Trong-1</title>
+  
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Hiệu ứng laser quét */
+    @keyframes laserScan {
+      0% { top: 6%; opacity: 0.9; }
+      50% { top: 90%; opacity: 0.9; }
+      100% { top: 6%; opacity: 0.9; }
+    }
+    .laser-line {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      height: 2px;
+      background: #10b981;
+      box-shadow: 0 0 12px 2px #34d399, 0 0 4px #10b981;
+      animation: laserScan 2.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="h-full text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+  <!-- ======================================================== -->
+  <!-- 1. HEADER CỐ ĐỊNH PHÍA TRÊN                              -->
+  <!-- ======================================================== -->
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 shrink-0 sticky top-0 z-40">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <a href="/admin.html" class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white">
+          <i class="fa-solid fa-arrow-left text-xs"></i>
+        </a>
+        <div class="flex items-center space-x-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <h1 class="text-sm font-black tracking-tight text-white uppercase">Inbound Mobile</h1>
+        </div>
+      </div>
+
+      <!-- Trạng Thái Kết Nối Lưu Trữ (Chỉ hiển thị, hoàn toàn không mở cấu hình trên điện thoại) -->
+      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <i class="fa-solid fa-cloud text-[10px]"></i>
+        <span>Cloud Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 2. NỘI DUNG CHÍNH (CUỘN ĐƯỢC)                             -->
+  <!-- ======================================================== -->
+  <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
+
+    <!-- KHUNG CAMERA TRỰC TIẾP (LIVE STREAM) -->
+    <div class="bg-slate-900 rounded-3xl border border-slate-800 p-2 shadow-2xl relative overflow-hidden">
+      <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-slate-800">
+        <video id="videoCameraLive" autoplay playsinline muted class="w-full h-full object-cover"></video>
+        <canvas id="canvasCapture" class="hidden"></canvas>
+
+        <!-- Khung ngắm chuẩn 4x6" -->
+        <div class="absolute inset-4 border-2 border-dashed border-emerald-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-2">
+          <div class="flex justify-between items-center text-[10px] font-mono text-emerald-400 font-bold bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm self-start">
+            <span id="txtCameraResolution">1280x720</span>
+          </div>
+          <div class="text-center">
+            <span class="bg-black/60 text-slate-200 text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-sm border border-slate-700">
+              Căn chỉnh nhãn AWB hoặc kiện hàng vào giữa khung
+            </span>
+          </div>
+        </div>
+
+        <!-- Tia Laser Quét -->
+        <div id="laserScanBar" class="laser-line"></div>
+
+        <!-- Badge Phát Hiện Barcode -->
+        <div id="badgeDetectedAwb" class="hidden absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-500 text-slate-950 font-mono font-black text-xs shadow-lg flex items-center space-x-1.5 animate-bounce">
+          <i class="fa-solid fa-barcode text-sm"></i>
+          <span id="txtDetectedAwbNum">1Z...</span>
+        </div>
+
+        <!-- Nút Điều Khiển Nhanh Trên Video (Đổi camera / Bật Flash) -->
+        <div class="absolute top-3 right-3 flex flex-col space-y-2 z-10">
+          <button type="button" onclick="switchCameraFacing()" class="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/80 transition" title="Đổi camera">
+            <i class="fa-solid fa-camera-rotate text-xs"></i>
+          </button>
+          <button type="button" onclick="toggleFlashlight()" id="btnToggleFlash" class="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/80 transition" title="Bật/Tắt Flash">
+            <i class="fa-solid fa-bolt text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2 NÚT CHỤP ẢNH TỐC ĐỘ CAO (CHỤP TEM AWB & CHỤP KIỆN HÀNG) -->
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <button type="button" onclick="capturePhoto('AWB')" class="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs shadow-lg flex items-center justify-center space-x-1.5 transition">
+          <i class="fa-solid fa-barcode text-sm"></i>
+          <span>1. CHỤP TEM AWB</span>
+        </button>
+        <button type="button" onclick="capturePhoto('BOX')" class="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-extrabold text-xs shadow-lg flex items-center justify-center space-x-1.5 transition">
+          <i class="fa-solid fa-box text-sm"></i>
+          <span>2. CHỤP KIỆN &amp; CÂN</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2 ẢNH PREVIEW ĐÃ CHỤP (HIỂN THỊ DUNG LƯỢNG SIÊU NHẸ ĐÃ NÉN) -->
+    <div class="grid grid-cols-2 gap-3">
+      <!-- Slot 1: Ảnh Nhãn AWB -->
+      <div id="cardSlotAwb" class="bg-slate-900 border border-slate-800 rounded-2xl p-2.5 text-center relative overflow-hidden flex flex-col justify-between">
+        <div>
+          <div class="text-[10px] font-black uppercase text-indigo-400 mb-1 flex items-center justify-center space-x-1">
+            <i class="fa-solid fa-barcode"></i>
+            <span>Ảnh Nhãn AWB</span>
+          </div>
+          <div class="aspect-square bg-slate-950 rounded-xl overflow-hidden border border-slate-800 relative flex items-center justify-center">
+            <img id="imgPreviewAwb" src="" alt="Ảnh AWB" class="w-full h-full object-cover hidden">
+            <div id="phAwbEmpty" class="text-slate-600 flex flex-col items-center space-y-1">
+              <i class="fa-solid fa-camera text-xl"></i>
+              <span class="text-[9px] font-bold">Chưa chụp tem</span>
+            </div>
+            <button type="button" onclick="removePhoto('AWB')" id="btnDelAwbPhoto" class="hidden absolute top-1 right-1 w-6 h-6 rounded-full bg-rose-600 text-white text-[10px] flex items-center justify-center shadow">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div id="txtSizeAwb" class="text-[9px] font-mono text-slate-400 mt-1 truncate">Chờ chụp...</div>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-800/80">
+          <button type="button" onclick="document.getElementById('inpFileAwb').click()" class="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center justify-center space-x-1 w-full py-0.5">
+            <i class="fa-solid fa-folder-open text-[9px]"></i>
+            <span>Chọn từ máy</span>
+          </button>
+          <input type="file" id="inpFileAwb" accept="image/*" class="hidden" onchange="handleFilePicked(this.files, 'AWB')">
+        </div>
+      </div>
+
+      <!-- Slot 2: Ảnh Kiện Hàng & Cân -->
+      <div id="cardSlotBox" class="bg-slate-900 border border-slate-800 rounded-2xl p-2.5 text-center relative overflow-hidden flex flex-col justify-between">
+        <div>
+          <div class="text-[10px] font-black uppercase text-amber-400 mb-1 flex items-center justify-center space-x-1">
+            <i class="fa-solid fa-box"></i>
+            <span>Ảnh Kiện &amp; Cân</span>
+          </div>
+          <div class="aspect-square bg-slate-950 rounded-xl overflow-hidden border border-slate-800 relative flex items-center justify-center">
+            <img id="imgPreviewBox" src="" alt="Ảnh Kiện Hàng" class="w-full h-full object-cover hidden">
+            <div id="phBoxEmpty" class="text-slate-600 flex flex-col items-center space-y-1">
+              <i class="fa-solid fa-weight-scale text-xl"></i>
+              <span class="text-[9px] font-bold">Chưa chụp thùng</span>
+            </div>
+            <button type="button" onclick="removePhoto('BOX')" id="btnDelBoxPhoto" class="hidden absolute top-1 right-1 w-6 h-6 rounded-full bg-rose-600 text-white text-[10px] flex items-center justify-center shadow">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div id="txtSizeBox" class="text-[9px] font-mono text-slate-400 mt-1 truncate">Chờ chụp...</div>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-800/80">
+          <button type="button" onclick="document.getElementById('inpFileBox').click()" class="text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center justify-center space-x-1 w-full py-0.5">
+            <i class="fa-solid fa-folder-open text-[9px]"></i>
+            <span>Chọn từ máy</span>
+          </button>
+          <input type="file" id="inpFileBox" accept="image/*" class="hidden" onchange="handleFilePicked(this.files, 'BOX')">
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM THÔNG TIN NHẬP KHO (TỰ ĐIỀN SAU KHI QUÉT HOẶC NHẬP TAY) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3 shadow-xl">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-xs font-black uppercase text-slate-300 flex items-center space-x-1.5">
+          <i class="fa-solid fa-clipboard-check text-emerald-400"></i>
+          <span>Thông Tin Kiện Hàng Nhập Kho</span>
+        </h3>
+        <span class="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-bold" id="badgeCarrierAuto">Tự nhận hãng</span>
+      </div>
+
+      <!-- Mã Vận Đơn AWB -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 mb-1">Mã Vận Đơn (AWB / Tracking Number) <span class="text-rose-400">*</span></label>
+        <div class="relative">
+          <input
+            type="text"
+            id="inpAwbNumber"
+            placeholder="Quét tem hoặc gõ (VD: 1Z..., 7700...)"
+            required
+            oninput="handleAwbInputManual(this.value)"
+            class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl py-2.5 pl-3 pr-10 font-mono text-sm font-black uppercase tracking-wider text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          >
+          <button type="button" onclick="clearAwbInput()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white p-1">
+            <i class="fa-solid fa-circle-xmark text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Trọng Lượng & Kho Hub -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 mb-1">Cân Nặng Thực Tế (kg)</label>
+          <div class="relative">
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              id="inpWeightKg"
+              placeholder="1.0"
+              class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl py-2 px-3 font-mono text-sm font-black text-amber-400 focus:outline-none"
+            >
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">kg</span>
+          </div>
+          <div class="flex items-center space-x-1 mt-1.5 overflow-x-auto pb-0.5">
+            <button type="button" onclick="addWeight(0.5)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono font-bold shrink-0">+0.5</button>
+            <button type="button" onclick="addWeight(1.0)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono font-bold shrink-0">+1k</button>
+            <button type="button" onclick="addWeight(2.0)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono font-bold shrink-0">+2k</button>
+            <button type="button" onclick="addWeight(5.0)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono font-bold shrink-0">+5k</button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 mb-1">Kho Nhập Hàng</label>
+          <select id="selHub" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl py-2 px-2.5 text-xs font-bold text-white focus:outline-none">
+            <option value="SGN">SGN - TP. Hồ Chí Minh</option>
+            <option value="HAN">HAN - Hà Nội Hub</option>
+            <option value="DAD">DAD - Đà Nẵng</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Ghi Chú Ngoại Quan (Hàng móp, ướt, tem rách...) -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 mb-1">Ghi Chú Ngoại Quan Kiện Hàng</label>
+        <input
+          type="text"
+          id="inpNotes"
+          placeholder="VD: Kiện nguyên vẹn, thùng carton chắc chắn..."
+          class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none"
+        >
+      </div>
+    </div>
+
+    <!-- DANH SÁCH VỪA QUÉT TRONG NGÀY (LỊCH SỬ NHANH) -->
+    <div class="space-y-2 pt-2">
+      <div class="flex items-center justify-between text-xs font-bold text-slate-400">
+        <span class="flex items-center space-x-1">
+          <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+          <span>Vừa Nhập Gần Đây</span>
+        </span>
+        <span id="badgeScannedCount" class="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-emerald-400">0 kiện</span>
+      </div>
+      <div id="listRecentScans" class="space-y-2">
+        <div class="text-center py-4 text-xs text-slate-600 font-medium">Chưa có kiện nào được quét trong phiên này.</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- 3. NÚT XÁC NHẬN CỐ ĐỊNH Ở ĐÁY (STICKY BOTTOM BAR)         -->
+  <!-- ======================================================== -->
+  <footer class="fixed bottom-0 left-0 right-0 p-3 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 z-40">
+    <button
+      type="button"
+      id="btnSubmitInbound"
+      onclick="submitMobileInbound()"
+      class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 active:scale-[0.98] text-white font-black text-sm shadow-xl shadow-emerald-950/50 flex items-center justify-center space-x-2 transition"
+    >
+      <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+      <span>XÁC NHẬN NHẬP KHO &amp; LƯU VÀO R2</span>
+    </button>
+  </footer>
+
+
+
+  <!-- MODAL XEM ẢNH TRỰC TIẾP TRÊN MOBILE -->
+  <div id="modalMobilePhotoViewer" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col justify-end p-4 hidden">
+    <div class="bg-slate-900 rounded-3xl border border-slate-800 p-4 space-y-3 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <div>
+          <h3 class="text-xs font-black text-white" id="txtMobileViewerAwb">AWB: ...</h3>
+          <span class="text-[10px] text-emerald-400 font-bold" id="txtMobileViewerStorage">☁️ Cloudflare R2</span>
+        </div>
+        <button type="button" onclick="document.getElementById('modalMobilePhotoViewer').classList.add('hidden')" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <div class="text-[10px] text-slate-400 font-bold mb-1">1. Tem AWB</div>
+          <div class="aspect-square bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+            <img id="imgMobileViewerAwb" src="" class="w-full h-full object-contain">
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] text-slate-400 font-bold mb-1">2. Kiện &amp; Cân</div>
+          <div class="aspect-square bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+            <img id="imgMobileViewerBox" src="" class="w-full h-full object-contain">
+          </div>
+        </div>
+      </div>
+      <button type="button" onclick="copyMobilePhotoLink()" class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black text-xs flex items-center justify-center space-x-1.5 shadow">
+        <i class="fa-solid fa-copy"></i>
+        <span>Sao Chép Link Gửi Zalo</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ÂM THANH BÍP PHẢN HỒI KHI QUÉT THÀNH CÔNG (WEB AUDIO SYNTH) -->
+  <script>
+    // Audio Beep
+    function playBeep(freq = 880, duration = 120) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration / 1000);
+      } catch (_) {}
+    }
+
+    function playSuccessSound() {
+      playBeep(880, 80);
+      setTimeout(() => playBeep(1760, 160), 90);
+      if (navigator.vibrate) navigator.vibrate([80, 40, 120]);
+    }
+  </script>
+
+  <!-- LOGIC CAMERA, NÉN ẢNH VÀ QUÉT BARCODE -->
+  <script>
+    let currentStream = null;
+    let currentFacingMode = 'environment'; // Ưu tiên camera sau
+    let videoElement = document.getElementById('videoCameraLive');
+    let canvasElement = document.getElementById('canvasCapture');
+    let barcodeDetector = null;
+    let isDetectingBarcode = true;
+    let flashEnabled = false;
+
+    // Lưu trữ ảnh đã chụp (Base64)
+    let photoAwbBase64 = null;
+    let photoBoxBase64 = null;
+    let recentScansList = [];
+
+    // 1. Khởi động Camera khi mở trang
+    async function initCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+      }
+
+      const constraints = {
+        video: {
+          facingMode: { ideal: currentFacingMode },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        audio: false
+      };
+
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoElement.srcObject = currentStream;
+        await videoElement.play();
+
+        const track = currentStream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        document.getElementById('txtCameraResolution').textContent = `${settings.width || 1280}x${settings.height || 720}`;
+
+        // Kiểm tra xem trình duyệt có hỗ trợ native BarcodeDetector API không
+        if ('BarcodeDetector' in window) {
+          try {
+            barcodeDetector = new BarcodeDetector({
+              formats: ['code_128', 'code_39', 'qr_code', 'ean_13', 'upc_a', 'data_matrix', 'itf']
+            });
+            startContinuousBarcodeScanner();
+          } catch (e) {
+            console.warn('BarcodeDetector format not supported:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Không thể mở Camera:', err);
+        alert('Không thể mở Camera. Vui lòng cấp quyền truy cập Camera cho trình duyệt!');
+      }
+    }
+
+    // Đổi camera Trước / Sau
+    async function switchCameraFacing() {
+      currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+      await initCamera();
+    }
+
+    // Bật / Tắt đèn Flash (nếu camera sau có hỗ trợ Torch)
+    async function toggleFlashlight() {
+      if (!currentStream) return;
+      const track = currentStream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities?.() || {};
+      if (!capabilities.torch) {
+        alert('Thiết bị hoặc camera này không hỗ trợ đèn Flash.');
+        return;
+      }
+      flashEnabled = !flashEnabled;
+      try {
+        await track.applyConstraints({
+          advanced: [{ torch: flashEnabled }]
+        });
+        document.getElementById('btnToggleFlash').classList.toggle('text-amber-400', flashEnabled);
+      } catch (e) {
+        console.warn('Lỗi bật flash:', e);
+      }
+    }
+
+    // Quét Barcode liên tục từ video stream
+    async function startContinuousBarcodeScanner() {
+      if (!barcodeDetector || !isDetectingBarcode) return;
+
+      if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+        try {
+          const barcodes = await barcodeDetector.detect(videoElement);
+          if (barcodes.length > 0) {
+            const raw = barcodes[0].rawValue.trim();
+            handleBarcodeFound(raw);
+          }
+        } catch (_) {}
+      }
+
+      requestAnimationFrame(startContinuousBarcodeScanner);
+    }
+
+    // Xử lý khi phát hiện Barcode
+    function handleBarcodeFound(rawCode) {
+      if (!rawCode) return;
+      const clean = rawCode.replace(/\s+/g, '').toUpperCase();
+      const inp = document.getElementById('inpAwbNumber');
+      if (inp.value === clean) return; // Đã nhận diện rồi thì không rung lại
+
+      inp.value = clean;
+      playSuccessSound();
+
+      // Hiện badge nổi
+      const badge = document.getElementById('badgeDetectedAwb');
+      document.getElementById('txtDetectedAwbNum').textContent = clean;
+      badge.classList.remove('hidden');
+      setTimeout(() => badge.classList.add('hidden'), 3000);
+
+      // Tự động nhận diện hãng
+      if (clean.startsWith('1Z')) {
+        document.getElementById('badgeCarrierAuto').textContent = 'UPS Express';
+        document.getElementById('badgeCarrierAuto').className = 'text-[10px] font-mono bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-black border border-amber-500/30';
+      } else if (clean.length === 12 || clean.length === 34) {
+        document.getElementById('badgeCarrierAuto').textContent = 'FedEx Express';
+        document.getElementById('badgeCarrierAuto').className = 'text-[10px] font-mono bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-black border border-purple-500/30';
+      }
+    }
+
+    // 2. Chụp ảnh & Nén Client-Side (Scale HD 1280px & Nén WebP 60KB)
+    function capturePhoto(type) {
+      if (!videoElement || videoElement.readyState < 2) {
+        alert('Camera chưa sẵn sàng!');
+        return;
+      }
+
+      const canvas = canvasElement;
+      const vw = videoElement.videoWidth || 1280;
+      const vh = videoElement.videoHeight || 720;
+
+      // Giới hạn kích thước tối đa 1280px để ảnh siêu nhẹ nhưng vẫn sắc nét từng chữ
+      const maxDim = 1280;
+      let targetW = vw;
+      let targetH = vh;
+      if (targetW > maxDim || targetH > maxDim) {
+        if (targetW > targetH) {
+          targetH = Math.round((targetH * maxDim) / targetW);
+          targetW = maxDim;
+        } else {
+          targetW = Math.round((targetW * maxDim) / targetH);
+          targetH = maxDim;
+        }
+      }
+
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoElement, 0, 0, targetW, targetH);
+
+      // Nén sang định dạng WebP với quality 0.82 (chất lượng cao, dung lượng ~60KB)
+      let dataUrl = canvas.toDataURL('image/webp', 0.82);
+      if (!dataUrl.startsWith('data:image/webp')) {
+        // Fallback sang JPEG nếu máy không hỗ trợ webp encode
+        dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      }
+
+      const sizeKb = Math.round((dataUrl.length * 3 / 4) / 1024);
+      playSuccessSound();
+
+      if (type === 'AWB') {
+        photoAwbBase64 = dataUrl;
+        document.getElementById('imgPreviewAwb').src = dataUrl;
+        document.getElementById('imgPreviewAwb').classList.remove('hidden');
+        document.getElementById('phAwbEmpty').classList.add('hidden');
+        document.getElementById('btnDelAwbPhoto').classList.remove('hidden');
+        document.getElementById('txtSizeAwb').innerHTML = `<span class="text-emerald-400 font-bold">✓ Đã nén: ${sizeKb} KB</span>`;
+      } else {
+        photoBoxBase64 = dataUrl;
+        document.getElementById('imgPreviewBox').src = dataUrl;
+        document.getElementById('imgPreviewBox').classList.remove('hidden');
+        document.getElementById('phBoxEmpty').classList.add('hidden');
+        document.getElementById('btnDelBoxPhoto').classList.remove('hidden');
+        document.getElementById('txtSizeBox').innerHTML = `<span class="text-emerald-400 font-bold">✓ Đã nén: ${sizeKb} KB</span>`;
+      }
+    }
+
+    function removePhoto(type) {
+      if (type === 'AWB') {
+        photoAwbBase64 = null;
+        document.getElementById('imgPreviewAwb').classList.add('hidden');
+        document.getElementById('phAwbEmpty').classList.remove('hidden');
+        document.getElementById('btnDelAwbPhoto').classList.add('hidden');
+        document.getElementById('txtSizeAwb').textContent = 'Chờ chụp...';
+      } else {
+        photoBoxBase64 = null;
+        document.getElementById('imgPreviewBox').classList.add('hidden');
+        document.getElementById('phBoxEmpty').classList.remove('hidden');
+        document.getElementById('btnDelBoxPhoto').classList.add('hidden');
+        document.getElementById('txtSizeBox').textContent = 'Chờ chụp...';
+      }
+    }
+
+    function clearAwbInput() {
+      document.getElementById('inpAwbNumber').value = '';
+      document.getElementById('badgeCarrierAuto').textContent = 'Tự nhận hãng';
+      document.getElementById('badgeCarrierAuto').className = 'text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-bold';
+    }
+
+    function handleAwbInputManual(val) {
+      if (!val) {
+        clearAwbInput();
+        return;
+      }
+      const clean = val.replace(/\s+/g, '').toUpperCase();
+      document.getElementById('inpAwbNumber').value = clean;
+      
+      if (clean.startsWith('1Z')) {
+        document.getElementById('badgeCarrierAuto').textContent = 'UPS Express';
+        document.getElementById('badgeCarrierAuto').className = 'text-[10px] font-mono bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-black border border-amber-500/30';
+      } else if (clean.length === 12 || clean.length === 34 || clean.startsWith('77') || clean.startsWith('78') || clean.startsWith('79')) {
+        document.getElementById('badgeCarrierAuto').textContent = 'FedEx Express';
+        document.getElementById('badgeCarrierAuto').className = 'text-[10px] font-mono bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-black border border-purple-500/30';
+      } else if (clean.length === 10) {
+        document.getElementById('badgeCarrierAuto').textContent = 'DHL Express';
+        document.getElementById('badgeCarrierAuto').className = 'text-[10px] font-mono bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded font-black border border-yellow-500/30';
+      } else {
+        document.getElementById('badgeCarrierAuto').textContent = 'Quốc Tế';
+        document.getElementById('badgeCarrierAuto').className = 'text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-bold';
+      }
+    }
+
+    function addWeight(delta) {
+      const inp = document.getElementById('inpWeightKg');
+      const cur = parseFloat(inp.value || '0');
+      const next = Math.max(0.1, Math.round((cur + delta) * 100) / 100);
+      inp.value = next;
+    }
+
+    function handleFilePicked(files, type) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = canvasElement;
+          const maxDim = 1280;
+          let targetW = img.width;
+          let targetH = img.height;
+          if (targetW > maxDim || targetH > maxDim) {
+            if (targetW > targetH) {
+              targetH = Math.round((targetH * maxDim) / targetW);
+              targetW = maxDim;
+            } else {
+              targetW = Math.round((targetW * maxDim) / targetH);
+              targetH = maxDim;
+            }
+          }
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+          let dataUrl = canvas.toDataURL('image/webp', 0.82);
+          if (!dataUrl.startsWith('data:image/webp')) {
+            dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          }
+          const sizeKb = Math.round((dataUrl.length * 3 / 4) / 1024);
+          playSuccessSound();
+
+          if (type === 'AWB') {
+            photoAwbBase64 = dataUrl;
+            document.getElementById('imgPreviewAwb').src = dataUrl;
+            document.getElementById('imgPreviewAwb').classList.remove('hidden');
+            document.getElementById('phAwbEmpty').classList.add('hidden');
+            document.getElementById('btnDelAwbPhoto').classList.remove('hidden');
+            document.getElementById('txtSizeAwb').innerHTML = `<span class="text-emerald-400 font-bold">✓ Đã nén: ${sizeKb} KB</span>`;
+          } else {
+            photoBoxBase64 = dataUrl;
+            document.getElementById('imgPreviewBox').src = dataUrl;
+            document.getElementById('imgPreviewBox').classList.remove('hidden');
+            document.getElementById('phBoxEmpty').classList.add('hidden');
+            document.getElementById('btnDelBoxPhoto').classList.remove('hidden');
+            document.getElementById('txtSizeBox').innerHTML = `<span class="text-emerald-400 font-bold">✓ Đã nén: ${sizeKb} KB</span>`;
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 3. Gửi Dữ Liệu Nhập Kho Lên Server & Cloudflare R2
+    async function submitMobileInbound() {
+      const awb = document.getElementById('inpAwbNumber')?.value.trim();
+      if (!awb) {
+        alert('⚠️ Vui lòng quét hoặc nhập mã AWB trước khi xác nhận!');
+        document.getElementById('inpAwbNumber').focus();
+        return;
+      }
+
+      const weightKg = parseFloat(document.getElementById('inpWeightKg')?.value || '0');
+      const hub = document.getElementById('selHub')?.value || 'SGN';
+      const notes = document.getElementById('inpNotes')?.value.trim();
+
+      const btn = document.getElementById('btnSubmitInbound');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang tải ảnh lên Cloudflare R2 &amp; Nhập kho...`;
+
+      try {
+        const res = await fetch('/api/inbound/mobile-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            awb,
+            weightKg,
+            hub,
+            notes,
+            awbPhotoBase64: photoAwbBase64,
+            packagePhotoBase64: photoBoxBase64,
+            operator: 'kho_mobile'
+          })
+        });
+
+        const d = await res.json();
+        if (d.success) {
+          playSuccessSound();
+
+          // Thêm vào danh sách vừa quét
+          recentScansList.unshift({
+            awb,
+            weightKg: weightKg || 1,
+            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            storage: d.storageProvider === 'CLOUDFLARE_R2' ? 'R2' : 'Local',
+            labelUrl: d.photos?.labelUrl,
+            packageUrl: d.photos?.packageUrl
+          });
+          renderRecentScans();
+
+          // Reset form sẵn sàng cho kiện tiếp theo
+          clearAwbInput();
+          document.getElementById('inpWeightKg').value = '';
+          document.getElementById('inpNotes').value = '';
+          removePhoto('AWB');
+          removePhoto('BOX');
+
+          alert(`🎉 Nhập kho thành công AWB: ${awb}!\n• Lưu trữ: ${d.storageProvider === 'CLOUDFLARE_R2' ? '☁️ Cloudflare R2 (Đám mây 0 MB)' : '💾 Bộ nhớ đệm'}`);
+        } else {
+          alert('❌ Lỗi: ' + (d.message || 'Không thể nhập kho'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối máy chủ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-base"></i><span>XÁC NHẬN NHẬP KHO &amp; LƯU VÀO R2</span>`;
+      }
+    }
+
+    let currentMobileViewerItem = null;
+
+    function renderRecentScans() {
+      const container = document.getElementById('listRecentScans');
+      document.getElementById('badgeScannedCount').textContent = `${recentScansList.length} kiện`;
+
+      if (recentScansList.length === 0) {
+        container.innerHTML = `<div class="text-center py-4 text-xs text-slate-600 font-medium">Chưa có kiện nào trong phiên này.</div>`;
+        return;
+      }
+
+      container.innerHTML = recentScansList.slice(0, 10).map((item, idx) => `
+        <div onclick="previewRecentItemPhotos(${idx})" class="p-2.5 bg-slate-900 hover:bg-slate-800 active:scale-[0.99] border border-slate-800 rounded-2xl flex items-center justify-between text-xs cursor-pointer transition">
+          <div class="flex items-center space-x-2.5 min-w-0">
+            ${item.packageUrl ? `
+              <img src="${item.packageUrl}" class="w-10 h-10 object-cover rounded-lg border border-slate-700 shrink-0">
+            ` : `
+              <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
+                <i class="fa-solid fa-box text-sm"></i>
+              </div>
+            `}
+            <div class="min-w-0">
+              <div class="font-mono font-black text-white truncate text-xs flex items-center space-x-1">
+                <span>${item.awb}</span>
+                <i class="fa-solid fa-chevron-right text-[9px] text-slate-500"></i>
+              </div>
+              <div class="text-[10px] text-slate-400 mt-0.5">
+                <span class="text-amber-400 font-bold">${item.weightKg} kg</span> • ${item.time}
+              </div>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[9px] font-black shrink-0 ${item.storage === 'R2' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}">
+            ${item.storage === 'R2' ? '☁️ R2' : '💾 Local'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function previewRecentItemPhotos(idx) {
+      const item = recentScansList[idx];
+      if (!item) return;
+      currentMobileViewerItem = item;
+      document.getElementById('txtMobileViewerAwb').textContent = `AWB: ${item.awb} (${item.weightKg} kg)`;
+      document.getElementById('txtMobileViewerStorage').textContent = item.storage === 'R2' ? '☁️ Cloudflare R2' : '💾 Bộ Nhớ Đệm';
+      document.getElementById('imgMobileViewerAwb').src = item.labelUrl || '';
+      document.getElementById('imgMobileViewerBox').src = item.packageUrl || '';
+      document.getElementById('modalMobilePhotoViewer').classList.remove('hidden');
+    }
+
+    function copyMobilePhotoLink() {
+      if (!currentMobileViewerItem) return;
+      const url = currentMobileViewerItem.packageUrl || currentMobileViewerItem.labelUrl;
+      if (!url) {
+        alert('Không có ảnh nào để sao chép link!');
+        return;
+      }
+      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(fullUrl).then(() => {
+          alert('✓ Đã sao chép link ảnh vào bộ nhớ tạm! Có thể dán gửi Zalo cho khách.');
+        }).catch(() => {
+          prompt('Link ảnh:', fullUrl);
+        });
+      } else {
+        prompt('Link ảnh:', fullUrl);
+      }
+    }
+
+    // Khởi chạy khi tải trang
+    window.addEventListener('DOMContentLoaded', () => {
+      initCamera();
+    });
+  </script>
+</body>
+</html>

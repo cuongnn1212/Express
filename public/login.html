@@ -179,9 +179,22 @@
           localStorage.setItem('pandalex_user', JSON.stringify(data.data));
           document.cookie = 'pandalex_token=' + encodeURIComponent(data.token) + '; Path=/; Max-Age=86400; SameSite=Lax';
 
-          // Chuyển hướng theo query param redirect (nếu có), mặc định vào /admin.html
+          // Chuyển hướng theo query param redirect (nếu có)
           const urlParams = new URLSearchParams(window.location.search);
-          const redirectTarget = urlParams.get('redirect') || '/admin.html';
+          let redirectTarget = urlParams.get('redirect');
+          if (!redirectTarget || redirectTarget === '/admin.html' || redirectTarget === '/admin') {
+            const perms = data.data?.permissions || {};
+            const canAuditOrRates = data.data?.role === 'SUPER_ADMIN' || perms.audit?.canView || perms.rates?.canView || perms.finance?.canView;
+            if (canAuditOrRates) {
+              redirectTarget = '/admin.html#dashboard';
+            } else if (perms.warehouse?.canView) {
+              redirectTarget = '/admin.html#warehouse';
+            } else if (perms.shipments?.canView) {
+              redirectTarget = '/admin.html#shipments';
+            } else {
+              redirectTarget = '/admin.html';
+            }
+          }
           window.location.href = redirectTarget;
         } else {
           showAlert(data.message || 'Tên đăng nhập hoặc mật khẩu không chính xác.');

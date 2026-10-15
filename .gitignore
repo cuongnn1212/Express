@@ -8,6 +8,8 @@ tmp_export/
 # Uploads & Temporary files
 uploads/awb_pdfs/*
 !uploads/awb_pdfs/.gitkeep
+uploads/inbound_photos/*
+!uploads/inbound_photos/.gitkeep
 
 # Environment variables
 .env

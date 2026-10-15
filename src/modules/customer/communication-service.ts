@@ -15,7 +15,7 @@ export type TicketStatus = 'NEW' | 'PROCESSING' | 'RESOLVED' | 'CLOSED';
 
 export interface TicketMessage {
   id: string;
-  senderRole: 'CUSTOMER' | 'SUPPORT_AGENT' | 'WAREHOUSE' | 'FINANCE';
+  senderRole: 'CUSTOMER' | 'SUPPORT_AGENT' | 'WAREHOUSE' | 'FINANCE' | 'WAREHOUSE_PARTNER';
   senderName: string;
   message: string;
   attachments?: string[];
@@ -241,7 +241,7 @@ export class CommunicationService {
   }
 
   static replyTicket(ticketCode: string, reply: {
-    senderRole: 'CUSTOMER' | 'SUPPORT_AGENT' | 'WAREHOUSE' | 'FINANCE';
+    senderRole: 'CUSTOMER' | 'SUPPORT_AGENT' | 'WAREHOUSE' | 'FINANCE' | 'WAREHOUSE_PARTNER';
     senderName: string;
     message: string;
   }): CustomerTicket | null {
