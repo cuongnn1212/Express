@@ -1,5 +1,16 @@
 [
   {
+    "id": "log_1792054378185_641",
+    "timestamp": "2026-10-15T08:52:58.185Z",
+    "userId": "usr_partner_warehouse",
+    "username": "doitac_kho",
+    "userRole": "WAREHOUSE_PARTNER",
+    "action": "LOGIN",
+    "targetId": "doitac_kho",
+    "details": "Đăng nhập hệ thống thành công (WAREHOUSE_PARTNER @ Hub SGN)",
+    "hub": "SGN"
+  },
+  {
     "id": "log_1792046553696_650",
     "timestamp": "2026-10-15T06:42:33.696Z",
     "userId": "usr_partner_warehouse",

@@ -72,34 +72,216 @@ export const SYSTEM_ROLES = [
     }
 ];
 export const SYSTEM_MENUS = [
-    // Nhóm 1: Cấu hình
-    { id: 'rates', name: '1.1 Bảng Giá & Biểu Cước Hãng', group: '1. Cấu Hình & Biểu Cước', description: 'Quản lý bảng cước UPS/FedEx và cấu trúc vùng tính cước' },
-    { id: 'customers', name: '1.2 Khách Hàng (Master Data)', group: '1. Cấu Hình & Biểu Cước', description: 'Danh bạ đối tác khách hàng và phân loại tài khoản' },
-    { id: 'hubs', name: '1.3 Văn Phòng / Chi Nhánh / Hub', group: '1. Cấu Hình & Biểu Cước', description: 'Quản lý các Hub kho SGN, HAN, DAD' },
-    { id: 'geography', name: '1.4 Vị Trí Địa Lý & Vùng Phủ Sóng', group: '1. Cấu Hình & Biểu Cước', description: 'Cấu hình quốc gia, mã bưu chính và phân vùng hãng' },
-    { id: 'surcharges', name: '1.5 Phụ Phí Xăng (FSC) & Vùng Xa', group: '1. Cấu Hình & Biểu Cước', description: 'Tỷ lệ phụ phí nhiên liệu hàng tuần và cước vùng sâu vùng xa' },
-    { id: 'audit', name: '1.6 Phân Quyền & Audit Logs', group: '1. Cấu Hình & Biểu Cước', description: 'Phân quyền chức vụ theo menu (PermissionPage) và vết thao tác' },
-    // Nhóm 2: Vận hành
-    { id: 'shipments', name: '2.1 Tạo Đơn Hàng & In Tem AWB', group: '2. Vận Hành Kho & Vận Đơn', description: 'Tạo đơn mới, sinh nhãn barcode AWB chuẩn nhiệt 4x6' },
-    { id: 'warehouse', name: '2.2 Kho Bãi & Scan Inbound / Bao', group: '2. Vận Hành Kho & Vận Đơn', description: 'Trạm nhập kho AI OCR, cân đo lại, gom bao và bảng kê xuất kho' },
-    { id: 'awbManagement', name: '2.4 Quản Lý Vận Đơn AWB', group: '2. Vận Hành Kho & Vận Đơn', description: 'Tra cứu, lọc trạng thái vận hành và quản lý AWB' },
-    // Nhóm 3: Tài chính
-    { id: 'codeVsSell', name: '3.1 Quản Lý Giá Code (Cost Hãng)', group: '3. Tài Chính & Đối Soát', description: 'Quản lý giá vốn mua từ Hãng - TỐI MẬT' },
-    { id: 'markupConfig', name: '3.2 Quản Lý Giá Bán & Gup Giá', group: '3. Tài Chính & Đối Soát', description: 'Chính sách tỷ lệ lãi gộp và cộng giá bán' },
-    { id: 'agents', name: '3.3 Quản Lý Đại Lý & Chiết Khấu', group: '3. Tài Chính & Đối Soát', description: 'Bảng giá riêng và chiết khấu cho từng đại lý cấp 2' },
-    { id: 'carrierPartners', name: '3.4 Quản Lý Đối Tác Hãng Cước', group: '3. Tài Chính & Đối Soát', description: 'Thông tin hợp đồng đại lý cấp 1 với UPS, FedEx, DHL' },
-    { id: 'finance', name: '3.5 Công Nợ, Thu Cước & Đối Soát', group: '3. Tài Chính & Đối Soát', description: 'Kiểm soát 3 điều kiện thanh toán mở khóa xuất kho' },
-    { id: 'walletTopup', name: '3.6 Quản Lý Ví & Nạp Ký Quỹ', group: '3. Tài Chính & Đối Soát', description: 'Cộng/trừ số dư ví trả trước và hạn mức nợ' },
-    { id: 'reconciliation', name: '3.7 Đối Soát & Gạch Nợ (NCC & Đại Lý)', group: '3. Tài Chính & Đối Soát', description: 'Gạch nợ chi phí mua hãng và quyết toán công nợ đại lý' },
-    // Nhóm 4: CRM
-    { id: 'contracts', name: '4.1 Quản Lý Khách Hàng Hợp Đồng', group: '4. CRM & Hợp Đồng', description: 'Theo dõi hợp đồng pháp lý và hạn ngạch công nợ' },
-    { id: 'approval', name: '4.2 Phê Duyệt Tài Khoản & Tín Dụng', group: '4. CRM & Hợp Đồng', description: 'Xét duyệt hạn mức nợ trả sau cho khách hàng mới' },
-    { id: 'commitments', name: '4.3 Cam Kết Sản Lượng & Khách VIP', group: '4. CRM & Hợp Đồng', description: 'Chính sách thưởng doanh số theo sản lượng tháng' },
-    { id: 'customerCommunication', name: '4.4 Trung Tâm Giao Tiếp CSKH & Khách Hàng', group: '4. CRM & Hợp Đồng', description: 'Tiếp nhận yêu cầu lấy hàng, khiếu nại và chat hỗ trợ 24/7' },
-    // Nhóm 5: Mở rộng
-    { id: 'customerApi', name: '5.1 Quản Lý Kết Nối API Khách Hàng', group: '5. Mở Rộng (Dự Phòng)', description: 'Cấp API Key cho đối tác tích hợp phần mềm bán hàng' },
-    { id: 'airCargo', name: '5.4 Air Cargo & Vận Tải Quốc Tế', group: '5. Mở Rộng (Dự Phòng)', description: 'Linehaul hàng không MAWB / HAWB kiện lớn' },
-    { id: 'seaFreight', name: '5.5 Vận Tải Đường Biển (Sea Freight)', group: '5. Mở Rộng (Dự Phòng)', description: 'Container FCL và hàng gom LCL' }
+    // Nhóm 0: Tổng Quan & Dashboard
+    {
+        id: 'dashboard',
+        name: '0.1 Dashboard KPI & Báo Cáo Tổng Hợp',
+        group: '0. Tổng Quan & Dashboard',
+        description: 'Theo dõi tổng quan KPI sản lượng kg, số lượng đơn, doanh thu, lợi nhuận gộp và biểu đồ vận hành thời gian thực'
+    },
+    // Nhóm 1: Cấu hình & Biểu cước (Master Data)
+    {
+        id: 'rates',
+        name: '1.1 Bảng Giá & Biểu Cước Hãng (UPS / FedEx)',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Quản lý bảng cước mua Viettel và bảng cước bán khách hàng Frank, cấu trúc vùng tính cước'
+    },
+    {
+        id: 'customers',
+        name: '1.2 Khách Hàng (Master Data & Báo Giá)',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Danh bạ đối tác khách hàng, phân loại trả trước/công nợ và cấu hình tỷ lệ chiết khấu riêng'
+    },
+    {
+        id: 'hubs',
+        name: '1.3 Văn Phòng / Chi Nhánh / Hub Khai Thác',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Quản lý các chi nhánh khai thác kho SGN (Tân Bình), HAN (Nội Bài), DAD (Đà Nẵng)'
+    },
+    {
+        id: 'geography',
+        name: '1.4 Vị Trí Địa Lý & Ma Trận Phân Vùng (Zone)',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Cấu hình danh mục quốc gia, mã bưu chính và ma trận phân vùng cước hãng (Zone Matrix)'
+    },
+    {
+        id: 'surcharges',
+        name: '1.5 Phụ Phí Xăng Dầu (FSC) & Vùng Xa',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Cập nhật tỷ lệ biến động nhiên liệu hàng tuần (FSC) và phụ phí khu vực mở rộng / vùng sâu vùng xa'
+    },
+    {
+        id: 'customsCargoConfig',
+        name: '1.6 Quản Lý Phí Hải Quan Theo Loại Hàng',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Cấu hình đơn giá hải quan thu khách & trả NCC cho từng loại hàng (Mỹ phẩm, Thực phẩm, Hàng hiệu, Trầm hương...)'
+    },
+    {
+        id: 'audit',
+        name: '1.7 Phân Quyền Chức Vụ & Audit Logs',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Quản trị ma trận phân quyền RBAC theo chức vụ (PermissionPage) và kiểm tra nhật ký vết thao tác hệ thống'
+    },
+    {
+        id: 'r2Storage',
+        name: '1.8 Cấu Hình Lưu Trữ Đám Mây (Cloud R2)',
+        group: '1. Cấu Hình & Biểu Cước',
+        description: 'Cấu hình kết nối lưu trữ ảnh nhãn AWB và ảnh chụp kiện hàng trên Cloudflare R2 / AWS S3'
+    },
+    // Nhóm 2: Vận hành & Kho (Operations)
+    {
+        id: 'createShipment',
+        name: '2.1 Tạo Đơn Hàng & In Tem AWB (UPS/FedEx)',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Tạo đơn mới theo form chuẩn hãng, tự động sinh mã AWB check digit và in tem nhiệt 4x6'
+    },
+    {
+        id: 'shipments',
+        name: '2.2 Quản Lý Đơn Hàng & Manifest Quốc Tế',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Tra cứu, lọc trạng thái vận hành, xuất file Excel danh sách và quản lý đơn hàng'
+    },
+    {
+        id: 'excelPricingTool',
+        name: '2.3 Tool Tính Giá Cước Hàng Loạt Bằng Excel',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Nhập file Excel AWB + Kg, tính cước hãng & cước khách tự động, xuất bảng kê thu khách & trả Viettel, lưu đơn hàng loạt'
+    },
+    {
+        id: 'warehouse',
+        name: '2.4 Kho Bãi, Quét Inbound, Kho Chờ Xuất & Bảng Kê',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Trạm nhập kho AI OCR nhãn tem, cân đo kiện hàng, kiểm soát 3 điều kiện kho chờ xuất, gom bao và lập bảng kê xuất kho'
+    },
+    {
+        id: 'trackingPortal',
+        name: '2.5 Cổng Tra Cứu Vận Trình Tracking AWB',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Giao diện tra cứu chi tiết hành trình vận chuyển đa hãng dành cho khách hàng và bộ phận vận hành'
+    },
+    {
+        id: 'awbManagement',
+        name: '2.6 Quản Lý Vận Đơn AWB & Kho Số Hãng',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Quản lý kho dải số tracking UPS/FedEx, kiểm tra thuật toán Mod 7/10, hủy đơn Void AWB và xuất báo cáo vận đơn'
+    },
+    {
+        id: 'commercialInvoice',
+        name: '2.7 Hóa Đơn Thương Mại (Commercial Invoice)',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Lập hóa đơn hải quan xuất khẩu CI, khai báo chi tiết dòng hàng HS Code, xuất file in PDF và Excel CI chuẩn quốc tế'
+    },
+    {
+        id: 'photoLookup',
+        name: '2.8 Tra Cứu Hình Ảnh Kiện Hàng & Nhãn AWB (Cloud)',
+        group: '2. Vận Hành Kho & Vận Đơn',
+        description: 'Tra cứu trực quan ảnh chụp nhãn tem AWB và ảnh chụp kiện hàng trên bàn cân lưu trữ trên Cloudflare R2'
+    },
+    // Nhóm 3: Tài chính & Sổ Quỹ (Finance)
+    {
+        id: 'codeVsSell',
+        name: '3.1 Quản Lý Giá Code (Cost Hãng) vs Giá Bán',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'So sánh song song Giá mua từ hãng (TỐI MẬT) và Giá bán thu khách hàng để kiểm soát biên lợi nhuận gộp'
+    },
+    {
+        id: 'markupConfig',
+        name: '3.2 Cài Đặt Gup Giá Bán & Lợi Nhuận Gộp',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'Cài đặt tỷ lệ cộng lãi (%) hoặc số tiền cố định (đ/kg) vào cước gốc để xây dựng bảng giá bán cho từng phân khúc'
+    },
+    {
+        id: 'agents',
+        name: '3.3 Quản Lý Đại Lý Cấp 2 & Chính Sách Chiết Khấu',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'Quản lý danh sách đại lý gom hàng, gán biểu cước ưu đãi và tỷ lệ chiết khấu riêng theo doanh số'
+    },
+    {
+        id: 'carrierPartners',
+        name: '3.4 Nhà Cung Cấp & Sổ Ký Quỹ Hãng (Vendor Deposit)',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'Theo dõi tài khoản ký quỹ với Viettel/UPS/FedEx, theo dõi chi phí mua cước và nạp tiền bảo lãnh thanh toán'
+    },
+    {
+        id: 'finance',
+        name: '3.5 Công Nợ, Thu Cước & Mở Khóa Xuất Kho',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'Cổng kiểm soát tài chính 3 điều kiện (Đã thanh toán, Đã trừ ví/nợ, Có cam kết thuế) để cho phép kho xuất hàng'
+    },
+    {
+        id: 'walletTopup',
+        name: '3.6 Quản Lý Top-Up Ví Đại Lý & Ký Quỹ Trả Trước',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'Quản lý nạp tiền ví trả trước, khấu trừ tự động khi tạo đơn và cấp hạn mức công nợ bảo lãnh'
+    },
+    {
+        id: 'reconciliation',
+        name: '3.7 Đối Soát Hai Chiều (Phải Thu AR vs Phải Trả AP)',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'Đối soát chênh lệch trọng lượng & cước phí: Phải thu khách hàng (AR) và Phải chi trả nhà cung cấp hãng (AP)'
+    },
+    {
+        id: 'cashBook',
+        name: '3.8 Sổ Quỹ Thu - Chi Toàn Diện & Phiếu Thu/Chi',
+        group: '3. Tài Chính & Đối Soát',
+        description: 'Sổ quỹ tiền mặt & ngân hàng, tạo và quản lý Phiếu Thu cước AWB, Phiếu Chi vận hành/hải quan, báo cáo tồn quỹ'
+    },
+    // Nhóm 4: CRM & Hợp Đồng (CRM & Contracts)
+    {
+        id: 'contracts',
+        name: '4.1 Quản Lý Khách Hàng Hợp Đồng & Công Nợ',
+        group: '4. CRM & Hợp Đồng',
+        description: 'Theo dõi hợp đồng pháp lý, chu kỳ thanh toán trả sau (7-15-30 ngày), hạn mức nợ tối đa và cảnh báo quá hạn'
+    },
+    {
+        id: 'approval',
+        name: '4.2 Hàng Đợi Phê Duyệt Tài Khoản & Tín Dụng',
+        group: '4. CRM & Hợp Đồng',
+        description: 'Quy trình xét duyệt cấp tài khoản khách hàng mới, thẩm định hồ sơ công ty và nâng hạn mức nợ'
+    },
+    {
+        id: 'commitments',
+        name: '4.3 Cam Kết Sản Lượng & Phân Cấp Khách Hàng VIP',
+        group: '4. CRM & Hợp Đồng',
+        description: 'Theo dõi sản lượng cam kết hàng tháng (kg/tháng), phân hạng khách hàng VIP và tính thưởng chiết khấu bậc thang'
+    },
+    {
+        id: 'customerCommunication',
+        name: '4.4 Trung Tâm Giao Tiếp CSKH & Khách Hàng',
+        group: '4. CRM & Hợp Đồng',
+        description: 'Tiếp nhận yêu cầu lấy hàng tận nơi (Pickup Request), xử lý khiếu nại đền bù hàng hóa và chat hỗ trợ 24/7'
+    },
+    // Nhóm 5: Mở Rộng & BI (Integrations & Analytics)
+    {
+        id: 'customerApi',
+        name: '5.1 Quản Lý Kết Nối API Khách Hàng (Open API)',
+        group: '5. Mở Rộng & BI',
+        description: 'Cấp và quản lý API Key, Webhook, tài liệu REST API để khách hàng tích hợp tạo đơn trực tiếp từ website/ERP'
+    },
+    {
+        id: 'tracking',
+        name: '5.2 Tích Hợp API Hãng & Webhook Tra Cứu Tracking',
+        group: '5. Mở Rộng & BI',
+        description: 'Cấu hình API kết nối máy chủ UPS Developers & FedEx Web Services để đồng bộ trạng thái giao hàng tự động'
+    },
+    {
+        id: 'biAnalytics',
+        name: '5.3 Báo Cáo Phân Tích Thông Minh & BI Dashboard',
+        group: '5. Mở Rộng & BI',
+        description: 'Báo cáo phân tích chuyên sâu: Cơ cấu doanh thu theo tuyến bay, top khách hàng lớn, tỷ lệ giao thành công On-time'
+    },
+    {
+        id: 'airCargo',
+        name: '5.4 Air Cargo & Vận Tải Quốc Tế (MAWB/HAWB)',
+        group: '5. Mở Rộng & BI',
+        description: 'Linehaul hàng không MAWB / HAWB kiện lớn, gom hàng bay và kết nối hãng hàng không quốc tế'
+    },
+    {
+        id: 'seaFreight',
+        name: '5.5 Vận Tải Đường Biển (Sea Freight FCL & LCL)',
+        group: '5. Mở Rộng & BI',
+        description: 'Container nguyên FCL và hàng gom lẻ LCL đường biển, quản lý thủ tục hải quan cảng biển'
+    }
 ];
 export class AuthService {
     static userFile = path.join(process.cwd(), 'data', 'users.json');
@@ -291,16 +473,26 @@ export class AuthService {
                 this.auditLogs = [];
                 this.persistLogs();
             }
-            // Khởi tạo ma trận phân quyền Role-Menu
-            this.rolePermissions = this.buildDefaultPermissionMatrix();
+            // Khởi tạo ma trận phân quyền Role-Menu đầy đủ cho tất cả chức năng
+            const defaultMatrix = this.buildDefaultPermissionMatrix();
             if (fs.existsSync(this.permissionsFile)) {
-                const loaded = JSON.parse(fs.readFileSync(this.permissionsFile, 'utf-8'));
-                this.rolePermissions = { ...this.rolePermissions, ...loaded };
-                // Đảm bảo SUPER_ADMIN và DIRECTOR luôn đầy đủ cấu hình
-                if (!this.rolePermissions['DIRECTOR']) {
-                    this.rolePermissions['DIRECTOR'] = this.buildDirectorPermissions();
+                try {
+                    const loaded = JSON.parse(fs.readFileSync(this.permissionsFile, 'utf-8'));
+                    // Ghép từng chức vụ và từng menu để không bị mất các menu chức năng mới bổ sung
+                    for (const role of Object.keys(defaultMatrix)) {
+                        const loadedRole = loaded[role] || {};
+                        for (const menu of SYSTEM_MENUS) {
+                            if (loadedRole[menu.id]) {
+                                defaultMatrix[role][menu.id] = { ...defaultMatrix[role][menu.id], ...loadedRole[menu.id] };
+                            }
+                        }
+                    }
+                }
+                catch (e) {
+                    console.error('Lỗi đọc role_permissions.json, sử dụng mặc định:', e);
                 }
             }
+            this.rolePermissions = defaultMatrix;
             this.persistPermissions();
         }
         catch (e) {
@@ -310,7 +502,7 @@ export class AuthService {
     static buildDirectorPermissions() {
         const directorPerms = {};
         for (const menu of SYSTEM_MENUS) {
-            const isCoreSystemConfig = menu.id === 'customerApi';
+            const isCoreSystemConfig = menu.id === 'customerApi' || menu.id === 'r2Storage';
             directorPerms[menu.id] = {
                 canView: true,
                 canCreate: !isCoreSystemConfig,
@@ -333,7 +525,7 @@ export class AuthService {
                 }
                 else if (role === 'DIRECTOR') {
                     // CẤP 2: DIRECTOR (Ban Giám Đốc) - Ngay sau Admin, toàn quyền điều hành kinh doanh & tài chính
-                    const isCoreSystemConfig = menu.id === 'customerApi';
+                    const isCoreSystemConfig = menu.id === 'customerApi' || menu.id === 'r2Storage';
                     matrix[role][menu.id] = {
                         canView: true,
                         canCreate: !isCoreSystemConfig,
@@ -343,21 +535,21 @@ export class AuthService {
                     };
                 }
                 else if (role === 'ACCOUNTANT') {
-                    // CẤP 3: ACCOUNTANT (Kế Toán Trưởng) - Tài chính, công nợ, gạch nợ, nạp ví, hợp đồng
-                    const isFinanceOrCrm = ['codeVsSell', 'markupConfig', 'agents', 'carrierPartners', 'finance', 'walletTopup', 'reconciliation', 'contracts', 'approval', 'commitments', 'audit'].includes(menu.id);
-                    const isOperationalView = ['rates', 'customers', 'hubs', 'shipments', 'warehouse', 'awbManagement', 'airCargo', 'seaFreight'].includes(menu.id);
+                    // CẤP 3: ACCOUNTANT (Kế Toán Trưởng) - Toàn quyền Tài chính, Sổ quỹ, Công nợ, Gạch nợ, Nạp ví, Hợp đồng
+                    const isFinanceMaster = ['codeVsSell', 'markupConfig', 'agents', 'carrierPartners', 'finance', 'walletTopup', 'reconciliation', 'cashBook', 'contracts', 'approval', 'commitments'].includes(menu.id);
+                    const isOperationalView = ['dashboard', 'rates', 'customsCargoConfig', 'customers', 'hubs', 'geography', 'surcharges', 'createShipment', 'shipments', 'excelPricingTool', 'warehouse', 'awbManagement', 'commercialInvoice', 'trackingPortal', 'biAnalytics', 'airCargo', 'seaFreight', 'audit'].includes(menu.id);
                     matrix[role][menu.id] = {
-                        canView: isFinanceOrCrm || isOperationalView,
-                        canCreate: isFinanceOrCrm,
-                        canEdit: isFinanceOrCrm,
+                        canView: isFinanceMaster || isOperationalView,
+                        canCreate: isFinanceMaster,
+                        canEdit: isFinanceMaster,
                         canDelete: false,
-                        canApprove: isFinanceOrCrm
+                        canApprove: isFinanceMaster
                     };
                 }
                 else if (role === 'WAREHOUSE') {
-                    // CẤP 4: WAREHOUSE (Thủ Kho PandaLex) - Kho bãi, Inbound, Cân đo, Bảng kê xuất kho
-                    const isWarehouseOps = ['warehouse', 'shipments', 'awbManagement'].includes(menu.id);
-                    const isInfoView = ['rates', 'customers', 'hubs', 'geography', 'surcharges', 'airCargo', 'seaFreight'].includes(menu.id);
+                    // CẤP 4: WAREHOUSE (Thủ Kho PandaLex Hub) - Kho bãi, Inbound, Cân đo, Bảng kê xuất kho, Tạo đơn, Quản lý AWB
+                    const isWarehouseOps = ['warehouse', 'createShipment', 'shipments', 'excelPricingTool', 'awbManagement', 'photoLookup', 'commercialInvoice', 'trackingPortal'].includes(menu.id);
+                    const isInfoView = ['dashboard', 'rates', 'customsCargoConfig', 'customers', 'hubs', 'geography', 'surcharges', 'airCargo', 'seaFreight'].includes(menu.id);
                     matrix[role][menu.id] = {
                         canView: isWarehouseOps || isInfoView,
                         canCreate: isWarehouseOps,
@@ -368,7 +560,7 @@ export class AuthService {
                 }
                 else if (role === 'WAREHOUSE_PARTNER') {
                     // CẤP 5: WAREHOUSE_PARTNER (Đối Tác Kho / Kho Vệ Tinh) - CHỈ DUY NHẤT VẬN HÀNH KHO BÃI
-                    const isWarehouseOnly = menu.id === 'warehouse';
+                    const isWarehouseOnly = ['warehouse', 'photoLookup', 'trackingPortal'].includes(menu.id);
                     matrix[role][menu.id] = {
                         canView: isWarehouseOnly,
                         canCreate: isWarehouseOnly,
@@ -378,22 +570,24 @@ export class AuthService {
                     };
                 }
                 else if (role === 'AGENT') {
-                    // CẤP 5: AGENT (Đại Lý) - Chỉ tạo đơn, in AWB, xem đơn của mình, xem ví
-                    const isAgentAllowed = ['shipments', 'awbManagement', 'walletTopup'].includes(menu.id);
+                    // CẤP 6: AGENT (Đại Lý) - Tạo đơn, in AWB, xem đơn của mình, nạp ví, tra cứu tracking, xuất CI
+                    const isAgentManage = ['createShipment', 'commercialInvoice', 'customerCommunication'].includes(menu.id);
+                    const isAgentView = ['shipments', 'walletTopup', 'trackingPortal', 'rates'].includes(menu.id);
                     matrix[role][menu.id] = {
-                        canView: isAgentAllowed,
-                        canCreate: menu.id === 'shipments',
-                        canEdit: false,
+                        canView: isAgentManage || isAgentView,
+                        canCreate: isAgentManage,
+                        canEdit: isAgentManage,
                         canDelete: false,
                         canApprove: false
                     };
                 }
                 else {
-                    // CẤP 6: CUSTOMER (Khách Hàng) - Chỉ tạo đơn và xem tracking
-                    const isCustomerAllowed = ['shipments', 'awbManagement'].includes(menu.id);
+                    // CẤP 7: CUSTOMER (Khách Hàng) - Tạo đơn lẻ, xem đơn của mình, tra cứu tracking, xuất CI
+                    const isCustomerManage = ['createShipment', 'commercialInvoice', 'customerCommunication'].includes(menu.id);
+                    const isCustomerView = ['shipments', 'trackingPortal'].includes(menu.id);
                     matrix[role][menu.id] = {
-                        canView: isCustomerAllowed,
-                        canCreate: menu.id === 'shipments',
+                        canView: isCustomerManage || isCustomerView,
+                        canCreate: isCustomerManage,
                         canEdit: false,
                         canDelete: false,
                         canApprove: false

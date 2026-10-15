@@ -1347,10 +1347,10 @@ app.post('/api/shipments/create', (req, res) => {
   try {
     const callerToken = extractRequestToken(req);
     const callerUser = callerToken ? AuthService.getUserByToken(callerToken) : null;
-    if (callerUser && !AuthService.hasPermission(callerUser.role, 'shipments', 'canCreate')) {
+    if (callerUser && !AuthService.hasPermission(callerUser.role, 'createShipment', 'canCreate') && !AuthService.hasPermission(callerUser.role, 'shipments', 'canCreate')) {
       return res.status(403).json({
         success: false,
-        message: 'Chức vụ của bạn không có quyền tạo đơn hàng mới (shipments.canCreate = false).'
+        message: 'Chức vụ của bạn không có quyền tạo đơn hàng mới (createShipment.canCreate = false).'
       });
     }
 
@@ -3347,6 +3347,15 @@ app.post('/api/shipments/export-pricing-supplier-excel', (req, res) => {
 // 7l. Lưu Danh Sách Đơn Hàng Đã Sửa & Tính Giá Vào Hệ Thống (Mục 2.2 Quản Lý Đơn Hàng)
 app.post('/api/shipments/save-awb-pricing-batch', (req, res) => {
   try {
+    const callerToken = extractRequestToken(req);
+    const callerUser = callerToken ? AuthService.getUserByToken(callerToken) : null;
+    if (callerUser && !AuthService.hasPermission(callerUser.role, 'excelPricingTool', 'canCreate') && !AuthService.hasPermission(callerUser.role, 'shipments', 'canCreate')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Chức vụ của bạn không có quyền lưu đơn hàng từ Tool tính giá Excel (excelPricingTool.canCreate = false).'
+      });
+    }
+
     const rows = req.body.rows || [];
     const validRows = rows.filter((r: any) => r && r.valid !== false && r.awb);
     let createdCount = 0;

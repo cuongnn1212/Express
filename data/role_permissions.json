@@ -1,5 +1,12 @@
 {
   "SUPER_ADMIN": {
+    "dashboard": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "rates": {
       "canView": true,
       "canCreate": true,
@@ -35,7 +42,28 @@
       "canDelete": true,
       "canApprove": true
     },
+    "customsCargoConfig": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "audit": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "r2Storage": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "createShipment": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -49,6 +77,13 @@
       "canDelete": true,
       "canApprove": true
     },
+    "excelPricingTool": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "warehouse": {
       "canView": true,
       "canCreate": true,
@@ -56,7 +91,28 @@
       "canDelete": true,
       "canApprove": true
     },
+    "trackingPortal": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "awbManagement": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "commercialInvoice": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "photoLookup": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -112,6 +168,13 @@
       "canDelete": true,
       "canApprove": true
     },
+    "cashBook": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "contracts": {
       "canView": true,
       "canCreate": true,
@@ -133,7 +196,28 @@
       "canDelete": true,
       "canApprove": true
     },
+    "customerCommunication": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "customerApi": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "tracking": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "biAnalytics": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -156,6 +240,13 @@
     }
   },
   "DIRECTOR": {
+    "dashboard": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "rates": {
       "canView": true,
       "canCreate": true,
@@ -191,6 +282,13 @@
       "canDelete": true,
       "canApprove": true
     },
+    "customsCargoConfig": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "audit": {
       "canView": true,
       "canCreate": true,
@@ -198,7 +296,28 @@
       "canDelete": false,
       "canApprove": true
     },
+    "r2Storage": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "createShipment": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "shipments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "excelPricingTool": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -212,7 +331,28 @@
       "canDelete": true,
       "canApprove": true
     },
+    "trackingPortal": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "awbManagement": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "commercialInvoice": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "photoLookup": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -268,6 +408,13 @@
       "canDelete": true,
       "canApprove": true
     },
+    "cashBook": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "contracts": {
       "canView": true,
       "canCreate": true,
@@ -289,11 +436,32 @@
       "canDelete": true,
       "canApprove": true
     },
+    "customerCommunication": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
     "customerApi": {
       "canView": true,
       "canCreate": false,
       "canEdit": true,
       "canDelete": false,
+      "canApprove": true
+    },
+    "tracking": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
+      "canApprove": true
+    },
+    "biAnalytics": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": true,
       "canApprove": true
     },
     "airCargo": {
@@ -312,6 +480,13 @@
     }
   },
   "ACCOUNTANT": {
+    "dashboard": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "rates": {
       "canView": true,
       "canCreate": false,
@@ -347,6 +522,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customsCargoConfig": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "audit": {
       "canView": true,
       "canCreate": true,
@@ -354,7 +536,28 @@
       "canDelete": false,
       "canApprove": true
     },
+    "r2Storage": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "createShipment": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "shipments": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "excelPricingTool": {
       "canView": true,
       "canCreate": false,
       "canEdit": false,
@@ -368,8 +571,29 @@
       "canDelete": false,
       "canApprove": false
     },
+    "trackingPortal": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "awbManagement": {
       "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "commercialInvoice": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "photoLookup": {
+      "canView": false,
       "canCreate": false,
       "canEdit": false,
       "canDelete": false,
@@ -424,6 +648,13 @@
       "canDelete": false,
       "canApprove": true
     },
+    "cashBook": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
     "contracts": {
       "canView": true,
       "canCreate": true,
@@ -445,8 +676,29 @@
       "canDelete": false,
       "canApprove": true
     },
+    "customerCommunication": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "customerApi": {
       "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "tracking": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "biAnalytics": {
+      "canView": true,
       "canCreate": false,
       "canEdit": false,
       "canDelete": false,
@@ -468,6 +720,13 @@
     }
   },
   "WAREHOUSE": {
+    "dashboard": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "rates": {
       "canView": false,
       "canCreate": false,
@@ -503,6 +762,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customsCargoConfig": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "audit": {
       "canView": false,
       "canCreate": false,
@@ -510,7 +776,28 @@
       "canDelete": false,
       "canApprove": false
     },
+    "r2Storage": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "createShipment": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
     "shipments": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "excelPricingTool": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -524,7 +811,28 @@
       "canDelete": false,
       "canApprove": true
     },
+    "trackingPortal": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
     "awbManagement": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "commercialInvoice": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "photoLookup": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -580,6 +888,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "cashBook": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "contracts": {
       "canView": false,
       "canCreate": false,
@@ -601,7 +916,28 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customerCommunication": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "tracking": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "biAnalytics": {
       "canView": false,
       "canCreate": false,
       "canEdit": false,
@@ -624,6 +960,13 @@
     }
   },
   "WAREHOUSE_PARTNER": {
+    "dashboard": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "rates": {
       "canView": false,
       "canCreate": false,
@@ -659,7 +1002,28 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customsCargoConfig": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "audit": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "r2Storage": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "createShipment": {
       "canView": false,
       "canCreate": false,
       "canEdit": false,
@@ -673,7 +1037,21 @@
       "canDelete": false,
       "canApprove": false
     },
+    "excelPricingTool": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "warehouse": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
+    },
+    "trackingPortal": {
       "canView": true,
       "canCreate": true,
       "canEdit": true,
@@ -686,6 +1064,20 @@
       "canEdit": false,
       "canDelete": false,
       "canApprove": false
+    },
+    "commercialInvoice": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "photoLookup": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": true
     },
     "codeVsSell": {
       "canView": false,
@@ -736,6 +1128,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "cashBook": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "contracts": {
       "canView": false,
       "canCreate": false,
@@ -757,7 +1156,28 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customerCommunication": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "tracking": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "biAnalytics": {
       "canView": false,
       "canCreate": false,
       "canEdit": false,
@@ -780,6 +1200,13 @@
     }
   },
   "AGENT": {
+    "dashboard": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "rates": {
       "canView": false,
       "canCreate": false,
@@ -815,6 +1242,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customsCargoConfig": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "audit": {
       "canView": false,
       "canCreate": false,
@@ -822,9 +1256,30 @@
       "canDelete": false,
       "canApprove": false
     },
+    "r2Storage": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "createShipment": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": false
+    },
     "shipments": {
       "canView": true,
       "canCreate": true,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "excelPricingTool": {
+      "canView": false,
+      "canCreate": false,
       "canEdit": false,
       "canDelete": false,
       "canApprove": false
@@ -836,8 +1291,29 @@
       "canDelete": false,
       "canApprove": false
     },
+    "trackingPortal": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "awbManagement": {
       "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "commercialInvoice": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "photoLookup": {
+      "canView": false,
       "canCreate": false,
       "canEdit": false,
       "canDelete": false,
@@ -892,6 +1368,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "cashBook": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "contracts": {
       "canView": false,
       "canCreate": false,
@@ -913,7 +1396,28 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customerCommunication": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false,
+      "canApprove": false
+    },
     "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "tracking": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "biAnalytics": {
       "canView": false,
       "canCreate": false,
       "canEdit": false,
@@ -936,6 +1440,13 @@
     }
   },
   "CUSTOMER": {
+    "dashboard": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "rates": {
       "canView": false,
       "canCreate": false,
@@ -971,9 +1482,30 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customsCargoConfig": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "audit": {
       "canView": false,
       "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "r2Storage": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "createShipment": {
+      "canView": true,
+      "canCreate": true,
       "canEdit": false,
       "canDelete": false,
       "canApprove": false
@@ -985,6 +1517,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "excelPricingTool": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "warehouse": {
       "canView": false,
       "canCreate": false,
@@ -992,8 +1531,29 @@
       "canDelete": false,
       "canApprove": false
     },
+    "trackingPortal": {
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "awbManagement": {
       "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "commercialInvoice": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "photoLookup": {
+      "canView": false,
       "canCreate": false,
       "canEdit": false,
       "canDelete": false,
@@ -1048,6 +1608,13 @@
       "canDelete": false,
       "canApprove": false
     },
+    "cashBook": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "contracts": {
       "canView": false,
       "canCreate": false,
@@ -1069,7 +1636,28 @@
       "canDelete": false,
       "canApprove": false
     },
+    "customerCommunication": {
+      "canView": true,
+      "canCreate": true,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
     "customerApi": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "tracking": {
+      "canView": false,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false,
+      "canApprove": false
+    },
+    "biAnalytics": {
       "canView": false,
       "canCreate": false,
       "canEdit": false,

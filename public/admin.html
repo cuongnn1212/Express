@@ -3460,7 +3460,7 @@
                     <i class="fa-solid fa-id-badge text-purple-600"></i>
                     <span>Danh Sách Chức Vụ (Roles)</span>
                   </h4>
-                  <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold">5 Vai Trò</span>
+                  <span id="lblRolesCountBadge" class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold">7 Chức Vụ</span>
                 </div>
                 <p class="text-[11px] text-slate-500">Bấm vào chức vụ bên dưới để xem và cấu hình quyền hạn cho các Menu bên phải:</p>
                 
@@ -7438,16 +7438,16 @@
     }
 
     const SECTION_PERMISSION_MAP = {
-      'dashboard': () => hasUserPermission('audit', 'canView') || hasUserPermission('rates', 'canView') || hasUserPermission('finance', 'canView') || hasUserPermission('shipments', 'canView'),
+      'dashboard': () => hasUserPermission('dashboard', 'canView'),
       'rateTables': () => hasUserPermission('rates', 'canView'),
       'customers': () => hasUserPermission('customers', 'canView'),
       'hubs': () => hasUserPermission('hubs', 'canView'),
       'geography': () => hasUserPermission('geography', 'canView'),
       'surcharges': () => hasUserPermission('surcharges', 'canView'),
       'audit': () => hasUserPermission('audit', 'canView'),
-      'createShipment': () => hasUserPermission('shipments', 'canCreate'),
+      'createShipment': () => hasUserPermission('createShipment', 'canView') || hasUserPermission('createShipment', 'canCreate'),
       'shipments': () => hasUserPermission('shipments', 'canView'),
-      'excelPricingTool': () => canUserViewRates(),
+      'excelPricingTool': () => hasUserPermission('excelPricingTool', 'canView'),
       'warehouse': () => hasUserPermission('warehouse', 'canView'),
       'awbManagement': () => hasUserPermission('awbManagement', 'canView'),
       'codeVsSell': () => hasUserPermission('codeVsSell', 'canView'),
@@ -7457,14 +7457,14 @@
       'finance': () => hasUserPermission('finance', 'canView'),
       'walletTopup': () => hasUserPermission('walletTopup', 'canView'),
       'reconciliation': () => hasUserPermission('reconciliation', 'canView'),
-      'cashBook': () => hasUserPermission('finance', 'canView'),
+      'cashBook': () => hasUserPermission('cashBook', 'canView'),
       'contracts': () => hasUserPermission('contracts', 'canView'),
       'approval': () => hasUserPermission('approval', 'canView'),
       'commitments': () => hasUserPermission('commitments', 'canView'),
       'customerCommunication': () => hasUserPermission('customerCommunication', 'canView'),
       'customerApi': () => hasUserPermission('customerApi', 'canView'),
-      'tracking': () => hasUserPermission('awbManagement', 'canView'),
-      'biAnalytics': () => hasUserPermission('audit', 'canView'),
+      'tracking': () => hasUserPermission('tracking', 'canView'),
+      'biAnalytics': () => hasUserPermission('biAnalytics', 'canView'),
       'airCargo': () => hasUserPermission('airCargo', 'canView'),
       'seaFreight': () => hasUserPermission('seaFreight', 'canView')
     };
@@ -11328,6 +11328,11 @@
       const container = document.getElementById('listRolesContainer');
       if (!container) return;
 
+      const badge = document.getElementById('lblRolesCountBadge');
+      if (badge && Array.isArray(allRolesList)) {
+        badge.textContent = `${allRolesList.length} Chức Vụ`;
+      }
+
       if (!allRolesList || allRolesList.length === 0) {
         container.innerHTML = '<div class="p-3 text-center text-slate-400 text-xs">Không có chức vụ nào</div>';
         return;
@@ -11598,14 +11603,14 @@
         'menuHubs': 'hubs',
         'menuGeography': 'geography',
         'menuSurcharges': 'surcharges',
-        'menuCustomsConfig': 'rates',
+        'menuCustomsConfig': 'customsCargoConfig',
         'menuAudit': 'audit',
-        'menuR2StorageConfig': 'audit',
-        'menuCreateShipment': 'shipments',
+        'menuR2StorageConfig': 'r2Storage',
+        'menuCreateShipment': 'createShipment',
         'menuShipments': 'shipments',
         'menuWarehouse': 'warehouse',
         'menuAwbManagement': 'awbManagement',
-        'menuPhotoLookup': 'warehouse',
+        'menuPhotoLookup': 'photoLookup',
         'menuCodeVsSell': 'codeVsSell',
         'menuMarkupConfig': 'markupConfig',
         'menuAgents': 'agents',
@@ -11613,15 +11618,15 @@
         'menuFinance': 'finance',
         'menuWalletTopup': 'walletTopup',
         'menuReconciliation': 'reconciliation',
-        'menuCashBook': 'finance',
-        'menuExcelPricingTool': 'rates',
+        'menuCashBook': 'cashBook',
+        'menuExcelPricingTool': 'excelPricingTool',
         'menuContracts': 'contracts',
         'menuApproval': 'approval',
         'menuCommitments': 'commitments',
         'menuCustomerCommunication': 'customerCommunication',
         'menuCustomerApi': 'customerApi',
-        'menuTracking': 'awbManagement',
-        'menuBIAnalytics': 'audit',
+        'menuTracking': 'tracking',
+        'menuBIAnalytics': 'biAnalytics',
         'menuAirCargo': 'airCargo',
         'menuSeaFreight': 'seaFreight'
       };
@@ -11643,22 +11648,22 @@
       // 2. Ẩn/Hiện các nút thao tác nhanh độc lập trên Top Bar theo quyền động
       const btnDash = document.getElementById('menuDashboard');
       if (btnDash) {
-        isSectionPermitted('dashboard') ? btnDash.classList.remove('hidden') : btnDash.classList.add('hidden');
+        hasUserPermission('dashboard', 'canView') ? btnDash.classList.remove('hidden') : btnDash.classList.add('hidden');
       }
 
       const btnToolTop = document.getElementById('menuExcelPricingToolTop');
       if (btnToolTop) {
-        canUserViewRates() ? btnToolTop.classList.remove('hidden') : btnToolTop.classList.add('hidden');
+        hasUserPermission('excelPricingTool', 'canView') ? btnToolTop.classList.remove('hidden') : btnToolTop.classList.add('hidden');
       }
 
       const btnExcelTop = document.getElementById('btnTopUpExcelAwb');
       if (btnExcelTop) {
-        hasUserPermission('shipments', 'canCreate') ? btnExcelTop.classList.remove('hidden') : btnExcelTop.classList.add('hidden');
+        hasUserPermission('createShipment', 'canCreate') ? btnExcelTop.classList.remove('hidden') : btnExcelTop.classList.add('hidden');
       }
 
       const btnBaoGia = document.getElementById('btnTopBaoGia');
       if (btnBaoGia) {
-        canUserViewRates() ? btnBaoGia.classList.remove('hidden') : btnBaoGia.classList.add('hidden');
+        hasUserPermission('rates', 'canView') ? btnBaoGia.classList.remove('hidden') : btnBaoGia.classList.add('hidden');
       }
 
       // Xóa phần tử điều hướng tùy biến cũ nếu có
