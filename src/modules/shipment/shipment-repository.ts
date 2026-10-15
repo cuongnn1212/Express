@@ -232,10 +232,14 @@ export class ShipmentRepository {
     if (!id) return undefined;
     const clean = String(id).trim().toUpperCase();
     return this.shipments.find(s => 
-      (s.shipmentId && s.shipmentId.toUpperCase() === clean) || 
-      (s.masterTrackingNumber && s.masterTrackingNumber.toUpperCase() === clean) ||
-      (s.pieces && s.pieces.some(p => p.trackingNumber && p.trackingNumber.toUpperCase() === clean))
+      (s.shipmentId && s.shipmentId.trim().toUpperCase() === clean) || 
+      (s.masterTrackingNumber && s.masterTrackingNumber.trim().toUpperCase() === clean) ||
+      (s.pieces && s.pieces.some(p => p.trackingNumber && p.trackingNumber.trim().toUpperCase() === clean))
     );
+  }
+
+  static existsAwb(awb: string): boolean {
+    return Boolean(this.getById(awb));
   }
 
   /**
@@ -478,6 +482,13 @@ export class ShipmentRepository {
       return true;
     }
     return false;
+  }
+
+  static deleteAll(): number {
+    const count = this.shipments.length;
+    this.shipments = [];
+    this.persist();
+    return count;
   }
 }
 

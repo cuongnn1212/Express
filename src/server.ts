@@ -1098,6 +1098,17 @@ app.post('/api/shipments/scan-awb', async (req, res) => {
     }
 
     // Nếu chọn tự động lưu trực tiếp vào CSDL:
+    if (parsed.trackingNumber) {
+      const existing = ShipmentRepository.getById(parsed.trackingNumber);
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          duplicate: true,
+          message: `⚠️ Cảnh báo: Vận đơn AWB "${parsed.trackingNumber}" đã tồn tại trên hệ thống (Shipment ID: ${existing.shipmentId}). Hệ thống không cho phép lưu trùng!`
+        });
+      }
+    }
+
     const custLookup = (customerCode || 'PDL-GUEST').toString().trim();
     const foundCust = CustomerService.getById(custLookup) || CustomerService.getByCode(custLookup);
     const custCode = foundCust ? foundCust.customerCode : custLookup.toUpperCase();
@@ -1362,6 +1373,19 @@ app.post('/api/shipments/create', (req, res) => {
     const estWeight = (req.body.pieces || []).reduce((s: number, p: any) => s + (Number(p.weightKg) || 0), 0);
     const estSellPrice = req.body.sellPrice ? Number(req.body.sellPrice) : Math.round(estWeight * 275000);
 
+    // Kiểm tra trùng mã AWB nếu client gửi lên
+    const checkIncomingAwb = (req.body.masterTrackingNumber || req.body.existingTrackingNumber || (req.body.pieces && req.body.pieces[0]?.trackingNumber) || '').toString().trim().toUpperCase();
+    if (checkIncomingAwb) {
+      const existing = ShipmentRepository.getById(checkIncomingAwb);
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          duplicate: true,
+          message: `⚠️ Cảnh báo: Mã vận đơn (AWB) "${checkIncomingAwb}" đã tồn tại trên hệ thống (Shipment ID: ${existing.shipmentId}). Hệ thống không cho phép lưu trùng!`
+        });
+      }
+    }
+
     // 1. Kiểm tra điều kiện tài chính & trạng thái phê duyệt của khách hàng
     const creditCheck = CustomerService.checkCreditAvailability(custCode, estSellPrice);
     if (!creditCheck.allowed) {
@@ -1400,6 +1424,15 @@ app.post('/api/shipments/create', (req, res) => {
       paymentStatus: pStatus,
       paymentMethod: pMethod
     });
+
+    const checkGenerated = ShipmentRepository.getById(awbData.masterTrackingNumber);
+    if (checkGenerated) {
+      return res.status(409).json({
+        success: false,
+        duplicate: true,
+        message: `⚠️ Cảnh báo: Mã vận đơn (AWB) "${awbData.masterTrackingNumber}" đã tồn tại trên hệ thống. Không thể tạo trùng vận đơn!`
+      });
+    }
 
     // 3. Tự động lưu vào Repository
     const stored = ShipmentRepository.save(awbData, req.body.notes);
@@ -1830,10 +1863,47 @@ app.put('/api/shipments/:id/payment', (req, res) => {
 });
 
 /**
+ * API: Xóa toàn bộ vận đơn trên hệ thống (Chỉ Super Admin / Admin)
+ * POST /api/shipments/clear-all
+ * DELETE /api/shipments/clear-all
+ */
+const handleClearAllShipments = (req: any, res: any) => {
+  try {
+    const callerToken = extractRequestToken(req);
+    const callerUser = callerToken ? AuthService.getUserByToken(callerToken) : null;
+    if (callerUser && callerUser.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Chỉ Quản trị viên cấp cao (SUPER_ADMIN) mới có quyền xóa toàn bộ đơn hàng.'
+      });
+    }
+
+    const count = ShipmentRepository.deleteAll();
+    res.json({
+      success: true,
+      deletedCount: count,
+      message: `Đã xóa sạch toàn bộ ${count} vận đơn trên hệ thống!`
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+app.post('/api/shipments/clear-all', handleClearAllShipments);
+app.delete('/api/shipments/clear-all', handleClearAllShipments);
+
+/**
  * API: Xóa vận đơn
  * DELETE /api/shipments/:id
  */
 app.delete('/api/shipments/:id', (req, res) => {
+  const callerToken = extractRequestToken(req);
+  const callerUser = callerToken ? AuthService.getUserByToken(callerToken) : null;
+  if (callerUser && !AuthService.hasPermission(callerUser.role, 'shipments', 'canDelete')) {
+    return res.status(403).json({
+      success: false,
+      message: 'Chức vụ của bạn không có quyền xóa đơn hàng.'
+    });
+  }
   const ok = ShipmentRepository.delete(req.params.id);
   res.json({ success: ok, message: ok ? 'Đã xóa vận đơn' : 'Không tìm thấy vận đơn' });
 });
@@ -3279,12 +3349,18 @@ app.post('/api/shipments/save-awb-pricing-batch', (req, res) => {
   try {
     const rows = req.body.rows || [];
     const validRows = rows.filter((r: any) => r && r.valid !== false && r.awb);
-    let updatedCount = 0;
     let createdCount = 0;
+    const duplicateAwbs: string[] = [];
 
     for (const r of validRows) {
       const rawAwb = String(r.awb).trim().toUpperCase();
       const existing = ShipmentRepository.getById(rawAwb);
+
+      if (existing) {
+        duplicateAwbs.push(rawAwb);
+        continue; // BỎ QUA - TUYỆT ĐỐI KHÔNG LƯU ĐÈ / KHÔNG LƯU LẠI
+      }
+
       const w = Number(r.chargeableWeightKg || r.weightKg || 1);
       const cost = Number(r.supplierCostPrice !== undefined ? r.supplierCostPrice : (r.costPrice || 0));
       const sell = Number(r.customerSellPrice !== undefined ? r.customerSellPrice : (r.sellPrice || 0));
@@ -3295,82 +3371,84 @@ app.post('/api/shipments/save-awb-pricing-batch', (req, res) => {
       const custObj = CustomerService.getByCode(custCode);
       const custName = r.customerName || custObj?.customerName || (custObj as any)?.name || 'Khách vãng lai';
 
-      if (existing) {
-        existing.totalWeightKg = w;
-        existing.chargeableWeightKg = w;
-        existing.costPrice = cost;
-        existing.sellPrice = sell;
-        existing.profit = profit;
-        existing.carrier = carrier;
-        if (existing.shipTo) existing.shipTo.countryCode = country;
-        existing.customerCode = custCode;
-        existing.customerName = custName;
-        ShipmentRepository.save(existing, `Cập nhật từ Tool Tính Giá Excel (${w}kg - Cost: ${cost}đ - Sell: ${sell}đ)`);
-        updatedCount++;
-      } else {
-        const nowIso = new Date().toISOString();
-        const rowNum = updatedCount + createdCount + 1;
-        const newShp: any = {
-          id: `SHP-${Date.now()}-${rowNum}`,
-          shipmentId: `SHP-${Date.now()}-${rowNum}`,
-          shipmentNumber: `PDL-${Date.now().toString().slice(-6)}-${rowNum}`,
-          masterTrackingNumber: rawAwb,
-          carrier,
-          serviceCode: carrier === 'UPS' ? 'SAVER' : 'IP',
-          serviceName: carrier === 'UPS' ? 'UPS Worldwide Saver' : 'FedEx Intl Priority',
-          customerCode: custCode,
-          customerName: custName,
-          financialCategory: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : custObj?.financialCategory === 'PREPAID_WALLET' ? 'WALLET' : 'IMMEDIATE',
-          paymentTerm: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : 'PREPAID',
-          paymentStatus: 'UNPAID',
-          status: 'INBOUND_RECEIVED',
-          hub: 'SGN',
-          currentWarehouseHub: 'SGN',
-          totalPieces: 1,
-          totalWeightKg: w,
-          volumetricWeightKg: w,
-          chargeableWeightKg: w,
-          costPrice: cost,
-          sellPrice: sell,
-          profit,
-          destinationCountry: country,
-          shipFrom: {
-            contactName: custName,
-            companyName: custName,
-            city: 'HO CHI MINH',
-            countryCode: 'VN',
-            phone: custObj?.phone || '0909000111'
-          },
-          shipTo: {
-            contactName: 'CONSIGNEE ' + country,
-            city: country,
-            countryCode: country,
-            phone: '0000000000'
-          },
-          pieces: [
-            {
-              pieceNumber: 1,
-              trackingNumber: rawAwb,
-              weightKg: w,
-              lengthCm: 25,
-              widthCm: 20,
-              heightCm: 15,
-              inboundStatus: 'INBOUNDED'
-            }
-          ],
-          createdAt: nowIso
-        };
-        ShipmentRepository.save(newShp, `Tạo mới từ Tool Tính Giá Excel (${w}kg)`);
-        createdCount++;
-      }
+      const nowIso = new Date().toISOString();
+      const rowNum = createdCount + 1;
+      const newShp: any = {
+        id: `SHP-${Date.now()}-${rowNum}`,
+        shipmentId: `SHP-${Date.now()}-${rowNum}`,
+        shipmentNumber: `PDL-${Date.now().toString().slice(-6)}-${rowNum}`,
+        masterTrackingNumber: rawAwb,
+        carrier,
+        serviceCode: carrier === 'UPS' ? 'SAVER' : 'IP',
+        serviceName: carrier === 'UPS' ? 'UPS Worldwide Saver' : 'FedEx Intl Priority',
+        customerCode: custCode,
+        customerName: custName,
+        financialCategory: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : custObj?.financialCategory === 'PREPAID_WALLET' ? 'WALLET' : 'IMMEDIATE',
+        paymentTerm: custObj?.financialCategory === 'POSTPAID_CONTRACT' ? 'POSTPAID' : 'PREPAID',
+        paymentStatus: 'UNPAID',
+        status: 'INBOUND_RECEIVED',
+        hub: 'SGN',
+        currentWarehouseHub: 'SGN',
+        totalPieces: 1,
+        totalWeightKg: w,
+        volumetricWeightKg: w,
+        chargeableWeightKg: w,
+        costPrice: cost,
+        sellPrice: sell,
+        profit,
+        destinationCountry: country,
+        shipFrom: {
+          contactName: custName,
+          companyName: custName,
+          city: 'HO CHI MINH',
+          countryCode: 'VN',
+          phone: custObj?.phone || '0909000111'
+        },
+        shipTo: {
+          contactName: 'CONSIGNEE ' + country,
+          city: country,
+          countryCode: country,
+          phone: '0000000000'
+        },
+        pieces: [
+          {
+            pieceNumber: 1,
+            trackingNumber: rawAwb,
+            weightKg: w,
+            lengthCm: 25,
+            widthCm: 20,
+            heightCm: 15,
+            inboundStatus: 'INBOUNDED'
+          }
+        ],
+        createdAt: nowIso
+      };
+      ShipmentRepository.save(newShp, `Tạo mới từ Tool Tính Giá Excel (${w}kg)`);
+      createdCount++;
+    }
+
+    if (createdCount === 0 && duplicateAwbs.length > 0) {
+      return res.status(409).json({
+        success: false,
+        duplicate: true,
+        duplicateCount: duplicateAwbs.length,
+        duplicateAwbs,
+        message: `⚠️ CẢNH BÁO: Tất cả ${duplicateAwbs.length} mã AWB đã được lưu trên hệ thống từ trước (${duplicateAwbs.slice(0, 5).join(', ')}${duplicateAwbs.length > 5 ? '...' : ''}). Hệ thống từ chối lưu trùng!`
+      });
+    }
+
+    let message = `Đã lưu thành công ${createdCount} vận đơn mới vào hệ thống.`;
+    if (duplicateAwbs.length > 0) {
+      message += ` ⚠️ Có ${duplicateAwbs.length} AWB đã tồn tại từ trước và bị bỏ qua: ${duplicateAwbs.join(', ')}`;
     }
 
     res.json({
       success: true,
-      totalSaved: validRows.length,
-      updatedCount,
+      totalSaved: createdCount,
       createdCount,
-      message: `Đã lưu thành công ${validRows.length} vận đơn (${createdCount} tạo mới, ${updatedCount} cập nhật)`
+      duplicateCount: duplicateAwbs.length,
+      duplicateAwbs,
+      message
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });

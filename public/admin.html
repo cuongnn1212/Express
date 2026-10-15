@@ -15163,8 +15163,17 @@ curl -X POST http://localhost:4000/api/shipments/create \\
       const totalSecurityAll = validAll.reduce((s, r) => s + (Number(r.securityFeeAmount) || 0), 0);
       const totalCostAll = validAll.reduce((s, r) => s + (Number(r.costPrice) || 0), 0);
       const totalSellAll = validAll.reduce((s, r) => s + (Number(r.sellPrice) || 0), 0);
-      const totalProfitAll = validAll.reduce((s, r) => s + (Number(r.profit) || 0), 0);
-      const existedCount = validAll.filter(r => r.existedInSystem).length;
+      const isShipmentInSystem = (awb) => {
+        if (!awb) return false;
+        const clean = String(awb).trim().toUpperCase();
+        return Array.isArray(allAdminShipments) && allAdminShipments.some(s => 
+          (s.masterTrackingNumber && s.masterTrackingNumber.trim().toUpperCase() === clean) ||
+          (s.shipmentId && s.shipmentId.trim().toUpperCase() === clean) ||
+          (Array.isArray(s.pieces) && s.pieces.some(p => p.trackingNumber && p.trackingNumber.trim().toUpperCase() === clean))
+        );
+      };
+
+      const existedCount = validAll.filter(r => r.existedInSystem || isShipmentInSystem(r.awb)).length;
       const newCount = totalCountAll - existedCount;
       const marginPct = totalSellAll > 0 ? ((totalProfitAll / totalSellAll) * 100).toFixed(1) : '0.0';
 
@@ -15181,7 +15190,7 @@ curl -X POST http://localhost:4000/api/shipments/create \\
 
       if (elCnt) elCnt.textContent = totalCountAll.toLocaleString('vi-VN');
       if (elKg) elKg.textContent = (Math.round(totalKgAll * 100) / 100).toLocaleString('vi-VN');
-      if (elSubExist) elSubExist.textContent = totalCountAll > 0 ? `${existedCount} đơn khớp HT | ${newCount} AWB mới` : 'Chưa nạp danh sách';
+      if (elSubExist) elSubExist.textContent = totalCountAll > 0 ? (existedCount > 0 ? `⚠️ ${existedCount} AWB đã lưu trên HT (Không lưu lại) | ${newCount} AWB mới` : `✦ Tất cả ${newCount} AWB mới`) : 'Chưa nạp danh sách';
       if (elCost) elCost.textContent = totalCostAll.toLocaleString('vi-VN') + ' đ';
       if (elSubBase) elSubBase.textContent = `Net: ${totalBaseAll.toLocaleString('vi-VN')}đ | Biến động 50%: +${totalSurgeAll.toLocaleString('vi-VN')}đ | Phát hàng Mỹ: +${totalOrderProcAll.toLocaleString('vi-VN')}đ | FSC: +${totalFscAll.toLocaleString('vi-VN')}đ | VAT: +${totalVatAll.toLocaleString('vi-VN')}đ | Phí HQ: +${totalCustomsAll.toLocaleString('vi-VN')}đ`;
       if (elSell) elSell.textContent = totalSellAll.toLocaleString('vi-VN') + ' đ';
@@ -15396,9 +15405,12 @@ curl -X POST http://localhost:4000/api/shipments/create \\
 
           <!-- 2. Mã Vận Đơn (AWB) -->
           <td class="p-2.5 border-r border-slate-100">
-            <div class="font-mono font-black text-indigo-700 text-xs">${r.awb}</div>
-            <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold ${r.existedInSystem ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-200'}">
-              ${r.existedInSystem ? '✓ Có trên HT' : '✦ AWB Mới'}
+            <div class="font-mono font-black text-indigo-700 text-xs flex items-center space-x-1">
+              <span>${r.awb}</span>
+              ${(r.existedInSystem || isShipmentInSystem(r.awb)) ? '<i class="fa-solid fa-triangle-exclamation text-rose-500 text-xs" title="Mã AWB này đã được lưu trên hệ thống từ trước"></i>' : ''}
+            </div>
+            <span class="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-black ${(r.existedInSystem || isShipmentInSystem(r.awb)) ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-900 border border-amber-200'}">
+              ${(r.existedInSystem || isShipmentInSystem(r.awb)) ? '⚠️ ĐÃ LƯU TRÊN HT' : '✦ AWB MỚI'}
             </span>
           </td>
 
@@ -15772,7 +15784,33 @@ curl -X POST http://localhost:4000/api/shipments/create \\
     // 3. Lưu / Đồng bộ danh sách đã tính giá vào Hệ Thống (Mục 2.2 Quản Lý Đơn Hàng)
     async function saveExcelPricingToolListToShipments() {
       const validRows = toolExcelPricingList.filter(r => r.valid);
-      if (validRows.length === 0) return;
+      if (validRows.length === 0) {
+        alert('⚠️ Bảng tính hiện không có dữ liệu hợp lệ để lưu!');
+        return;
+      }
+
+      const isAwbInDb = (awb) => {
+        if (!awb) return false;
+        const clean = String(awb).trim().toUpperCase();
+        return Array.isArray(allAdminShipments) && allAdminShipments.some(s => 
+          (s.masterTrackingNumber && s.masterTrackingNumber.trim().toUpperCase() === clean) ||
+          (s.shipmentId && s.shipmentId.trim().toUpperCase() === clean) ||
+          (Array.isArray(s.pieces) && s.pieces.some(p => p.trackingNumber && p.trackingNumber.trim().toUpperCase() === clean))
+        );
+      };
+
+      const duplicates = validRows.filter(r => r.existedInSystem || isAwbInDb(r.awb));
+      const newRows = validRows.filter(r => !duplicates.includes(r));
+
+      if (newRows.length === 0) {
+        alert(`⚠️ CẢNH BÁO TRÙNG LẶP AWB:\n\nTất cả ${duplicates.length} mã AWB trong bảng đều ĐÃ ĐƯỢC LƯU trên hệ thống từ trước!\n\n${duplicates.slice(0, 10).map(d => '• ' + d.awb).join('\n')}${duplicates.length > 10 ? '\n...' : ''}\n\nHệ thống từ chối lưu trùng để bảo vệ toàn vẹn dữ liệu.`);
+        return;
+      }
+
+      if (duplicates.length > 0) {
+        const ok = confirm(`⚠️ CẢNH BÁO TRÙNG LẶP AWB:\n\nPhát hiện ${duplicates.length} / ${validRows.length} vận đơn đã được lưu trên hệ thống từ trước!\n\nCác AWB đã có trên hệ thống:\n${duplicates.slice(0, 5).map(d => '• ' + d.awb).join('\n')}${duplicates.length > 5 ? '\n...' : ''}\n\nHệ thống sẽ CHỈ LƯU ${newRows.length} AWB MỚI và tự động BỎ QUA các AWB đã lưu.\n\nBạn có muốn tiếp tục lưu ${newRows.length} đơn mới không?`);
+        if (!ok) return;
+      }
 
       const btn = document.getElementById('btnToolSaveToShipments');
       if (btn) {
@@ -15791,10 +15829,10 @@ curl -X POST http://localhost:4000/api/shipments/create \\
           alert(`🎉 ${d.message}`);
           loadAdminShipments();
         } else {
-          alert('Lỗi lưu đơn hàng: ' + (d.message || 'Không xác định'));
+          alert('❌ ' + (d.message || 'Lỗi lưu đơn hàng'));
         }
       } catch (err) {
-        alert('Lỗi kết nối lưu đơn hàng: ' + err.message);
+        alert('❌ Lỗi kết nối lưu đơn hàng: ' + err.message);
       } finally {
         if (btn) {
           btn.disabled = false;

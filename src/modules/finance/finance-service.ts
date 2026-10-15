@@ -2675,25 +2675,11 @@ export class FinanceService {
       totalSellPrice += customerSellPrice;
       totalProfit += profit;
 
-      let statusNote = existingShipment ? 'Đã có trên hệ thống' : 'AWB mới (Tự tính cước)';
+      let statusNote = existingShipment ? '⚠️ Đã có trên hệ thống (Không lưu lại)' : 'AWB mới (Tự tính cước)';
 
       if (applyToShipments) {
         if (existingShipment) {
-          existingShipment.totalWeightKg = effectiveWeight;
-          existingShipment.chargeableWeightKg = chargeableWeightKg;
-          existingShipment.costPrice = supplierCostPrice;
-          existingShipment.sellPrice = customerSellPrice;
-          existingShipment.profit = profit;
-          if (rawCountry && existingShipment.shipTo) {
-            existingShipment.shipTo.countryCode = rawCountry;
-          }
-          if (rawCustomer) {
-            existingShipment.customerCode = custCode;
-            existingShipment.customerName = custName;
-          }
-          ShipmentRepository.save(existingShipment, `Cập nhật trọng lượng (${chargeableWeightKg}kg) & giá cước (${customerSellPrice.toLocaleString('vi-VN')}đ) từ Tool Tính Giá Excel`);
-          statusNote = 'Đã cập nhật giá vào đơn';
-          updatedShipmentsCount++;
+          statusNote = '⚠️ AWB đã tồn tại trên hệ thống (Bỏ qua, không lưu đè)';
         } else {
           const nowIso = new Date().toISOString();
           const newShp: any = {
@@ -3074,7 +3060,7 @@ export class FinanceService {
         profit,
         marginPercent: customerQuote?.customerPolicyApplied?.marginPercent || 0,
         existedInSystem: Boolean(existingShipment),
-        statusNote: existingShipment ? 'Đã có trên hệ thống' : 'Tự tính cước theo biểu giá',
+        statusNote: existingShipment ? '⚠️ Đã có trên hệ thống (Không lưu lại)' : 'Tự tính cước theo biểu giá',
         valid: true
       }
     };
