@@ -62,301 +62,366 @@
   <!-- Main Admin Layout: Top Dropdown Menu + Full-Width Content -->
   <div class="flex-1 flex flex-col relative min-w-0">
 
-    <!-- STICKY HEADER & MENU MỀM XỔ XUỐNG (TOP DROPDOWN NAVBAR) -->
+    <!-- STICKY HEADER & MENU ĐIỀU HÀNH CHUẨN NGHIỆP VỤ LOGISTICS -->
     <div class="sticky top-0 z-40 shadow-md">
       
-      <!-- TẦNG 1: Thương Hiệu + Tiêu Đề Trang Đang Mở + Thông Tin Tài Khoản -->
-      <header class="bg-slate-950 text-white border-b border-slate-800 px-3 sm:px-6 py-2 flex items-center justify-between gap-2">
+      <!-- TẦNG 1: HEADER 3 VÙNG CÂN ĐỐI (THƯƠNG HIỆU — TÌM KIẾM TRUNG TÂM — TIỆN ÍCH & TÀI KHOẢN) -->
+      <header class="bg-slate-950 text-white border-b border-slate-800/90 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3">
+        <!-- Vùng Trái: Thương hiệu + Tên Phân hệ đang mở -->
         <div class="flex items-center space-x-3 min-w-0">
-          <!-- Brand Logo -->
           <div onclick="switchAdminSection('dashboard')" class="flex items-center space-x-2.5 cursor-pointer group flex-shrink-0">
             <div class="w-9 h-9 bg-gradient-to-tr from-amber-400 to-amber-500 rounded-xl flex items-center justify-center text-slate-950 font-black text-lg shadow group-hover:scale-105 transition">
               🐼
             </div>
             <div class="leading-tight">
-              <h1 class="text-xs sm:text-sm font-extrabold text-white tracking-tight">PandaLex Admin</h1>
-              <span class="text-[9px] text-amber-400 font-bold uppercase tracking-wider block">Control Center</span>
+              <h1 class="text-xs sm:text-sm font-extrabold text-white tracking-tight">PandaLex TMS</h1>
+              <span class="text-[9px] text-amber-400 font-bold uppercase tracking-wider block">Enterprise v4.0</span>
             </div>
           </div>
 
-          <span class="text-slate-700 hidden sm:inline">|</span>
+          <span class="text-slate-800 hidden sm:inline">|</span>
 
-          <!-- Active Section Title -->
           <div class="flex items-center space-x-2 min-w-0">
-            <h2 id="topBarTitle" class="text-xs sm:text-sm font-extrabold text-sky-400 truncate">Dashboard Tổng Quan</h2>
-            <span class="hidden lg:inline-block text-[10px] bg-emerald-950/90 text-emerald-400 border border-emerald-800/60 px-2 py-0.5 rounded-full font-mono">● Online</span>
+            <h2 id="topBarTitle" class="text-xs sm:text-sm font-extrabold text-sky-400 truncate max-w-[200px] sm:max-w-[320px]">Dashboard Tổng Quan</h2>
+            <span class="hidden xl:inline-flex items-center space-x-1 text-[10px] bg-emerald-950/90 text-emerald-400 border border-emerald-800/60 px-2 py-0.5 rounded-full font-mono">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Online</span>
+            </span>
           </div>
         </div>
 
-        <!-- Right User Info & Quick Links -->
+        <!-- Vùng Giữa: Thanh Tìm Kiếm Điều Hành Thông Minh (Ctrl+K / ⌘K) -->
+        <div class="hidden md:flex flex-1 max-w-md mx-2">
+          <button id="pdxQuickSearchTrigger" type="button" onclick="openCommandPalette()" class="w-full bg-slate-900/90 hover:bg-slate-800/90 text-slate-300 border border-slate-700/80 hover:border-sky-500/50 px-3.5 py-1.5 rounded-xl transition flex items-center justify-between text-xs shadow-inner cursor-pointer group">
+            <span class="flex items-center space-x-2.5 truncate">
+              <i class="fa-solid fa-magnifying-glass text-sky-400 group-hover:scale-110 transition"></i>
+              <span class="text-slate-400 group-hover:text-slate-200 font-medium truncate">Tìm nhanh 34 chức năng, Sổ quỹ hoặc gõ mã AWB...</span>
+            </span>
+            <kbd class="text-[10px] bg-slate-800 text-amber-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono font-black ml-2 flex-shrink-0">⌘K</kbd>
+          </button>
+        </div>
+
+        <!-- Vùng Phải: Hệ thống, Cổng Tiện Ích & Hồ sơ Người dùng -->
         <div class="flex items-center space-x-2 text-xs flex-shrink-0">
-          <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1">
-            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
-              <i class="fa-solid fa-user-check"></i>
-            </div>
-            <div class="flex flex-col text-left leading-tight">
-              <span id="topBarUserFullName" class="font-extrabold text-slate-100 text-[11px] truncate max-w-[120px]">Quản Trị Viên Hệ Thống</span>
-              <span id="badgeCurrentRoleHub" class="text-[9px] font-black text-amber-400 truncate max-w-[150px]">SUPER_ADMIN • SGN Hub</span>
+          <!-- Nút tìm nhanh trên màn hình nhỏ -->
+          <button type="button" onclick="openCommandPalette()" class="md:hidden bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 p-2 rounded-xl">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+
+          <!-- 1. Trạng thái Engine & Sao lưu 1 chạm -->
+          <button id="pdxSystemHealthTrigger" type="button" onclick="openSystemHealthModal()" class="bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/70 px-2.5 py-1.5 rounded-xl transition flex items-center space-x-1.5 shadow-sm cursor-pointer" title="Kiểm tra Hiệu năng Hệ thống, Chỉ mục O(1) &amp; Sao lưu Dữ liệu Tự động">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="hidden lg:inline font-extrabold text-[11px]">Engine &amp; Sao Lưu</span>
+            <i class="fa-solid fa-shield-heart text-emerald-400"></i>
+          </button>
+
+          <!-- 2. Menu Xổ Xuống: Cổng Giao Tiếp & Tiện Ích Nhanh (Gom gọn các link phụ) -->
+          <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grpQuickPortals')" onmouseleave="closeTopDropdown('grpQuickPortals')">
+            <button id="btnGrpQuickPortals" type="button" onclick="toggleGroup('grpQuickPortals', event)" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 px-2.5 py-1.5 rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-compass text-amber-400"></i>
+              <span class="hidden sm:inline font-bold">Cổng &amp; Tiện Ích</span>
+              <i id="icon-grpQuickPortals" class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="grpQuickPortals" class="hidden absolute right-0 top-full pt-1.5 w-64 z-50">
+              <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
+                <div class="px-2.5 py-1 text-[10px] font-black uppercase text-amber-400 border-b border-slate-800 tracking-wider">Cổng Khách Hàng &amp; Công Cụ</div>
+                <button id="btnTopUpExcelAwb" type="button" onclick="openModalAwbWeightExcelPricing()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-amber-300 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-800/50 transition text-xs text-left font-bold">
+                  <i class="fa-solid fa-file-excel w-4 text-center text-emerald-400"></i>
+                  <span>⚡ Up Excel (AWB + Kg) Nhanh</span>
+                </button>
+                <a href="/inbound-mobile.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-sky-300 hover:text-white hover:bg-slate-800 transition text-xs font-bold">
+                  <i class="fa-solid fa-camera w-4 text-center text-sky-400"></i>
+                  <span>📱 Camera Quét Kho Di Động ↗</span>
+                </a>
+                <a id="btnTopBaoGia" href="/calculator.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
+                  <i class="fa-solid fa-calculator w-4 text-center text-blue-400"></i>
+                  <span>Cổng Tra Cứu &amp; Báo Giá ↗</span>
+                </a>
+                <a href="/track.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
+                  <i class="fa-solid fa-satellite-dish w-4 text-center text-emerald-400"></i>
+                  <span>Cổng Tracking Hành Trình ↗</span>
+                </a>
+                <a href="/home.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
+                  <i class="fa-solid fa-house w-4 text-center text-amber-400"></i>
+                  <span>Trang Chủ Website ↗</span>
+                </a>
+                <a href="/huong-dan.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
+                  <i class="fa-solid fa-book-open w-4 text-center text-purple-400"></i>
+                  <span>Cẩm Nang Hướng Dẫn 📖</span>
+                </a>
+                <button id="btnPdxInstallApp" type="button" onclick="triggerInstallPwaModal()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-indigo-300 bg-indigo-950/50 hover:bg-indigo-900/70 border border-indigo-800/50 transition text-xs text-left font-bold">
+                  <i class="fa-solid fa-mobile-screen-button w-4 text-center text-indigo-400"></i>
+                  <span>📲 Cài Đặt App Ra Màn Hình (0đ)</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <a href="/home.html" target="_blank" class="bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold px-2.5 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1" title="Trang Chủ">
-            <i class="fa-solid fa-house"></i>
-            <span class="hidden xl:inline">Trang Chủ ↗</span>
-          </a>
+          <!-- 3. Hồ sơ Người dùng & Vai trò -->
+          <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1">
+            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div class="hidden sm:flex flex-col text-left leading-tight">
+              <span id="topBarUserFullName" class="font-extrabold text-slate-100 text-[11px] truncate max-w-[125px]">Quản Trị Viên Hệ Thống</span>
+              <span id="badgeCurrentRoleHub" class="text-[9px] font-black text-amber-400 truncate max-w-[140px]">SUPER_ADMIN • SGN Hub</span>
+            </div>
+          </div>
 
-          <button id="btnTopUpExcelAwb" type="button" onclick="openModalAwbWeightExcelPricing()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1.5 cursor-pointer" title="Upload File Excel (Số AWB + Trọng lượng Kg) để tự động tính Giá Vốn &amp; Giá Bán">
-            <i class="fa-solid fa-file-excel text-emerald-800"></i>
-            <span>⚡ Up Excel (AWB + Kg) Tính Giá</span>
-          </button>
-
-          <a href="/huong-dan.html" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1" title="Mở Cẩm Nang &amp; Hướng Dẫn Sử Dụng Phần Mềm">
-            <i class="fa-solid fa-book-open"></i>
-            <span class="hidden md:inline">Hướng Dẫn 📖</span>
-          </a>
-
-          <a id="btnTopBaoGia" href="/" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1" title="Cổng Báo Giá">
-            <i class="fa-solid fa-calculator"></i>
-            <span class="hidden lg:inline">Báo Giá</span>
-          </a>
-
-          <button onclick="handleAdminLogout()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1 cursor-pointer" title="Đăng xuất khỏi hệ thống">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span class="hidden sm:inline">Đăng xuất</span>
+          <!-- 4. Nút Đăng xuất -->
+          <button onclick="handleAdminLogout()" class="bg-rose-600/90 hover:bg-rose-500 text-white font-bold px-2.5 py-1.5 rounded-xl transition shadow-sm flex items-center space-x-1 cursor-pointer" title="Đăng xuất khỏi hệ thống">
+            <i class="fa-solid fa-power-off"></i>
+            <span class="hidden xl:inline">Thoát</span>
           </button>
         </div>
       </header>
 
-      <!-- TẦNG 2: THANH MENU MỀM XỔ XUỐNG (HORIZONTAL DROPDOWN NAVIGATION BAR) -->
-      <nav class="bg-slate-900 border-b border-slate-800 px-3 sm:px-6 py-1.5 flex items-center flex-wrap gap-1.5 text-xs font-bold select-none">
+      <!-- TẦNG 2: THANH ĐIỀU HƯỚNG SẮP XẾP THEO LUỒNG NGHIỆP VỤ (KHAI THÁC -> KHO -> TÀI CHÍNH -> KHÁCH HÀNG -> CẤU HÌNH) -->
+      <nav class="bg-slate-900 border-b border-slate-800 px-3 sm:px-6 py-1.5 flex items-center justify-between flex-wrap gap-1.5 text-xs font-bold select-none">
         
-        <!-- 0. Dashboard Tổng Quan -->
-        <button id="menuDashboard" onclick="switchAdminSection('dashboard')" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-transparent transition">
-          <i class="fa-solid fa-chart-pie text-blue-400"></i>
-          <span>Dashboard Tổng Quan</span>
-        </button>
-
-        <!-- ⚡ TOOL TÍNH GIÁ BẰNG EXCEL (NÚT TRỰC TIẾP TRÊN THANH MENU) -->
-        <button id="menuExcelPricingToolTop" onclick="switchAdminSection('excelPricingTool')" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-emerald-950/80 text-emerald-300 hover:text-white hover:bg-emerald-800 border border-emerald-700/70 shadow-sm transition">
-          <i class="fa-solid fa-file-excel text-emerald-400"></i>
-          <span class="font-black">⚡ Tool Tính Giá Bằng Excel</span>
-        </button>
-
-        <!-- ============================================== -->
-        <!-- ⚙️ NHÓM 1: CÀI ĐẶT (MASTER DATA) - XỔ XUỐNG -->
-        <!-- ============================================== -->
-        <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp1Settings')" onmouseleave="closeTopDropdown('grp1Settings')">
-          <button id="btnGrp1Settings" type="button" onclick="toggleGroup('grp1Settings', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
-            <i class="fa-solid fa-sliders text-indigo-400"></i>
-            <span>1. Cài Đặt (Master Data)</span>
-            <span class="text-[9px] bg-indigo-950 text-indigo-300 border border-indigo-800/60 font-black px-1.5 py-0.2 rounded-full">8</span>
-            <i id="icon-grp1Settings" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+        <!-- Cụm Menu Trái: Chu trình Vận hành Chính -->
+        <div class="flex items-center flex-wrap gap-1.5">
+          <!-- 0. Bàn Điều Khiển Tổng Quan -->
+          <button id="menuDashboard" onclick="switchAdminSection('dashboard')" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-transparent transition">
+            <i class="fa-solid fa-chart-pie text-sky-400"></i>
+            <span>Tổng Quan</span>
           </button>
-          <div id="grp1Settings" class="hidden absolute left-0 top-full pt-1.5 w-72 z-50">
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
-              <div class="px-2.5 py-1 text-[10px] font-black uppercase text-indigo-400 border-b border-slate-800 tracking-wider">Cài Đặt &amp; Dữ Liệu Gốc</div>
-              <button id="menuRateTables" onclick="switchAdminSection('rateTables')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-table-cells w-4 text-center text-cyan-400"></i>
-                <span>1.1 Bảng Giá &amp; Biểu Cước Hãng</span>
-              </button>
-              <button id="menuCustomers" onclick="switchAdminSection('customers')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-address-book w-4 text-center text-sky-400"></i>
-                <span>1.2 Khách Hàng (Master Data)</span>
-              </button>
-              <button id="menuHubs" onclick="switchAdminSection('hubs')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-building-columns w-4 text-center text-amber-400"></i>
-                <span>1.3 Văn Phòng / Chi Nhánh / Hub</span>
-              </button>
-              <button id="menuGeography" onclick="switchAdminSection('geography')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-earth-americas w-4 text-center text-emerald-400"></i>
-                <span>1.4 Vị Trí Địa Lý &amp; Vùng Phủ Sóng</span>
-              </button>
-              <button id="menuSurcharges" onclick="switchAdminSection('surcharges')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-gas-pump w-4 text-center text-rose-400"></i>
-                <span>1.5 Phụ Phí Xăng (FSC) &amp; Vùng Xa</span>
-              </button>
-              <button id="menuCustomsConfig" onclick="openModalCustomsCargoConfig()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-purple-300 bg-purple-950/40 hover:text-white hover:bg-purple-900/60 border border-purple-800/50 transition text-xs text-left">
-                <i class="fa-solid fa-sliders w-4 text-center text-purple-400"></i>
-                <span class="font-bold">1.6 Quản Lý Phí Hải Quan (Khách &amp; Trả)</span>
-              </button>
-              <button id="menuAudit" onclick="switchAdminSection('audit')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-shield-halved w-4 text-center text-indigo-400"></i>
-                <span>1.7 Phân Quyền &amp; Audit Logs</span>
-              </button>
-              <button id="menuR2StorageConfig" onclick="openAdminR2ConfigModal()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-teal-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-cloud w-4 text-center text-teal-400"></i>
-                <span class="font-bold">1.8 Cấu Hình Lưu Trữ Đám Mây (Cloud R2)</span>
-              </button>
-              <a href="/permissions.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-purple-300 hover:text-white hover:bg-purple-950/60 border border-purple-800/50 transition text-xs">
-                <i class="fa-solid fa-key w-4 text-center text-purple-400"></i>
-                <span class="font-extrabold">Trang Phân Quyền Riêng ↗</span>
-              </a>
+
+          <!-- ============================================== -->
+          <!-- 📦 NHÓM 1: VẬN ĐƠN & KHAI THÁC (DÙNG NHIỀU NHẤT) -->
+          <!-- ============================================== -->
+          <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp2Ops')" onmouseleave="closeTopDropdown('grp2Ops')">
+            <button id="btnGrp2Ops" type="button" onclick="toggleGroup('grp2Ops', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
+              <i class="fa-solid fa-box-open text-amber-400"></i>
+              <span>1. Vận Đơn &amp; Khai Thác</span>
+              <i id="icon-grp2Ops" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="grp2Ops" class="hidden absolute left-0 top-full pt-1.5 w-76 z-50">
+              <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
+                <div class="px-2.5 py-1 text-[10px] font-black uppercase text-amber-400 border-b border-slate-800 tracking-wider">Tạo Đơn, Tính Giá &amp; Chứng Từ</div>
+                <button id="menuCreateShipment" onclick="switchAdminSection('createShipment')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-file-circle-plus w-4 text-center text-emerald-400"></i>
+                  <span>1.1 Tạo Đơn Hàng &amp; In Tem AWB</span>
+                </button>
+                <button id="menuShipments" onclick="switchAdminSection('shipments')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-boxes-stacked w-4 text-center text-amber-400"></i>
+                  <span>1.2 Quản Lý Danh Sách Đơn Hàng</span>
+                </button>
+                <button id="menuExcelPricingTool" type="button" onclick="switchAdminSection('excelPricingTool')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-emerald-300 bg-emerald-950/50 hover:text-white hover:bg-emerald-900/70 border border-emerald-700/60 transition text-xs text-left">
+                  <i class="fa-solid fa-file-excel w-4 text-center text-emerald-400"></i>
+                  <span class="font-extrabold">1.3 ⚡ Tool Tính Giá Bằng Excel (AWB + Kg)</span>
+                </button>
+                <button id="menuAwbManagement" onclick="switchAdminSection('awbManagement')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-barcode w-4 text-center text-rose-400"></i>
+                  <span>1.4 Quản Lý Vận Đơn AWB (UPS/FedEx)</span>
+                </button>
+                <a href="/invoice.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
+                  <i class="fa-solid fa-file-invoice w-4 text-center text-indigo-400"></i>
+                  <span>1.5 Tạo &amp; Xuất Commercial Invoice ↗</span>
+                </a>
+                <a href="/track.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
+                  <i class="fa-solid fa-satellite-dish w-4 text-center text-sky-400"></i>
+                  <span>1.6 Cổng Tra Cứu Tracking ↗</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- 🏭 NHÓM 2: KHO BÃI & ĐIỀU PHỐI (INBOUND/OUTBOUND) -->
+          <!-- ============================================== -->
+          <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp5Expansions')" onmouseleave="closeTopDropdown('grp5Expansions')">
+            <button id="btnGrp5Expansions" type="button" onclick="toggleGroup('grp5Expansions', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
+              <i class="fa-solid fa-warehouse text-blue-400"></i>
+              <span>2. Kho Bãi &amp; Điều Phối</span>
+              <i id="icon-grp5Expansions" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="grp5Expansions" class="hidden absolute left-0 top-full pt-1.5 w-76 z-50">
+              <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
+                <div class="px-2.5 py-1 text-[10px] font-black uppercase text-blue-400 border-b border-slate-800 tracking-wider">Vận Hành Kho Inbound &amp; Xuất Hãng</div>
+                <button id="menuWarehouse" onclick="switchAdminSection('warehouse')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-200 bg-blue-950/40 hover:text-white hover:bg-blue-900/60 border border-blue-800/50 transition text-xs text-left font-bold">
+                  <i class="fa-solid fa-warehouse w-4 text-center text-blue-400"></i>
+                  <span>2.1 Kho Bãi, Scan Inbound &amp; Đóng Bao</span>
+                </button>
+                <button id="menuPhotoLookup" type="button" onclick="openPhotoLookupModal()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-teal-300 bg-teal-950/40 hover:text-white hover:bg-teal-900/60 border border-teal-800/50 transition text-xs text-left font-bold">
+                  <i class="fa-solid fa-camera w-4 text-center text-teal-400"></i>
+                  <span>2.2 📷 Tra Cứu Hình Ảnh AWB (Cloud)</span>
+                </button>
+                <a href="/inbound-mobile.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
+                  <i class="fa-solid fa-mobile-screen-button w-4 text-center text-emerald-400"></i>
+                  <span>2.3 Trạm Quét Camera Kho Di Động ↗</span>
+                </a>
+                <button id="menuAirCargo" onclick="switchAdminSection('airCargo')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-plane-departure w-4 text-center text-sky-400"></i>
+                  <span>2.4 Air Cargo &amp; Vận Tải Quốc Tế</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- 💰 NHÓM 3: TÀI CHÍNH & SỔ QUỸ (FINANCE & LEDGER) -->
+          <!-- ============================================== -->
+          <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp3Finance')" onmouseleave="closeTopDropdown('grp3Finance')">
+            <button id="btnGrp3Finance" type="button" onclick="toggleGroup('grp3Finance', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
+              <i class="fa-solid fa-wallet text-emerald-400"></i>
+              <span>3. Tài Chính &amp; Sổ Quỹ</span>
+              <i id="icon-grp3Finance" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="grp3Finance" class="hidden absolute left-0 top-full pt-1.5 w-80 z-50">
+              <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
+                <div class="px-2.5 py-1 text-[10px] font-black uppercase text-emerald-400 border-b border-slate-800 tracking-wider">Sổ Quỹ Thu Chi, Công Nợ &amp; Giá Vốn</div>
+                <button id="menuCashBook" onclick="switchAdminSection('cashBook')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-amber-300 hover:text-white hover:bg-slate-800 border border-amber-800/40 bg-amber-950/30 transition text-xs text-left">
+                  <i class="fa-solid fa-book-bookmark w-4 text-center text-amber-400"></i>
+                  <span class="font-extrabold">3.1 ⭐ Sổ Quỹ Thu - Chi &amp; Phiếu Thu/Chi</span>
+                </button>
+                <button id="menuFinance" onclick="switchAdminSection('finance')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-file-invoice-dollar w-4 text-center text-emerald-400"></i>
+                  <span>3.2 Công Nợ, Thu Cước &amp; Duyệt Xuất Kho</span>
+                </button>
+                <button id="menuReconciliation" onclick="switchAdminSection('reconciliation')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-receipt w-4 text-center text-rose-400"></i>
+                  <span>3.3 Đối Soát Hai Chiều (AR vs AP)</span>
+                </button>
+                <button id="menuWalletTopup" onclick="switchAdminSection('walletTopup')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-money-bill-transfer w-4 text-center text-indigo-400"></i>
+                  <span>3.4 Quản Lý Top-Up Ví Đại Lý</span>
+                </button>
+                <button id="menuCarrierPartners" onclick="switchAdminSection('carrierPartners')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-truck-plane w-4 text-center text-teal-400"></i>
+                  <span>3.5 Nhà Cung Cấp &amp; Sổ Ký Quỹ Hãng</span>
+                </button>
+                <button id="menuCodeVsSell" onclick="switchAdminSection('codeVsSell')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-scale-balanced w-4 text-center text-amber-400"></i>
+                  <span>3.6 So Sánh Giá Code (Cost) vs Giá Bán</span>
+                </button>
+                <button id="menuMarkupConfig" onclick="switchAdminSection('markupConfig')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-arrow-trend-up w-4 text-center text-emerald-400"></i>
+                  <span>3.7 Quản Lý Giá Bán &amp; Gộp Giá (Markup)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- 🤝 NHÓM 4: KHÁCH HÀNG & ĐẠI LÝ (CRM & PARTNERS) -->
+          <!-- ============================================== -->
+          <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp4CRM')" onmouseleave="closeTopDropdown('grp4CRM')">
+            <button id="btnGrp4CRM" type="button" onclick="toggleGroup('grp4CRM', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
+              <i class="fa-solid fa-users text-sky-400"></i>
+              <span>4. Khách Hàng &amp; Đại Lý</span>
+              <i id="icon-grp4CRM" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="grp4CRM" class="hidden absolute left-0 top-full pt-1.5 w-76 z-50">
+              <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
+                <div class="px-2.5 py-1 text-[10px] font-black uppercase text-sky-400 border-b border-slate-800 tracking-wider">Quản Trị Khách Hàng, Đại Lý &amp; CSKH</div>
+                <button id="menuCustomers" onclick="switchAdminSection('customers')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-200 bg-sky-950/40 hover:text-white hover:bg-sky-900/60 border border-sky-800/50 transition text-xs text-left font-bold">
+                  <i class="fa-solid fa-address-book w-4 text-center text-sky-400"></i>
+                  <span>4.1 Danh Sách Khách Hàng (Master Data)</span>
+                </button>
+                <button id="menuAgents" onclick="switchAdminSection('agents')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-handshake-angle w-4 text-center text-cyan-400"></i>
+                  <span>4.2 Quản Lý Đại Lý &amp; Chiết Khấu</span>
+                </button>
+                <button id="menuContracts" onclick="switchAdminSection('contracts')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-file-signature w-4 text-center text-indigo-400"></i>
+                  <span>4.3 Quản Lý Khách Hàng Hợp Đồng</span>
+                </button>
+                <button id="menuApproval" onclick="switchAdminSection('approval')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-user-check w-4 text-center text-emerald-400"></i>
+                  <span>4.4 Phê Duyệt Tài Khoản &amp; Tín Dụng</span>
+                </button>
+                <button id="menuCommitments" onclick="switchAdminSection('commitments')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-award w-4 text-center text-amber-400"></i>
+                  <span>4.5 Cam Kết Sản Lượng &amp; Khách VIP</span>
+                </button>
+                <button id="menuCustomerCommunication" onclick="switchAdminSection('customerCommunication')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                  <i class="fa-solid fa-headset w-4 text-center text-rose-400"></i>
+                  <span>4.6 Trung Tâm Giao Tiếp CSKH</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- ⚙️ NHÓM 5: CẤU HÌNH, BIỂU CƯỚC & PHÂN QUYỀN (MEGA MENU 2 CỘT) -->
+          <!-- ============================================== -->
+          <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp1Settings')" onmouseleave="closeTopDropdown('grp1Settings')">
+            <button id="btnGrp1Settings" type="button" onclick="toggleGroup('grp1Settings', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
+              <i class="fa-solid fa-sliders text-indigo-400"></i>
+              <span>5. Cấu Hình &amp; Hệ Thống</span>
+              <i id="icon-grp1Settings" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="grp1Settings" class="hidden absolute left-0 top-full pt-1.5 w-[540px] max-w-[94vw] z-50">
+              <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Cột 1: Cấu hình Biểu cước, Phụ phí & Tuyến -->
+                <div class="space-y-1">
+                  <div class="px-2.5 py-1 text-[10px] font-black uppercase text-cyan-400 border-b border-slate-800 tracking-wider">Biểu Cước, Phụ Phí &amp; Chi Nhánh</div>
+                  <button id="menuRateTables" onclick="switchAdminSection('rateTables')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-table-cells w-4 text-center text-cyan-400"></i>
+                    <span>5.1 Bảng Giá &amp; Biểu Cước Hãng</span>
+                  </button>
+                  <button id="menuSurcharges" onclick="switchAdminSection('surcharges')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-gas-pump w-4 text-center text-rose-400"></i>
+                    <span>5.2 Phụ Phí Xăng (FSC) &amp; Vùng Xa</span>
+                  </button>
+                  <button id="menuCustomsConfig" onclick="openModalCustomsCargoConfig()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-purple-300 bg-purple-950/40 hover:text-white hover:bg-purple-900/60 border border-purple-800/50 transition text-xs text-left">
+                    <i class="fa-solid fa-sliders w-4 text-center text-purple-400"></i>
+                    <span class="font-bold">5.3 Phí Hải Quan (Khách &amp; Trả)</span>
+                  </button>
+                  <button id="menuGeography" onclick="switchAdminSection('geography')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-earth-americas w-4 text-center text-emerald-400"></i>
+                    <span>5.4 Vị Trí Địa Lý &amp; Zone</span>
+                  </button>
+                  <button id="menuHubs" onclick="switchAdminSection('hubs')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-building-columns w-4 text-center text-amber-400"></i>
+                    <span>5.5 Văn Phòng / Chi Nhánh / Hub</span>
+                  </button>
+                </div>
+
+                <!-- Cột 2: Quản trị Phân quyền, BI & Tích hợp -->
+                <div class="space-y-1">
+                  <div class="px-2.5 py-1 text-[10px] font-black uppercase text-indigo-400 border-b border-slate-800 tracking-wider">Phân Quyền, BI &amp; Tích Hợp</div>
+                  <button id="menuAudit" onclick="switchAdminSection('audit')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-shield-halved w-4 text-center text-indigo-400"></i>
+                    <span>5.6 Tài Khoản, Phân Quyền &amp; Logs</span>
+                  </button>
+                  <a href="/permissions.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-purple-300 hover:text-white hover:bg-purple-950/60 border border-purple-800/50 transition text-xs">
+                    <i class="fa-solid fa-key w-4 text-center text-purple-400"></i>
+                    <span class="font-extrabold">5.7 Ma Trận Phân Quyền Đầy Đủ ↗</span>
+                  </a>
+                  <button id="menuBIAnalytics" onclick="switchAdminSection('biAnalytics')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-chart-line w-4 text-center text-purple-400"></i>
+                    <span>5.8 Báo Cáo &amp; BI Analytics</span>
+                  </button>
+                  <button id="menuR2StorageConfig" onclick="openAdminR2ConfigModal()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-teal-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-cloud w-4 text-center text-teal-400"></i>
+                    <span class="font-bold">5.9 Lưu Trữ Đám Mây (Cloud R2)</span>
+                  </button>
+                  <button id="menuCustomerApi" onclick="switchAdminSection('customerApi')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-code w-4 text-center text-teal-400"></i>
+                    <span>5.10 Kết Nối API Khách Hàng</span>
+                  </button>
+                  <button id="menuTracking" onclick="switchAdminSection('tracking')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
+                    <i class="fa-solid fa-network-wired w-4 text-center text-cyan-400"></i>
+                    <span>5.11 Cấu Hình API Hãng &amp; Webhook</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- ============================================== -->
-        <!-- 🚀 NHÓM 2: VẬN HÀNH (OPERATIONS) - XỔ XUỐNG -->
-        <!-- ============================================== -->
-        <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp2Ops')" onmouseleave="closeTopDropdown('grp2Ops')">
-          <button id="btnGrp2Ops" type="button" onclick="toggleGroup('grp2Ops', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
-            <i class="fa-solid fa-boxes-packing text-amber-400"></i>
-            <span>2. Vận Hành &amp; Kho</span>
-            <span class="text-[9px] bg-amber-950 text-amber-300 border border-amber-800/60 font-black px-1.5 py-0.2 rounded-full">7</span>
-            <i id="icon-grp2Ops" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+        <!-- Cụm Menu Phải: 2 Nút Lối Tắt Tác Vụ Nhanh Hàng Ngày -->
+        <div class="flex items-center gap-1.5">
+          <button id="menuExcelPricingToolTop" onclick="switchAdminSection('excelPricingTool')" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/90 text-emerald-300 hover:text-white hover:bg-emerald-800 border border-emerald-700/70 shadow-sm transition cursor-pointer">
+            <i class="fa-solid fa-file-excel text-emerald-400"></i>
+            <span class="font-black">⚡ Tính Giá Excel</span>
           </button>
-          <div id="grp2Ops" class="hidden absolute left-0 top-full pt-1.5 w-76 z-50">
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
-              <div class="px-2.5 py-1 text-[10px] font-black uppercase text-amber-400 border-b border-slate-800 tracking-wider">Khai Thác Vận Đơn &amp; Kho Bãi</div>
-              <button id="menuCreateShipment" onclick="switchAdminSection('createShipment')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-file-circle-plus w-4 text-center text-emerald-400"></i>
-                <span>2.1 Tạo Đơn Hàng &amp; In Tem AWB</span>
-              </button>
-              <button id="menuShipments" onclick="switchAdminSection('shipments')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-boxes-stacked w-4 text-center text-amber-400"></i>
-                <span>2.2 Quản Lý Đơn Hàng</span>
-              </button>
-              <button id="menuExcelPricingTool" type="button" onclick="switchAdminSection('excelPricingTool')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-emerald-300 bg-emerald-950/50 hover:text-white hover:bg-emerald-900/70 border border-emerald-700/60 transition text-xs text-left">
-                <i class="fa-solid fa-file-excel w-4 text-center text-emerald-400"></i>
-                <span class="font-extrabold">2.3 Tool Tính Giá Bằng Excel (AWB + Kg)</span>
-              </button>
-              <button id="menuWarehouse" onclick="switchAdminSection('warehouse')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-warehouse w-4 text-center text-blue-400"></i>
-                <span>2.4 Kho Bãi &amp; Scan Inbound/Bao</span>
-              </button>
-              <a href="/track.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
-                <i class="fa-solid fa-satellite-dish w-4 text-center text-sky-400"></i>
-                <span>2.5 Cổng Tra Cứu Tracking ↗</span>
-              </a>
-              <button id="menuAwbManagement" onclick="switchAdminSection('awbManagement')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-barcode w-4 text-center text-rose-400"></i>
-                <span>2.6 Quản Lý Vận Đơn AWB (UPS/FedEx)</span>
-              </button>
-              <a href="/invoice.html" target="_blank" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs">
-                <i class="fa-solid fa-file-invoice w-4 text-center text-indigo-400"></i>
-                <span>2.7 Tạo &amp; Quản Lý Commercial Invoice ↗</span>
-              </a>
-              <button id="menuPhotoLookup" type="button" onclick="openPhotoLookupModal()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-teal-300 bg-teal-950/40 hover:text-white hover:bg-teal-900/60 border border-teal-800/50 transition text-xs text-left">
-                <i class="fa-solid fa-camera w-4 text-center text-teal-400"></i>
-                <span class="font-extrabold">2.8 📷 Tra Cứu Hình Ảnh AWB (Cloud)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ============================================== -->
-        <!-- 💰 NHÓM 3: TÀI CHÍNH (FINANCE) - XỔ XUỐNG -->
-        <!-- ============================================== -->
-        <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp3Finance')" onmouseleave="closeTopDropdown('grp3Finance')">
-          <button id="btnGrp3Finance" type="button" onclick="toggleGroup('grp3Finance', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
-            <i class="fa-solid fa-wallet text-emerald-400"></i>
-            <span>3. Tài Chính &amp; Sổ Quỹ</span>
-            <span class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-black px-1.5 py-0.2 rounded-full">8</span>
-            <i id="icon-grp3Finance" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+          <button type="button" onclick="switchAdminSection('cashBook')" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-950/80 text-amber-300 hover:text-white hover:bg-amber-800 border border-amber-700/70 shadow-sm transition cursor-pointer">
+            <i class="fa-solid fa-book-bookmark text-amber-400"></i>
+            <span class="font-black">Sổ Quỹ Thu-Chi</span>
           </button>
-          <div id="grp3Finance" class="hidden absolute left-0 top-full pt-1.5 w-80 z-50">
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
-              <div class="px-2.5 py-1 text-[10px] font-black uppercase text-emerald-400 border-b border-slate-800 tracking-wider">Kế Toán, Giá Cước &amp; Sổ Quỹ AWB</div>
-              <button id="menuCodeVsSell" onclick="switchAdminSection('codeVsSell')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-scale-balanced w-4 text-center text-amber-400"></i>
-                <span>3.1 Quản Lý Giá Code (Cost Hãng)</span>
-              </button>
-              <button id="menuMarkupConfig" onclick="switchAdminSection('markupConfig')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-arrow-trend-up w-4 text-center text-emerald-400"></i>
-                <span>3.2 Quản Lý Giá Bán &amp; Gộp Giá</span>
-              </button>
-              <button id="menuAgents" onclick="switchAdminSection('agents')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-handshake-angle w-4 text-center text-cyan-400"></i>
-                <span>3.3 Quản Lý Đại Lý &amp; Chiết Khấu</span>
-              </button>
-              <button id="menuCarrierPartners" onclick="switchAdminSection('carrierPartners')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-truck-plane w-4 text-center text-teal-400"></i>
-                <span>3.4 Nhà Cung Cấp &amp; Sổ Ký Quỹ Hãng</span>
-              </button>
-              <button id="menuFinance" onclick="switchAdminSection('finance')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-file-invoice-dollar w-4 text-center text-emerald-400"></i>
-                <span>3.5 Công Nợ, Thu Cước &amp; Đối Soát</span>
-              </button>
-              <button id="menuWalletTopup" onclick="switchAdminSection('walletTopup')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-money-bill-transfer w-4 text-center text-indigo-400"></i>
-                <span>3.6 Quản Lý Top-Up Ví Đại Lý</span>
-              </button>
-              <button id="menuReconciliation" onclick="switchAdminSection('reconciliation')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-receipt w-4 text-center text-rose-400"></i>
-                <span>3.7 Đối Soát Hai Chiều (AR vs AP)</span>
-              </button>
-              <button id="menuCashBook" onclick="switchAdminSection('cashBook')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-amber-300 hover:text-white hover:bg-slate-800 border border-amber-800/40 bg-amber-950/20 transition text-xs text-left">
-                <i class="fa-solid fa-book-bookmark w-4 text-center text-amber-400"></i>
-                <span class="font-extrabold">3.8 Sổ Quỹ Thu - Chi &amp; Phiếu Thu/Chi ⭐</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ============================================== -->
-        <!-- 🤝 NHÓM 4: CRM & HỢP ĐỒNG - XỔ XUỐNG -->
-        <!-- ============================================== -->
-        <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp4CRM')" onmouseleave="closeTopDropdown('grp4CRM')">
-          <button id="btnGrp4CRM" type="button" onclick="toggleGroup('grp4CRM', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
-            <i class="fa-solid fa-handshake text-sky-400"></i>
-            <span>4. CRM &amp; Hợp Đồng</span>
-            <span class="text-[9px] bg-sky-950 text-sky-300 border border-sky-800/60 font-black px-1.5 py-0.2 rounded-full">4</span>
-            <i id="icon-grp4CRM" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
-          </button>
-          <div id="grp4CRM" class="hidden absolute left-0 top-full pt-1.5 w-72 z-50">
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
-              <div class="px-2.5 py-1 text-[10px] font-black uppercase text-sky-400 border-b border-slate-800 tracking-wider">Quản Trị Khách Hàng &amp; Tín Dụng</div>
-              <button id="menuContracts" onclick="switchAdminSection('contracts')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-file-signature w-4 text-center text-sky-400"></i>
-                <span>4.1 Quản Lý Khách Hàng Hợp Đồng</span>
-              </button>
-              <button id="menuApproval" onclick="switchAdminSection('approval')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-user-check w-4 text-center text-emerald-400"></i>
-                <span>4.2 Phê Duyệt Tài Khoản &amp; Tín Dụng</span>
-              </button>
-              <button id="menuCommitments" onclick="switchAdminSection('commitments')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-award w-4 text-center text-amber-400"></i>
-                <span>4.3 Cam Kết Sản Lượng &amp; Khách VIP</span>
-              </button>
-              <button id="menuCustomerCommunication" onclick="switchAdminSection('customerCommunication')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-headset w-4 text-center text-rose-400"></i>
-                <span>4.4 Trung Tâm Giao Tiếp CSKH</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ============================================== -->
-        <!-- 🔮 NHÓM 5: MỞ RỘNG & BI - XỔ XUỐNG -->
-        <!-- ============================================== -->
-        <div class="relative dropdown-nav-group" onmouseenter="openTopDropdown('grp5Expansions')" onmouseleave="closeTopDropdown('grp5Expansions')">
-          <button id="btnGrp5Expansions" type="button" onclick="toggleGroup('grp5Expansions', event)" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 border border-slate-800/80 transition">
-            <i class="fa-solid fa-cubes text-purple-400"></i>
-            <span>5. Mở Rộng &amp; BI</span>
-            <span class="text-[9px] bg-purple-950 text-purple-300 border border-purple-800/60 font-black px-1.5 py-0.2 rounded-full">4</span>
-            <i id="icon-grp5Expansions" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
-          </button>
-          <div id="grp5Expansions" class="hidden absolute left-0 top-full pt-1.5 w-72 z-50">
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2 space-y-1">
-              <div class="px-2.5 py-1 text-[10px] font-black uppercase text-purple-400 border-b border-slate-800 tracking-wider">Tích Hợp API &amp; Báo Cáo BI</div>
-              <button id="menuCustomerApi" onclick="switchAdminSection('customerApi')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-key w-4 text-center text-teal-400"></i>
-                <span>5.1 Quản Lý Kết Nối API Khách Hàng</span>
-              </button>
-              <button id="menuTracking" onclick="switchAdminSection('tracking')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-network-wired w-4 text-center text-cyan-400"></i>
-                <span>5.2 Tích Hợp API Hãng &amp; Webhook</span>
-              </button>
-              <button id="menuBIAnalytics" onclick="switchAdminSection('biAnalytics')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-chart-line w-4 text-center text-purple-400"></i>
-                <span>5.3 Báo Cáo Phân Tích &amp; BI Analytics</span>
-              </button>
-              <button id="menuAirCargo" onclick="switchAdminSection('airCargo')" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs text-left">
-                <i class="fa-solid fa-plane-departure w-4 text-center text-sky-400"></i>
-                <span>5.4 Air Cargo &amp; Vận Tải Quốc Tế</span>
-              </button>
-            </div>
-          </div>
         </div>
 
       </nav>
@@ -367,72 +432,230 @@
       <!-- CONTENT BODY -->
       <div class="flex-1 p-4 sm:p-6 overflow-y-auto">
         
-        <!-- SECTION 1: DASHBOARD TỔNG QUAN -->
+        <!-- SECTION 1: BÀN ĐIỀU KHIỂN TRUNG TÂM (DASHBOARD TỔNG QUAN) -->
         <section id="secDashboard" class="space-y-6 hidden">
-          <!-- 4 Thẻ KPI chính -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <!-- Tầng 1: 4 Thẻ KPI Trạng Thái Hệ Thống -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div onclick="switchAdminSection('rateTables')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer group">
               <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Biểu cước Active</p>
+                <p class="text-[11px] text-slate-400 font-extrabold uppercase tracking-wider">Biểu cước Hãng Active</p>
                 <h3 id="statRateTables" class="text-2xl font-black text-slate-900 mt-1">-</h3>
-                <p class="text-[11px] text-emerald-600 font-semibold mt-1"><i class="fa-solid fa-circle-check"></i> Đang hoạt động</p>
+                <p class="text-[11px] text-emerald-600 font-bold mt-1 flex items-center space-x-1">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>UPS Viettel &amp; FedEx</span>
+                </p>
               </div>
-              <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
+              <div class="w-12 h-12 bg-blue-50 group-hover:bg-blue-600 group-hover:text-white text-blue-600 rounded-2xl flex items-center justify-center text-xl transition">
                 <i class="fa-solid fa-layer-group"></i>
               </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div onclick="switchAdminSection('surcharges')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer group">
               <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Phụ phí xăng UPS</p>
+                <p class="text-[11px] text-slate-400 font-extrabold uppercase tracking-wider">Phụ phí xăng UPS (FSC)</p>
                 <h3 id="statUpsFuel" class="text-2xl font-black text-amber-600 mt-1">- %</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Cập nhật động</p>
+                <p class="text-[11px] text-slate-500 font-semibold mt-1">Bấm để điều chỉnh tỷ lệ</p>
               </div>
-              <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">
+              <div class="w-12 h-12 bg-amber-50 group-hover:bg-amber-500 group-hover:text-white text-amber-600 rounded-2xl flex items-center justify-center text-xl transition">
                 <i class="fa-solid fa-gas-pump"></i>
               </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div onclick="switchAdminSection('surcharges')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer group">
               <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Phụ phí xăng FEDEX</p>
+                <p class="text-[11px] text-slate-400 font-extrabold uppercase tracking-wider">Phụ phí xăng FEDEX</p>
                 <h3 id="statFedexFuel" class="text-2xl font-black text-purple-600 mt-1">- %</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Cập nhật động</p>
+                <p class="text-[11px] text-slate-500 font-semibold mt-1">Bấm để điều chỉnh tỷ lệ</p>
               </div>
-              <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-xl">
+              <div class="w-12 h-12 bg-purple-50 group-hover:bg-purple-600 group-hover:text-white text-purple-600 rounded-2xl flex items-center justify-center text-xl transition">
                 <i class="fa-solid fa-plane"></i>
               </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div onclick="switchAdminSection('customers')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer group">
               <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Khách Hàng / Đối Tác</p>
+                <p class="text-[11px] text-slate-400 font-extrabold uppercase tracking-wider">Khách Hàng &amp; Đại Lý</p>
                 <h3 id="statCustomers" class="text-2xl font-black text-emerald-600 mt-1">-</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Chính sách giá riêng</p>
+                <p class="text-[11px] text-slate-500 font-semibold mt-1">Quản lý báo giá &amp; công nợ</p>
               </div>
-              <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl">
+              <div class="w-12 h-12 bg-emerald-50 group-hover:bg-emerald-600 group-hover:text-white text-emerald-600 rounded-2xl flex items-center justify-center text-xl transition">
                 <i class="fa-solid fa-users"></i>
               </div>
             </div>
           </div>
 
-          <!-- Quick Actions Panel -->
-          <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-6 rounded-2xl shadow-md">
-            <h3 class="text-base font-extrabold mb-2">Thao Tác Quản Trị Nhanh</h3>
-            <p class="text-xs text-slate-300 mb-4">Các lối tắt điều hành hệ thống định giá quốc tế</p>
-            <div class="flex flex-wrap gap-3">
-              <button onclick="switchAdminSection('rateTables')" class="bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-2 transition shadow">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <span>Tải Lên Biểu Cước Mới (Excel)</span>
+          <!-- Tầng 2: Quy Trình Vận Hành Trực Quan 4 Bước (Interactive Workflow Pipeline) -->
+          <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-6 rounded-2xl shadow-lg border border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-amber-400">Chu Trình Khép Kín PandaLex</span>
+                <h3 class="text-base sm:text-lg font-black text-white">Luồng Điều Hành Vận Đơn &amp; Kiểm Soát Tài Chính 4 Bước</h3>
+              </div>
+              <button onclick="openCommandPalette()" class="bg-slate-800/90 hover:bg-slate-700 text-sky-300 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-2 self-start sm:self-auto cursor-pointer">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Tìm nhanh chức năng (⌘K)</span>
               </button>
-              <button onclick="switchAdminSection('surcharges')" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-xl text-xs flex items-center space-x-2 border border-slate-700 transition">
-                <i class="fa-solid fa-sliders text-blue-400"></i>
-                <span>Điều Chỉnh Tỷ Lệ Xăng Dầu & AHC</span>
-              </button>
-              <button onclick="switchAdminSection('customers')" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-xl text-xs flex items-center space-x-2 border border-slate-700 transition">
-                <i class="fa-solid fa-user-plus text-emerald-400"></i>
-                <span>Thêm Khách Hàng Mới</span>
-              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+              <!-- Bước 1 -->
+              <div onclick="switchAdminSection('excelPricingTool')" class="bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-amber-400/60 p-4 rounded-xl cursor-pointer transition group">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-black text-[10px]">BƯỚC 1 • KHAI THÁC</span>
+                  <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
+                </div>
+                <div class="font-extrabold text-white text-sm mb-1">Tính Giá &amp; Tạo Vận Đơn</div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Up file Excel (AWB + Kg) tính tự động Giá Vốn/Giá Bán hoặc tạo đơn lẻ in tem 4x6.</p>
+              </div>
+
+              <!-- Bước 2 -->
+              <div onclick="switchAdminSection('warehouse')" class="bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-sky-400/60 p-4 rounded-xl cursor-pointer transition group">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 font-black text-[10px]">BƯỚC 2 • KHO INBOUND</span>
+                  <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-sky-400 group-hover:translate-x-1 transition"></i>
+                </div>
+                <div class="font-extrabold text-white text-sm mb-1">Quét Kho &amp; Cân Đo OCR</div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Quét mã vạch, chụp ảnh tem &amp; kiện hàng bằng Camera điện thoại, kiểm tra trùng AWB.</p>
+              </div>
+
+              <!-- Bước 3 -->
+              <div onclick="switchAdminSection('finance')" class="bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-emerald-400/60 p-4 rounded-xl cursor-pointer transition group">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-black text-[10px]">BƯỚC 3 • CỔNG TÀI CHÍNH</span>
+                  <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition"></i>
+                </div>
+                <div class="font-extrabold text-white text-sm mb-1">Duyệt 3 Điều Kiện &amp; Sổ Quỹ</div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Kiểm soát Thu tiền ngay / Trừ ví / Công nợ hợp đồng và lập Phiếu Thu - Phiếu Chi.</p>
+              </div>
+
+              <!-- Bước 4 -->
+              <div onclick="switchAdminSection('reconciliation')" class="bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-purple-400/60 p-4 rounded-xl cursor-pointer transition group">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-black text-[10px]">BƯỚC 4 • ĐỐI SOÁT</span>
+                  <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition"></i>
+                </div>
+                <div class="font-extrabold text-white text-sm mb-1">Xuất Hãng &amp; Quyết Toán</div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Lập bảng kê Manifest bàn giao UPS/FedEx, đối soát công nợ Khách (AR) &amp; Hãng (AP).</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tầng 3: Bàn Điều Khiển Phân Khu Theo Bộ Phận (4 Khối Rõ Ràng) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <!-- Khối 1: Khai Thác & Đơn Hàng -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center space-x-2.5 mb-3">
+                  <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-box-open"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-black text-slate-900 text-sm">1. Khai Thác &amp; Vận Đơn</h4>
+                    <p class="text-[10px] text-slate-400 font-semibold">Tạo đơn, Tính cước &amp; In ấn</p>
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <button onclick="switchAdminSection('createShipment')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-700 hover:text-amber-900 font-bold transition">
+                    <span><i class="fa-solid fa-file-circle-plus text-emerald-600 mr-2"></i>Tạo Đơn &amp; In Tem AWB</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                  <button onclick="switchAdminSection('excelPricingTool')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50/80 hover:bg-emerald-100 text-emerald-900 font-extrabold transition">
+                    <span><i class="fa-solid fa-file-excel text-emerald-600 mr-2"></i>Tool Tính Giá Excel (AWB+Kg)</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-emerald-600"></i>
+                  </button>
+                  <button onclick="switchAdminSection('shipments')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition">
+                    <span><i class="fa-solid fa-boxes-stacked text-amber-600 mr-2"></i>Quản Lý Toàn Bộ Đơn Hàng</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Khối 2: Kho Bãi & Hình Ảnh -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center space-x-2.5 mb-3">
+                  <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-warehouse"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-black text-slate-900 text-sm">2. Kho Bãi &amp; Camera OCR</h4>
+                    <p class="text-[10px] text-slate-400 font-semibold">Quét mã, Cân đo &amp; Xuất kho</p>
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <button onclick="switchAdminSection('warehouse')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-900 font-bold transition">
+                    <span><i class="fa-solid fa-barcode text-blue-600 mr-2"></i>Kho Bãi &amp; Bảng Kê Xuất Hãng</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                  <button onclick="openPhotoLookupModal()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-900 font-bold transition">
+                    <span><i class="fa-solid fa-camera text-teal-600 mr-2"></i>Tra Cứu Ảnh Chụp AWB</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                  <a href="/inbound-mobile.html" target="_blank" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-sky-50/80 hover:bg-sky-100 text-sky-900 font-extrabold transition">
+                    <span><i class="fa-solid fa-mobile-screen-button text-sky-600 mr-2"></i>Mở Trạm Quét Kho Di Động</span>
+                    <i class="fa-solid fa-up-right-from-square text-[10px] text-sky-600"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Khối 3: Kế Toán & Sổ Quỹ -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center space-x-2.5 mb-3">
+                  <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-wallet"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-black text-slate-900 text-sm">3. Tài Chính &amp; Sổ Quỹ</h4>
+                    <p class="text-[10px] text-slate-400 font-semibold">Phiếu Thu/Chi &amp; Công nợ</p>
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <button onclick="switchAdminSection('cashBook')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-amber-50/90 hover:bg-amber-100 text-amber-950 font-extrabold transition">
+                    <span><i class="fa-solid fa-book-bookmark text-amber-600 mr-2"></i>Sổ Quỹ Thu - Chi &amp; Phiếu</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-amber-700"></i>
+                  </button>
+                  <button onclick="switchAdminSection('finance')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 font-bold transition">
+                    <span><i class="fa-solid fa-file-invoice-dollar text-emerald-600 mr-2"></i>Công Nợ &amp; Duyệt Xuất Kho</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                  <button onclick="switchAdminSection('reconciliation')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-700 hover:text-rose-900 font-bold transition">
+                    <span><i class="fa-solid fa-scale-balanced text-rose-600 mr-2"></i>Đối Soát Công Nợ AR vs AP</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Khối 4: Cấu Hình & Quản Trị -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-center space-x-2.5 mb-3">
+                  <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-sliders"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-black text-slate-900 text-sm">4. Biểu Cước &amp; Quản Trị</h4>
+                    <p class="text-[10px] text-slate-400 font-semibold">Bảng giá, Phụ phí &amp; Phân quyền</p>
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <button onclick="switchAdminSection('rateTables')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-900 font-bold transition">
+                    <span><i class="fa-solid fa-table-cells text-cyan-600 mr-2"></i>Bảng Giá UPS &amp; FedEx</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                  <button onclick="openModalCustomsCargoConfig()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-900 font-bold transition">
+                    <span><i class="fa-solid fa-boxes-packing text-purple-600 mr-2"></i>Cấu Hình Phí Hải Quan</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                  </button>
+                  <button onclick="switchAdminSection('audit')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 text-indigo-900 font-extrabold transition">
+                    <span><i class="fa-solid fa-shield-halved text-indigo-600 mr-2"></i>Phân Quyền (7 Roles) &amp; Logs</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-indigo-600"></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -7313,13 +7536,14 @@
     })();
 
     // Quản lý Menu Mềm Xổ Xuống (Top Horizontal Dropdown Menu)
-    const ALL_DROPDOWN_GROUPS = ['grp1Settings', 'grp2Ops', 'grp3Finance', 'grp4CRM', 'grp5Expansions'];
+    const ALL_DROPDOWN_GROUPS = ['grpQuickPortals', 'grp2Ops', 'grp5Expansions', 'grp3Finance', 'grp4CRM', 'grp1Settings'];
     const GROUP_BTN_MAP = {
-      'grp1Settings': 'btnGrp1Settings',
+      'grpQuickPortals': 'btnGrpQuickPortals',
       'grp2Ops': 'btnGrp2Ops',
+      'grp5Expansions': 'btnGrp5Expansions',
       'grp3Finance': 'btnGrp3Finance',
       'grp4CRM': 'btnGrp4CRM',
-      'grp5Expansions': 'btnGrp5Expansions'
+      'grp1Settings': 'btnGrp1Settings'
     };
 
     function openTopDropdown(grpId) {
@@ -7375,33 +7599,38 @@
     function autoOpenGroupForSection(sec) {
       collapseAllGroups();
       const mapping = {
-        'rateTables': 'grp1Settings',
-        'customers': 'grp1Settings',
-        'hubs': 'grp1Settings',
-        'geography': 'grp1Settings',
-        'surcharges': 'grp1Settings',
-        'audit': 'grp1Settings',
+        // Nhóm 1: Vận Đơn & Khai Thác
         'createShipment': 'grp2Ops',
         'shipments': 'grp2Ops',
         'excelPricingTool': 'grp2Ops',
-        'warehouse': 'grp2Ops',
         'awbManagement': 'grp2Ops',
+        // Nhóm 2: Kho Bãi & Điều Phối
+        'warehouse': 'grp5Expansions',
+        'airCargo': 'grp5Expansions',
+        // Nhóm 3: Tài Chính & Sổ Quỹ
+        'cashBook': 'grp3Finance',
+        'finance': 'grp3Finance',
+        'reconciliation': 'grp3Finance',
+        'walletTopup': 'grp3Finance',
+        'carrierPartners': 'grp3Finance',
         'codeVsSell': 'grp3Finance',
         'markupConfig': 'grp3Finance',
-        'agents': 'grp3Finance',
-        'carrierPartners': 'grp3Finance',
-        'finance': 'grp3Finance',
-        'walletTopup': 'grp3Finance',
-        'reconciliation': 'grp3Finance',
-        'cashBook': 'grp3Finance',
+        // Nhóm 4: Khách Hàng & Đại Lý (CRM)
+        'customers': 'grp4CRM',
+        'agents': 'grp4CRM',
         'contracts': 'grp4CRM',
         'approval': 'grp4CRM',
         'commitments': 'grp4CRM',
         'customerCommunication': 'grp4CRM',
-        'customerApi': 'grp5Expansions',
-        'tracking': 'grp5Expansions',
-        'biAnalytics': 'grp5Expansions',
-        'airCargo': 'grp5Expansions'
+        // Nhóm 5: Cấu Hình & Hệ Thống
+        'rateTables': 'grp1Settings',
+        'surcharges': 'grp1Settings',
+        'geography': 'grp1Settings',
+        'hubs': 'grp1Settings',
+        'audit': 'grp1Settings',
+        'biAnalytics': 'grp1Settings',
+        'customerApi': 'grp1Settings',
+        'tracking': 'grp1Settings'
       };
       Object.values(GROUP_BTN_MAP).forEach(btnId => {
         const b = document.getElementById(btnId);

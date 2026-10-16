@@ -1,5 +1,16 @@
 [
   {
+    "id": "log_1792119536932_915",
+    "timestamp": "2026-10-16T02:58:56.933Z",
+    "userId": "usr_admin",
+    "username": "admin",
+    "userRole": "SUPER_ADMIN",
+    "action": "LOGIN",
+    "targetId": "admin",
+    "details": "Đăng nhập hệ thống thành công (SUPER_ADMIN @ Hub SGN)",
+    "hub": "SGN"
+  },
+  {
     "id": "log_1792117151422_738",
     "timestamp": "2026-10-16T02:19:11.422Z",
     "userId": "usr_admin",
