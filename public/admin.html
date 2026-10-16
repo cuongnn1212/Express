@@ -108,6 +108,12 @@
             <i class="fa-solid fa-magnifying-glass"></i>
           </button>
 
+          <!-- 0. Chọn Mẫu Giao Diện (4 Mẫu ERP / Tab / Dock / Classic) -->
+          <button id="pdxLayoutPickerTrigger" type="button" onclick="openLayoutGalleryModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-2.5 py-1.5 rounded-xl transition flex items-center space-x-1.5 shadow-sm cursor-pointer" title="Chọn 1 trong 4 Mẫu Giao Diện Điều Hành (Sidebar ERP, Tab 2 Tầng, Lưới App Dock, Top-Bar)">
+            <i class="fa-solid fa-palette"></i>
+            <span class="hidden sm:inline text-[11px]">4 Mẫu Giao Diện</span>
+          </button>
+
           <!-- 1. Trạng thái Engine & Sao lưu 1 chạm -->
           <button id="pdxSystemHealthTrigger" type="button" onclick="openSystemHealthModal()" class="bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/70 px-2.5 py-1.5 rounded-xl transition flex items-center space-x-1.5 shadow-sm cursor-pointer" title="Kiểm tra Hiệu năng Hệ thống, Chỉ mục O(1) &amp; Sao lưu Dữ liệu Tự động">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -15404,8 +15410,9 @@ curl -X POST http://localhost:4000/api/shipments/create \\
       const totalVatAll = validAll.reduce((s, r) => s + (Number(r.vatAmount) || 0), 0);
       const totalCustomsAll = validAll.reduce((s, r) => s + (Number(r.customsFeeAmount) || 0), 0);
       const totalSecurityAll = validAll.reduce((s, r) => s + (Number(r.securityFeeAmount) || 0), 0);
-      const totalCostAll = validAll.reduce((s, r) => s + (Number(r.costPrice) || 0), 0);
-      const totalSellAll = validAll.reduce((s, r) => s + (Number(r.sellPrice) || 0), 0);
+      const totalCostAll = validAll.reduce((s, r) => s + (Number(r.supplierCostPrice !== undefined ? r.supplierCostPrice : r.costPrice) || 0), 0);
+      const totalSellAll = validAll.reduce((s, r) => s + (Number(r.customerSellPrice !== undefined ? r.customerSellPrice : r.sellPrice) || 0), 0);
+      const totalProfitAll = validAll.reduce((s, r) => s + (Number(r.profit !== undefined ? r.profit : ((Number(r.customerSellPrice ?? r.sellPrice) || 0) - (Number(r.supplierCostPrice ?? r.costPrice) || 0))) || 0), 0);
       const isShipmentInSystem = (awb) => {
         if (!awb) return false;
         const clean = String(awb).trim().toUpperCase();

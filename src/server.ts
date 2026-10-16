@@ -926,6 +926,8 @@ app.post('/api/v1/rates/quote', (req, res) => {
       widthCm,
       heightCm,
       isDocument,
+      packageType,
+      packages,
       customerId,
       customMarginPercent,
       customMarginFixedAmount,
@@ -933,7 +935,22 @@ app.post('/api/v1/rates/quote', (req, res) => {
       vatPercent
     } = req.body;
 
-    if (!destinationCountry || !actualWeightKg) {
+    const firstPkg = Array.isArray(packages) && packages.length > 0 ? packages[0] : null;
+    const resolvedWeightKg = actualWeightKg !== undefined && actualWeightKg !== ''
+      ? parseFloat(actualWeightKg)
+      : (firstPkg ? parseFloat(firstPkg.weight || firstPkg.weightKg || 0) : 0);
+    const resolvedLengthCm = lengthCm !== undefined && lengthCm !== ''
+      ? parseFloat(lengthCm)
+      : (firstPkg ? parseFloat(firstPkg.length || firstPkg.lengthCm || 0) : 0);
+    const resolvedWidthCm = widthCm !== undefined && widthCm !== ''
+      ? parseFloat(widthCm)
+      : (firstPkg ? parseFloat(firstPkg.width || firstPkg.widthCm || 0) : 0);
+    const resolvedHeightCm = heightCm !== undefined && heightCm !== ''
+      ? parseFloat(heightCm)
+      : (firstPkg ? parseFloat(firstPkg.height || firstPkg.heightCm || 0) : 0);
+    const resolvedIsDoc = isDocument !== undefined ? Boolean(isDocument) : (packageType === 'DOC' || packageType === 'DOCUMENT');
+
+    if (!destinationCountry || !resolvedWeightKg || isNaN(resolvedWeightKg) || resolvedWeightKg <= 0) {
       return res.status(400).json({
         success: false,
         message: 'destinationCountry và actualWeightKg là bắt buộc.'
@@ -943,11 +960,11 @@ app.post('/api/v1/rates/quote', (req, res) => {
     const quoteReq: UniversalQuoteRequest = {
       carrier: carrier || 'ALL',
       destinationCountry: String(destinationCountry).toUpperCase().trim(),
-      actualWeightKg: parseFloat(actualWeightKg),
-      lengthCm: parseFloat(lengthCm || 0),
-      widthCm: parseFloat(widthCm || 0),
-      heightCm: parseFloat(heightCm || 0),
-      isDocument: Boolean(isDocument),
+      actualWeightKg: resolvedWeightKg,
+      lengthCm: resolvedLengthCm || 0,
+      widthCm: resolvedWidthCm || 0,
+      heightCm: resolvedHeightCm || 0,
+      isDocument: resolvedIsDoc,
       customerId: customerId || 'guest',
       customMarginPercent: customMarginPercent !== undefined && customMarginPercent !== '' ? parseFloat(customMarginPercent) : undefined,
       customMarginFixedAmount: customMarginFixedAmount !== undefined && customMarginFixedAmount !== '' ? parseFloat(customMarginFixedAmount) : undefined,
@@ -956,12 +973,18 @@ app.post('/api/v1/rates/quote', (req, res) => {
     };
 
     const results = universalEngine.quote(quoteReq);
+    const mappedResults = results.map(q => ({
+      ...q,
+      finalTotalVnd: q.totalSellPrice,
+      finalTotalUsd: +(q.totalSellPrice / 25400).toFixed(2)
+    }));
 
     return res.json({
       success: true,
       destinationCountry: quoteReq.destinationCountry,
-      chargeableWeightKg: results.length > 0 ? results[0].chargeableWeightKg : 0,
-      quotes: results
+      chargeableWeightKg: results.length > 0 ? results[0].chargeableWeightKg : resolvedWeightKg,
+      quotes: results,
+      results: mappedResults
     });
   } catch (error: any) {
     return res.status(500).json({

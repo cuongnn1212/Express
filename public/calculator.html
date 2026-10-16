@@ -1321,11 +1321,11 @@
     }
 
     function forwardToShipment(carrier, serviceName, weight) {
-      const country = document.getElementById('destinationCountry').value;
-      const length = document.getElementById('packageLength').value || 10;
-      const width = document.getElementById('packageWidth').value || 10;
-      const height = document.getElementById('packageHeight').value || 10;
-      const actualW = document.getElementById('packageWeight').value || weight;
+      const country = document.getElementById('destinationCountry')?.value || 'US';
+      const length = document.getElementById('lengthCm')?.value || 10;
+      const width = document.getElementById('widthCm')?.value || 10;
+      const height = document.getElementById('heightCm')?.value || 10;
+      const actualW = document.getElementById('actualWeightKg')?.value || weight;
 
       // Lưu vào sessionStorage để ship.html tự động load
       const draft = {
