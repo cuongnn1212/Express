@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { AtomicStorageEngine } from '../../core/storage-engine.js';
 export class CustomerService {
     static filePath = path.join(process.cwd(), 'data', 'customers.json');
     static customers = [];
@@ -190,12 +191,7 @@ export class CustomerService {
         }
     }
     static persist() {
-        try {
-            fs.writeFileSync(this.filePath, JSON.stringify(this.customers, null, 2), 'utf-8');
-        }
-        catch (e) {
-            console.error('Lỗi ghi customers.json:', e);
-        }
+        AtomicStorageEngine.writeJson(this.filePath, this.customers);
     }
     static getAll() {
         return this.customers;

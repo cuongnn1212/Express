@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { AtomicStorageEngine } from '../../core/storage-engine.js';
 
 export type CustomerType = 'PUBLIC_GUEST' | 'AGENT' | 'VIP' | 'REGULAR';
 export type PaymentTerm = 'PREPAID' | 'POSTPAID'; // THANH TOÁN TIỀN NGAY (Prepaid) | THANH TOÁN SAU / CÔNG NỢ (Postpaid)
@@ -243,11 +244,7 @@ export class CustomerService {
   }
 
   private static persist() {
-    try {
-      fs.writeFileSync(this.filePath, JSON.stringify(this.customers, null, 2), 'utf-8');
-    } catch (e) {
-      console.error('Lỗi ghi customers.json:', e);
-    }
+    AtomicStorageEngine.writeJson(this.filePath, this.customers);
   }
 
   static getAll(): Customer[] {

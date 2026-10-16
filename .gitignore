@@ -25,3 +25,9 @@ uploads/inbound_photos/*
 ehthumbs.db
 Thumbs.db
 *.log
+
+# Runtime Snapshots & Sessions
+data/.backups/
+data/active_sessions.json
+data/*.tmp
+

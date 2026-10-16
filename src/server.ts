@@ -34,6 +34,7 @@ import { CommunicationService } from './modules/customer/communication-service.j
 import { LogisticsTradeBrain } from './modules/ai/logistics-trade-brain.js';
 import { COUNTRY_TRADE_POLICIES } from './modules/ai/trade-compliance-knowledge.js';
 import { R2StorageService } from './modules/storage/r2-storage-service.js';
+import { systemRouter } from './routes/system.routes.js';
 
 import compression from 'compression';
 
@@ -48,6 +49,7 @@ app.use(compression({
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use('/api/system', systemRouter);
 
 // Trang chủ chuẩn quốc tế (UPS Style) cho Khách hàng & Giao tiếp CSKH
 app.get('/', (req, res) => {

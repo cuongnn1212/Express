@@ -1,0 +1,42 @@
+{
+  "name": "PandaLex Express - Hệ Điều Hành Vận Tải Quốc Tế",
+  "short_name": "PandaLex TMS",
+  "description": "Hệ thống Quản trị Vận tải Quốc tế UPS/FedEx, Vận hành Kho OCR & Sổ Quỹ Kép",
+  "start_url": "/admin.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quét Kho Camera (Inbound)",
+      "short_name": "Quét Kho",
+      "description": "Mở nhanh Camera quét mã AWB và chụp ảnh kiện hàng",
+      "url": "/inbound-mobile.html",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tool Tính Giá Excel",
+      "short_name": "Tính Giá Excel",
+      "description": "Mở nhanh công cụ tính giá hàng loạt từ Excel",
+      "url": "/admin.html#excelPricingTool",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Sổ Quỹ Thu - Chi",
+      "short_name": "Sổ Quỹ",
+      "description": "Mở nhanh sổ quỹ thu chi & phiếu thu/chi",
+      "url": "/admin.html#cashBook",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}

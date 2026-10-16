@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as XLSX from 'xlsx';
+import { AtomicStorageEngine } from '../../core/storage-engine.js';
 import { AuthService } from '../auth/auth-service.js';
 import { ShipmentRepository } from '../shipment/shipment-repository.js';
 import { CustomerService } from '../customer/customer-service.js';
@@ -205,19 +206,19 @@ export class FinanceService {
         }
     }
     static persist() {
-        fs.writeFileSync(this.txFile, JSON.stringify(this.transactions, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.txFile, this.transactions);
     }
     static persistVouchers() {
-        fs.writeFileSync(this.voucherFile, JSON.stringify(this.vouchers, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.voucherFile, this.vouchers);
     }
     static persistVendorDeposits() {
-        fs.writeFileSync(this.vendorDepositFile, JSON.stringify(this.vendorDeposits, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.vendorDepositFile, this.vendorDeposits);
     }
     static persistCategories() {
-        fs.writeFileSync(this.categoryFile, JSON.stringify(this.categories, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.categoryFile, this.categories);
     }
     static persistPaymentVouchers() {
-        fs.writeFileSync(this.paymentVoucherFile, JSON.stringify(this.paymentVouchers, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.paymentVoucherFile, this.paymentVouchers);
     }
     // =========================================================================
     // 🏢 PHÂN HỆ 1: NHÀ CUNG CẤP (NCC / CARRIERS - UPS, FEDEX, DHL...)

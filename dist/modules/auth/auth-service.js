@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { AtomicStorageEngine } from '../../core/storage-engine.js';
 export const HUBS_LIST = [
     { code: 'SGN', name: 'Tổng Kho Sài Gòn (Tân Bình - SGN Hub)', address: 'Phúc Yên, Phan Huy Ích, P.15, Q. Tân Bình, TP.HCM', hotline: '0976 843 168' },
     { code: 'HAN', name: 'Tổng Kho Hà Nội (Nội Bài - HAN Hub)', address: 'Khu Logistics Sân bay Quốc tế Nội Bài, Sóc Sơn, Hà Nội', hotline: '0988 123 456' },
@@ -287,6 +288,7 @@ export class AuthService {
     static userFile = path.join(process.cwd(), 'data', 'users.json');
     static auditFile = path.join(process.cwd(), 'data', 'audit_logs.json');
     static permissionsFile = path.join(process.cwd(), 'data', 'role_permissions.json');
+    static sessionsFile = path.join(process.cwd(), 'data', 'active_sessions.json');
     static users = [];
     static auditLogs = [];
     static rolePermissions = {};
@@ -494,6 +496,17 @@ export class AuthService {
             }
             this.rolePermissions = defaultMatrix;
             this.persistPermissions();
+            // Nạp các phiên đăng nhập đang hoạt động từ đĩa để không bị văng khi restart server
+            const savedSessions = AtomicStorageEngine.readJson(this.sessionsFile, []);
+            const now = Date.now();
+            this.sessions.clear();
+            if (Array.isArray(savedSessions)) {
+                for (const s of savedSessions) {
+                    if (s && s.token && s.expiresAt > now) {
+                        this.sessions.set(s.token, s);
+                    }
+                }
+            }
         }
         catch (e) {
             console.error('Lỗi nạp auth data:', e);
@@ -598,13 +611,21 @@ export class AuthService {
         return matrix;
     }
     static persistUsers() {
-        fs.writeFileSync(this.userFile, JSON.stringify(this.users, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.userFile, this.users);
     }
     static persistLogs() {
-        fs.writeFileSync(this.auditFile, JSON.stringify(this.auditLogs, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.auditFile, this.auditLogs);
     }
     static persistPermissions() {
-        fs.writeFileSync(this.permissionsFile, JSON.stringify(this.rolePermissions, null, 2), 'utf-8');
+        AtomicStorageEngine.writeJson(this.permissionsFile, this.rolePermissions);
+    }
+    static persistSessions() {
+        const now = Date.now();
+        const active = Array.from(this.sessions.values()).filter(s => s.expiresAt > now);
+        AtomicStorageEngine.writeJson(this.sessionsFile, active);
+    }
+    static getActiveSessionsCount() {
+        return this.sessions.size;
     }
     static getRoles() {
         return SYSTEM_ROLES;
@@ -666,15 +687,15 @@ export class AuthService {
     static getCurrentUser() {
         return this.getUserById(this.currentUsername) || this.users[0];
     }
-    // ⏱️ Thời gian hết hạn sau 30 phút không hoạt động (30 * 60 * 1000 ms)
-    static INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+    // ⏱️ Thời gian hiệu lực phiên 24 giờ (tự động gia hạn khi thao tác)
+    static INACTIVITY_TIMEOUT_MS = 24 * 60 * 60 * 1000;
     static switchCurrentUser(username) {
         const user = this.getUserById(username);
         if (!user) {
             return { success: false, user: this.users[0], message: `Không tìm thấy tài khoản ${username}` };
         }
         this.currentUsername = user.username;
-        // Cấp token phiên mới cho tài khoản chuyển đổi (hết hạn sau 30 phút)
+        // Cấp token phiên mới cho tài khoản chuyển đổi (hết hạn sau 24 giờ)
         const token = crypto.randomBytes(32).toString('hex');
         const expiresAt = Date.now() + this.INACTIVITY_TIMEOUT_MS;
         this.sessions.set(token, {
@@ -686,6 +707,7 @@ export class AuthService {
             createdAt: new Date().toISOString(),
             expiresAt
         });
+        this.persistSessions();
         this.logAction({
             userId: user.id,
             username: user.username,
@@ -708,7 +730,7 @@ export class AuthService {
         if (!this.verifyPassword(user, password)) {
             return { success: false, message: 'Tên đăng nhập hoặc mật khẩu không chính xác' };
         }
-        // Tạo token phiên đăng nhập (hiệu lực 30 phút tính từ thao tác cuối)
+        // Tạo token phiên đăng nhập bền vững (24 giờ tính từ thao tác cuối)
         const token = crypto.randomBytes(32).toString('hex');
         const expiresAt = Date.now() + this.INACTIVITY_TIMEOUT_MS;
         this.sessions.set(token, {
@@ -720,6 +742,7 @@ export class AuthService {
             createdAt: new Date().toISOString(),
             expiresAt
         });
+        this.persistSessions();
         this.currentUsername = user.username;
         this.logAction({
             userId: user.id,
@@ -752,6 +775,7 @@ export class AuthService {
                 hub: session.hub
             });
             this.sessions.delete(token);
+            this.persistSessions();
             return true;
         }
         return false;
@@ -762,12 +786,13 @@ export class AuthService {
         const session = this.sessions.get(token);
         if (!session)
             return null;
-        // Kiểm tra hết hạn 30 phút không thao tác
+        // Kiểm tra hết hạn
         if (Date.now() > session.expiresAt) {
             this.sessions.delete(token);
+            this.persistSessions();
             return null;
         }
-        // Trượt thời gian hết hạn thêm 30 phút khi có thao tác
+        // Trượt thời gian hết hạn thêm 24 giờ khi có thao tác
         session.expiresAt = Date.now() + this.INACTIVITY_TIMEOUT_MS;
         return this.getUserById(session.username) || null;
     }

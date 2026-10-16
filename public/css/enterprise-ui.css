@@ -1,0 +1,175 @@
+/* ============================================================================
+   PANDALEX EXPRESS — ENTERPRISE DESIGN SYSTEM v4.0
+   Giao diện mượt mà, hiện đại, độ tương phản cao & phản hồi tức thì
+   ============================================================================ */
+
+:root {
+  --pdx-primary: #2563eb;
+  --pdx-gold: #f59e0b;
+  --pdx-emerald: #10b981;
+  --pdx-dark: #090d16;
+  --pdx-surface: #ffffff;
+}
+
+/* 1. Tối ưu độ mượt phông chữ & cuộn trang */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: radial-gradient(circle at 15% 0%, #f1f5f9 0%, #e2e8f0 100%) !important;
+  letter-spacing: -0.01em;
+}
+
+/* 2. Thanh cuộn (Scrollbar) tinh gọn chuẩn macOS/Enterprise */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.6);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.65);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.85);
+}
+
+/* 3. Hiệu ứng chuyển đổi Màn hình (Section Transition) siêu mượt 60fps */
+@keyframes pdxSectionEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main section:not(.hidden),
+div.flex-1 > section:not(.hidden) {
+  animation: pdxSectionEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 4. Nâng cấp Header & Thanh điều hướng Glassmorphism */
+header.bg-slate-950 {
+  background: linear-gradient(90deg, #060913 0%, #0f172a 55%, #090d1a 100%) !important;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px -4px rgba(2, 6, 23, 0.45);
+}
+
+nav.bg-slate-900 {
+  background: rgba(15, 23, 42, 0.96) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.75) !important;
+}
+
+/* Dropdown menu mượt mà */
+.dropdown-nav-group > div[id^="grp"] > div {
+  background: rgba(15, 23, 42, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(71, 85, 105, 0.65) !important;
+  box-shadow: 0 20px 38px -10px rgba(2, 6, 23, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+  animation: pdxSectionEnter 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 5. Nâng cấp Thẻ KPI & Khối nội dung (Cards) */
+.bg-white.rounded-2xl.border {
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04), 0 1px 3px 0 rgba(15, 23, 42, 0.02) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+#secDashboard .grid > .bg-white.rounded-2xl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.04) !important;
+  border-color: rgba(148, 163, 184, 0.45) !important;
+}
+
+/* 6. Bảng dữ liệu (Enterprise Data Tables) */
+table thead th {
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+table tbody tr:hover {
+  background-color: rgba(241, 245, 249, 0.75) !important;
+}
+
+/* 7. Nút bấm & Input tương tác (Micro-interactions) */
+button, a[class*="rounded-"] {
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18) !important;
+  border-color: #3b82f6 !important;
+}
+
+/* 8. Command Palette (Ctrl + K) & System Monitor Overlay */
+.pdx-modal-backdrop {
+  background: rgba(2, 6, 23, 0.65);
+  backdrop-filter: blur(6px);
+  animation: pdxFadeBackdrop 0.15s ease forwards;
+}
+
+@keyframes pdxFadeBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pdx-cmd-item {
+  transition: all 0.12s ease;
+}
+.pdx-cmd-item:hover,
+.pdx-cmd-item.active {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.12) 0%, rgba(37, 99, 235, 0.04) 100%);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+/* Toast Notification hiện đại góc phải */
+#pdxToastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.pdx-toast {
+  pointer-events: auto;
+  min-width: 300px;
+  max-width: 440px;
+  background: #0f172a;
+  color: #f8fafc;
+  border-left: 4px solid #10b981;
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 18px 32px -8px rgba(2, 6, 23, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: pdxSectionEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
