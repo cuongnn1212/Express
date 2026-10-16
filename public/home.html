@@ -507,7 +507,7 @@
             </div>
 
             <form onsubmit="handleQuoteSubmit(event)" class="space-y-3.5 text-xs">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
                 <div>
                   <label class="block font-bold text-stone-700 mb-1">Quốc Gia Nước Đến:</label>
                   <select id="selQuoteDest" class="w-full bg-stone-50 border border-stone-300 rounded-xl p-2.5 font-bold text-stone-800 outline-none">
@@ -520,6 +520,18 @@
                     <option value="JP">🇯🇵 Nhật Bản (Japan)</option>
                     <option value="KR">🇰🇷 Hàn Quốc (Korea)</option>
                     <option value="SG">🇸🇬 Singapore</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-stone-700 mb-1">Loại Hàng Hóa:</label>
+                  <select id="selQuoteCargoType" class="w-full bg-amber-50 border border-amber-300 rounded-xl p-2.5 font-bold text-stone-900 outline-none">
+                    <option value="GENERAL" selected>📦 Hàng thông thường (+8k/kg)</option>
+                    <option value="COSMETICS_FOOD">💄 Thực phẩm, mỹ phẩm (+40k/kg)</option>
+                    <option value="BRANDED">👜 Hàng thương hiệu (+45k/kg)</option>
+                    <option value="EYELASHES">👁️ Hàng mi giả (+35k/kg)</option>
+                    <option value="AGARWOOD">🪵 Hàng trầm hương (+50k/kg)</option>
+                    <option value="HAIR">💇‍♀️ Hàng tóc (+42k/kg)</option>
+                    <option value="DOCUMENT">📄 Tài liệu / Chứng từ (0đ/kg)</option>
                   </select>
                 </div>
                 <div>
@@ -1537,6 +1549,7 @@
     async function handleQuoteSubmit(e) {
       e.preventDefault();
       const dest = document.getElementById('selQuoteDest').value;
+      const cargoType = document.getElementById('selQuoteCargoType')?.value || 'GENERAL';
       const actualWeight = parseFloat(document.getElementById('inpQuoteWeight').value) || 1;
       const l = parseFloat(document.getElementById('inpDimL').value) || 0;
       const w = parseFloat(document.getElementById('inpDimW').value) || 0;
@@ -1555,12 +1568,14 @@
       try {
         const payload = {
           destinationCountry: dest,
+          cargoType: cargoType,
+          isCosmetics: cargoType === 'COSMETICS_FOOD',
+          isDocument: cargoType === 'DOCUMENT',
           actualWeightKg: actualWeight,
           lengthCm: l,
           widthCm: w,
           heightCm: h,
-          isDocument: false,
-          packageType: 'NON_DOC',
+          packageType: cargoType === 'DOCUMENT' ? 'DOC' : 'NON_DOC',
           packages: [{ weight: actualWeight, length: l, width: w, height: h }]
         };
 
@@ -1577,6 +1592,9 @@
           quoteList.slice(0, 3).forEach((r, idx) => {
             const totalVnd = r.finalTotalVnd || r.totalSellPrice || 0;
             const totalUsd = r.finalTotalUsd || +(totalVnd / 25400).toFixed(2);
+            const cargoFee = Number(r.customerCustomsFeeAmount || 0);
+            const cargoFeeRate = Number(r.customerCustomsFeePerKg || 0);
+            const cargoBadge = cargoFee > 0 ? ` • <span class="text-amber-300 font-semibold">${r.cargoTypeDisplayName || 'Hàng phụ thu'}: +${cargoFee.toLocaleString('vi-VN')}đ (${cargoFeeRate.toLocaleString('vi-VN')}đ/kg)</span>` : ` • <span class="text-stone-300">${r.cargoTypeDisplayName || 'Hàng thông thường'}</span>`;
             const div = document.createElement('div');
             div.className = 'flex items-center justify-between p-3 rounded-xl bg-stone-800/90 border border-stone-700 text-xs';
             div.innerHTML = `
@@ -1584,7 +1602,7 @@
                 <span class="w-6 h-6 rounded-lg bg-[#ffb500]/20 text-[#ffb500] font-black flex items-center justify-center text-xs">#${idx+1}</span>
                 <div>
                   <h4 class="font-extrabold text-white text-xs">${r.carrier} - ${r.serviceName || 'Express'}</h4>
-                  <p class="text-[10px] text-stone-400">Thời gian: ${r.estimatedDeliveryDays || '2 - 4 ngày'} • Bao gồm phụ phí nhiên liệu FSC (${r.fuelSurchargePercent || 0}%)</p>
+                  <p class="text-[10px] text-stone-400">Thời gian: ${r.estimatedDeliveryDays || '2 - 4 ngày'} • FSC: ${r.fuelSurchargePercent || 0}%${cargoBadge}</p>
                 </div>
               </div>
               <div class="text-right">

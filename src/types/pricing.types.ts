@@ -76,10 +76,15 @@ export interface UniversalQuoteBreakdown {
   vatAmount: number;
   totalAfterVat?: number; // Cước Hãng đã bao gồm FSC và VAT (trước khi cộng Hải quan và An ninh)
   cargoType?: string;
+  cargoTypeDisplayName?: string;
   isCosmetics?: boolean;
   deliveryFee?: number; // Phí phát hàng (chịu phụ phí nhiên liệu)
   customsFeePerKg?: number;
-  customsFeeAmount?: number; // Phí Hải quan / 1 kg (Mỹ phẩm: 40,000 đ/kg)
+  customsFeeAmount?: number; // Phí Hải quan / 1 kg (theo loại hàng)
+  supplierCustomsFeePerKg?: number;
+  supplierCustomsFeeAmount?: number;
+  customerCustomsFeePerKg?: number;
+  customerCustomsFeeAmount?: number;
   securityFeeAmount?: number; // Phí An ninh trên AWB
   totalCostPrice: number; // TỔNG GIÁ VỐN NỘI BỘ
 

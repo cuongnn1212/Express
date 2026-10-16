@@ -209,15 +209,32 @@
                 <label class="block text-xs font-bold text-slate-600 mb-1">Phân Loại Hàng</label>
                 <div class="grid grid-cols-2 gap-1.5">
                   <label class="flex items-center justify-center space-x-1 border border-slate-200 py-2 rounded-xl cursor-pointer hover:bg-slate-50 text-xs font-semibold">
-                    <input type="radio" name="itemType" value="false" checked class="text-blue-600">
+                    <input type="radio" name="itemType" value="false" checked class="text-blue-600" onchange="document.getElementById('cargoTypeContainer').classList.remove('opacity-50', 'pointer-events-none');">
                     <span>📦 Hàng hóa</span>
                   </label>
                   <label class="flex items-center justify-center space-x-1 border border-slate-200 py-2 rounded-xl cursor-pointer hover:bg-slate-50 text-xs font-semibold">
-                    <input type="radio" name="itemType" value="true" class="text-blue-600">
+                    <input type="radio" name="itemType" value="true" class="text-blue-600" onchange="document.getElementById('cargoTypeSelect').value = 'DOCUMENT';">
                     <span>📄 Thư / Doc</span>
                   </label>
                 </div>
               </div>
+            </div>
+
+            <!-- Loại mặt hàng cụ thể & Biểu phí Hải Quan thu khách -->
+            <div id="cargoTypeContainer">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-slate-700">Loại Hàng Hóa (Biểu phí phụ thu khách)</label>
+                <span class="text-[10px] text-purple-600 font-extrabold">Đơn giá khác nhau theo mặt hàng</span>
+              </div>
+              <select id="cargoTypeSelect" class="w-full bg-purple-50/50 border border-purple-300 rounded-xl px-3 py-2 text-xs font-extrabold text-purple-950 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="GENERAL" selected>📦 Hàng thông thường (Thu khách: +8.000 đ/kg)</option>
+                <option value="COSMETICS_FOOD">💄 Thực phẩm, mỹ phẩm (Thu khách: +40.000 đ/kg)</option>
+                <option value="BRANDED">👜 Hàng thương hiệu (Thu khách: +45.000 đ/kg)</option>
+                <option value="EYELASHES">👁️ Hàng mi giả (Thu khách: +35.000 đ/kg)</option>
+                <option value="AGARWOOD">🪵 Hàng trầm hương (Thu khách: +50.000 đ/kg)</option>
+                <option value="HAIR">💇‍♀️ Hàng tóc (Thu khách: +42.000 đ/kg)</option>
+                <option value="DOCUMENT">📄 Tài liệu / Giấy tờ (Thu khách: 0 đ/kg)</option>
+              </select>
             </div>
 
             <!-- Cân nặng thực tế -->
@@ -1129,10 +1146,15 @@
       e.preventDefault();
 
       const dimDivisor = parseInt(document.querySelector('input[name="dimDivisorChoice"]:checked')?.value || '5000');
+      const isDoc = document.querySelector('input[name="itemType"]:checked').value === 'true';
+      const selectedCargoType = isDoc ? 'DOCUMENT' : (document.getElementById('cargoTypeSelect')?.value || 'GENERAL');
+
       const payload = {
         carrier: document.getElementById('carrierSelect').value,
         destinationCountry: document.getElementById('destinationCountry').value,
-        isDocument: document.querySelector('input[name="itemType"]:checked').value === 'true',
+        cargoType: selectedCargoType,
+        isCosmetics: selectedCargoType === 'COSMETICS_FOOD',
+        isDocument: isDoc,
         actualWeightKg: parseFloat(document.getElementById('actualWeightKg').value),
         lengthCm: parseFloat(document.getElementById('lengthCm').value || 0),
         widthCm: parseFloat(document.getElementById('widthCm').value || 0),
@@ -1257,6 +1279,10 @@
                 <span>Thuế VAT (${q.vatPercent}%):</span>
                 <span class="font-semibold text-slate-800">${q.vatAmount.toLocaleString('vi-VN')} đ</span>
               </div>
+              <div class="flex justify-between text-rose-700 font-bold">
+                <span>Phí HQ trả NCC:</span>
+                <span>+${(q.supplierCustomsFeeAmount || 0).toLocaleString('vi-VN')} đ</span>
+              </div>
             </div>
 
             <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-xs">
@@ -1288,6 +1314,7 @@
 
           ${costBlockHtml}
 
+          <!-- Thẻ Giá Bán Khách Hàng -->
           <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
               <p class="text-[11px] font-bold text-blue-900 uppercase tracking-wider">
@@ -1303,6 +1330,18 @@
               </span>
               <span class="text-xs font-bold text-blue-700 ml-0.5">VND</span>
             </div>
+          </div>
+
+          <!-- Chi tiết phụ thu theo Loại Hàng Hóa -->
+          <div class="mt-2.5 flex items-center justify-between text-[11px] bg-purple-50/70 text-purple-950 border border-purple-200 px-3 py-2 rounded-xl">
+            <span class="font-bold flex items-center space-x-1.5">
+              <i class="fa-solid fa-box text-purple-600"></i>
+              <span>Phân loại hàng:</span>
+              <span class="font-black text-purple-700">${q.cargoTypeDisplayName || 'Hàng thông thường'}</span>
+            </span>
+            <span class="font-black font-mono text-purple-800">
+              ${(q.customerCustomsFeeAmount || 0) > 0 ? `+${(q.customerCustomsFeeAmount || 0).toLocaleString('vi-VN')} đ (${(q.customerCustomsFeePerKg || 0).toLocaleString('vi-VN')} đ/kg)` : 'Đã bao gồm trong cước'}
+            </span>
           </div>
 
           ${surchargesHtml}

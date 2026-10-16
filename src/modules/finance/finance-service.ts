@@ -2341,14 +2341,14 @@ export class FinanceService {
         'Ghi Chú Nghiệp Vụ'
       ],
       [1, '1Z84Y8200492184701', 2.0, 'US', 'UPS', 'THUC_PHAM_MY_PHAM', 'PDL-FRANK', 'Mỹ phẩm đi Mỹ qua UPS: Trả Hải quan UPS 32k/kg | Thu khách 40k/kg | An ninh 150k'],
-      [2, '1Z84Y8200492184702', 1.5, 'CA', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Canada qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 40k/kg | An ninh 150k'],
+      [2, '1Z84Y8200492184702', 1.5, 'CA', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Canada qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 8k/kg | An ninh 150k'],
       [3, '771234567890', 3.0, 'DE', 'FEDEX', 'HANG_THUONG_HIEU', 'PDL-FRANK', 'Hàng thương hiệu đi Đức qua FedEx: Trả Hải quan FedEx 35k/kg | Thu khách 45k/kg | An ninh 150k'],
-      [4, '1Z84Y8200492184704', 0.5, 'FR', 'UPS', 'MI_GIA', 'PDL-FRANK', 'Hàng mi giả đi Pháp qua UPS: Trả HQ 0đ | Thu khách 40k/kg | An ninh 150k'],
-      [5, '1Z84Y8200492184705', 4.5, 'GB', 'UPS', 'TRAM', 'PDL-FRANK', 'Hàng trầm hương đi Anh qua UPS: Trả HQ 0đ | Thu khách 40k/kg | An ninh 150k'],
-      [6, '771234567891', 2.5, 'AU', 'FEDEX', 'TOC', 'PDL-FRANK', 'Hàng tóc đi Úc qua FedEx: Chưa có giá (0đ) | An ninh 150k'],
-      [7, '1Z84Y8200492184707', 5.0, 'JP', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Nhật qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 40k/kg | An ninh 150k'],
+      [4, '1Z84Y8200492184704', 0.5, 'FR', 'UPS', 'MI_GIA', 'PDL-FRANK', 'Hàng mi giả đi Pháp qua UPS: Trả HQ 25k/kg | Thu khách 35k/kg | An ninh 150k'],
+      [5, '1Z84Y8200492184705', 4.5, 'GB', 'UPS', 'TRAM', 'PDL-FRANK', 'Hàng trầm hương đi Anh qua UPS: Trả HQ 40k/kg | Thu khách 50k/kg | An ninh 150k'],
+      [6, '771234567891', 2.5, 'AU', 'FEDEX', 'TOC', 'PDL-FRANK', 'Hàng tóc đi Úc qua FedEx: Trả HQ 30k/kg | Thu khách 42k/kg | An ninh 150k'],
+      [7, '1Z84Y8200492184707', 5.0, 'JP', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Nhật qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 8k/kg | An ninh 150k'],
       [8, '771234567892', 1.0, 'SG', 'FEDEX', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Singapore qua FedEx: Trả Hải quan FedEx 8k/kg | Thu khách 8k/kg | An ninh 150k'],
-      [9, '1Z84Y8200492184709', 8.0, 'KR', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Hàn Quốc qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 40k/kg | An ninh 150k'],
+      [9, '1Z84Y8200492184709', 8.0, 'KR', 'UPS', 'HANG_THONG_THUONG', 'PDL-FRANK', 'Hàng thông thường đi Hàn Quốc qua UPS: Trả Hải quan UPS 8k/kg | Thu khách 8k/kg | An ninh 150k'],
       [10, '1Z84Y8200492184710', 21.0, 'US', 'UPS', 'THUC_PHAM_MY_PHAM', 'PDL-FRANK', 'Mỹ phẩm 21kg đi Mỹ qua UPS: Nấc 21-44kg | Trả Hải quan UPS 32k/kg | Thu khách 40k/kg | An ninh 150k']
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
@@ -2368,7 +2368,7 @@ export class FinanceService {
 
   /**
    * 14. Đọc File Excel (Số AWB + Trọng Lượng Kg) và Tự Động Tính Giá Gốc (Cost) + Giá Bán (Sell)
-   * Theo công thức: (Net + Phí biến động [giảm 50%] + Phí xử lý đơn) * FSC * VAT + Phí Hải quan (40k/kg mỹ phẩm) + Phí An ninh/AWB
+   * Theo công thức: (Net + Phí biến động [giảm 50%] + Phí xử lý đơn) * FSC * VAT + Phí Hải quan (theo loại hàng) + Phí An ninh/AWB
    */
   static parseAndCalculateAwbPricingExcel(
     fileBuffer: Buffer,
@@ -2378,7 +2378,7 @@ export class FinanceService {
       defaultCarrier?: string;
       defaultCustomerCode?: string;
       isDocument?: boolean;
-      defaultCargoType?: 'GENERAL' | 'COSMETICS' | 'DOCUMENT';
+      defaultCargoType?: string;
       isCosmetics?: boolean;
       customsFeePerKg?: number;
       securityFeePerAwb?: number;
@@ -2469,16 +2469,10 @@ export class FinanceService {
     const defCarrier = (options?.defaultCarrier || 'AUTO').trim().toUpperCase();
     const defCust = (options?.defaultCustomerCode || 'PDL-GUEST').trim().toUpperCase();
     const defIsDoc = Boolean(options?.isDocument);
-    const defIsCosmetics = Boolean(options?.isCosmetics || options?.defaultCargoType === 'COSMETICS');
-    const defCustomsFeePerKg = options?.customsFeePerKg !== undefined
-      ? Number(options.customsFeePerKg)
-      : (defIsCosmetics ? 40000 : 0);
+    const defIsCosmetics = Boolean(options?.isCosmetics || options?.defaultCargoType === 'COSMETICS' || options?.defaultCargoType === 'COSMETICS_FOOD');
     const defSecurityFeePerAwb = options?.securityFeePerAwb !== undefined
       ? Number(options.securityFeePerAwb)
       : 150000;
-    const defGeneralGoodsFeePerKg = options?.generalGoodsFeePerKg !== undefined
-      ? Number(options.generalGoodsFeePerKg)
-      : 8000;
     const defVatPercent = options?.vatPercent !== undefined ? Number(options.vatPercent) : 8;
     const defSurgeDiscount = options?.surgeDiscountPercent !== undefined ? Number(options.surgeDiscountPercent) : 50;
 
@@ -2532,7 +2526,7 @@ export class FinanceService {
       // Nhận diện loại hàng hóa theo Danh mục Biểu phí Hải quan:
       // Quy tắc: Phí chỉ áp dụng cho 1 loại / 1 AWB duy nhất (Hải quan UPS vs Hải quan FedEx)
       const cargoRate = CustomsCargoConfigService.getCargoRate(
-        rawCargoTypeStr || (defIsCosmetics ? 'COSMETICS_FOOD' : (defIsDoc ? 'DOCUMENT' : 'GENERAL')),
+        rawCargoTypeStr || options?.defaultCargoType || (defIsCosmetics ? 'COSMETICS_FOOD' : (defIsDoc ? 'DOCUMENT' : 'GENERAL')),
         detectedCarrier
       );
       const cargoInfo = cargoRate.cargoType;

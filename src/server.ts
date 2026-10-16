@@ -927,6 +927,11 @@ app.post('/api/v1/rates/quote', (req, res) => {
       heightCm,
       isDocument,
       packageType,
+      cargoType,
+      isCosmetics,
+      customsFeePerKg,
+      securityFeePerAwb,
+      dimDivisor,
       packages,
       customerId,
       customMarginPercent,
@@ -948,7 +953,10 @@ app.post('/api/v1/rates/quote', (req, res) => {
     const resolvedHeightCm = heightCm !== undefined && heightCm !== ''
       ? parseFloat(heightCm)
       : (firstPkg ? parseFloat(firstPkg.height || firstPkg.heightCm || 0) : 0);
-    const resolvedIsDoc = isDocument !== undefined ? Boolean(isDocument) : (packageType === 'DOC' || packageType === 'DOCUMENT');
+    const resolvedCargoType = cargoType || (packageType && !['PKG', 'PARCEL', 'DOC', 'DOCUMENT'].includes(String(packageType).toUpperCase()) ? String(packageType).toUpperCase() : undefined);
+    const resolvedIsDoc = isDocument !== undefined
+      ? Boolean(isDocument)
+      : (packageType === 'DOC' || packageType === 'DOCUMENT' || resolvedCargoType === 'DOCUMENT');
 
     if (!destinationCountry || !resolvedWeightKg || isNaN(resolvedWeightKg) || resolvedWeightKg <= 0) {
       return res.status(400).json({
@@ -965,11 +973,16 @@ app.post('/api/v1/rates/quote', (req, res) => {
       widthCm: resolvedWidthCm || 0,
       heightCm: resolvedHeightCm || 0,
       isDocument: resolvedIsDoc,
+      cargoType: resolvedCargoType || (resolvedIsDoc ? 'DOCUMENT' : (isCosmetics ? 'COSMETICS_FOOD' : 'GENERAL')),
+      isCosmetics: Boolean(isCosmetics || resolvedCargoType === 'COSMETICS_FOOD' || resolvedCargoType === 'COSMETICS'),
+      customsFeePerKg: customsFeePerKg !== undefined && customsFeePerKg !== '' ? parseFloat(customsFeePerKg) : undefined,
+      securityFeePerAwb: securityFeePerAwb !== undefined && securityFeePerAwb !== '' ? parseFloat(securityFeePerAwb) : undefined,
+      dimDivisor: dimDivisor !== undefined && dimDivisor !== '' ? parseInt(dimDivisor, 10) : undefined,
       customerId: customerId || 'guest',
       customMarginPercent: customMarginPercent !== undefined && customMarginPercent !== '' ? parseFloat(customMarginPercent) : undefined,
       customMarginFixedAmount: customMarginFixedAmount !== undefined && customMarginFixedAmount !== '' ? parseFloat(customMarginFixedAmount) : undefined,
       isResidential: Boolean(isResidential),
-      vatPercent: vatPercent !== undefined ? parseFloat(vatPercent) : 0
+      vatPercent: vatPercent !== undefined ? parseFloat(vatPercent) : 8
     };
 
     const results = universalEngine.quote(quoteReq);
@@ -982,6 +995,7 @@ app.post('/api/v1/rates/quote', (req, res) => {
     return res.json({
       success: true,
       destinationCountry: quoteReq.destinationCountry,
+      cargoType: quoteReq.cargoType,
       chargeableWeightKg: results.length > 0 ? results[0].chargeableWeightKg : resolvedWeightKg,
       quotes: results,
       results: mappedResults
@@ -1022,13 +1036,14 @@ app.post('/api/v1/rates/compare', (req, res) => {
 
 /**
  * API: Ma trận so sánh song song GIÁ CODE vs GIÁ BÁN
- * GET /api/rates/matrix-compare?carrier=UPS&country=US&customerId=...
+ * GET /api/rates/matrix-compare?carrier=UPS&country=US&customerId=...&cargoType=...
  */
 app.get('/api/rates/matrix-compare', (req, res) => {
   try {
     const carrier = (req.query.carrier as any) || 'UPS';
     const country = (req.query.country as string) || 'US';
     const customerId = (req.query.customerId as string) || undefined;
+    const cargoType = (req.query.cargoType as string) || 'GENERAL';
     const customMarginPercent = req.query.marginPercent !== undefined && req.query.marginPercent !== '' ? parseFloat(req.query.marginPercent as string) : undefined;
     const customMarginFixedAmount = req.query.marginFixed !== undefined && req.query.marginFixed !== '' ? parseFloat(req.query.marginFixed as string) : undefined;
     const vatPercent = req.query.vatPercent !== undefined ? parseFloat(req.query.vatPercent as string) : 0;
@@ -1037,6 +1052,7 @@ app.get('/api/rates/matrix-compare', (req, res) => {
       carrier,
       destinationCountry: country,
       customerId,
+      cargoType,
       customMarginPercent,
       customMarginFixedAmount,
       vatPercent

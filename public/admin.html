@@ -686,7 +686,7 @@
 
           <!-- Bộ lọc tra cứu biểu giá Code vs Bán -->
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-xs">
               <div>
                 <label class="block font-bold text-slate-700 mb-1">1. Hãng Vận Chuyển</label>
                 <select id="cvsCarrier" onchange="loadCodeVsSellData()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
@@ -712,14 +712,27 @@
               </div>
 
               <div>
-                <label class="block font-bold text-slate-700 mb-1">3. Khách Hàng / Đối Tác</label>
+                <label class="block font-bold text-slate-700 mb-1">3. Loại Hàng Hóa (Thu Khách)</label>
+                <select id="cvsCargoType" onchange="loadCodeVsSellData()" class="w-full bg-purple-50 border border-purple-300 rounded-xl p-2.5 font-extrabold text-purple-900">
+                  <option value="GENERAL" selected>📦 Hàng thông thường (+8k/kg)</option>
+                  <option value="COSMETICS_FOOD">💄 Thực phẩm, mỹ phẩm (+40k/kg)</option>
+                  <option value="BRANDED">👜 Hàng thương hiệu (+45k/kg)</option>
+                  <option value="EYELASHES">👁️ Hàng mi giả (+35k/kg)</option>
+                  <option value="AGARWOOD">🪵 Hàng trầm hương (+50k/kg)</option>
+                  <option value="HAIR">💇‍♀️ Tóc (+42k/kg)</option>
+                  <option value="DOCUMENT">📄 Tài liệu (0 đ/kg)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">4. Khách Hàng / Đối Tác</label>
                 <select id="cvsCustomer" onchange="loadCodeVsSellData()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
                   <!-- Load từ danh sách khách hàng -->
                 </select>
               </div>
 
               <div>
-                <label class="block font-bold text-slate-700 mb-1">4. Hệ Số DIM Thể Tích</label>
+                <label class="block font-bold text-slate-700 mb-1">5. Hệ Số DIM Thể Tích</label>
                 <select id="cvsDimDivisor" onchange="loadCodeVsSellData()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
                   <option value="5000" selected>⚡ DIM 5000 (IATA Express Chuẩn)</option>
                   <option value="6000">📦 DIM 6000 (Cargo / Chuyên Tuyến)</option>
@@ -729,10 +742,11 @@
 
             <!-- Banner chỉ số cấu thành -->
             <div id="cvsBanner" class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div class="flex items-center space-x-3">
+              <div class="flex flex-wrap items-center gap-3">
                 <span id="cvsCarrierBadge" class="bg-amber-600 text-white font-black px-2.5 py-1 rounded-lg">UPS</span>
                 <span class="text-slate-600">Zone đích: <strong id="cvsZoneDisplay" class="text-blue-700 font-black">Zone 5</strong></span>
                 <span class="text-slate-600">Phụ phí xăng FSC: <strong id="cvsFuelDisplay" class="text-rose-600 font-black">28.5%</strong></span>
+                <span id="cvsCargoBadge" class="bg-purple-100 text-purple-800 font-extrabold px-2.5 py-0.5 rounded-lg border border-purple-300">📦 Hàng thông thường: Thu khách 8.000 đ/kg</span>
               </div>
               <div class="flex items-center space-x-2">
                 <span class="text-slate-600">Chính sách Gup giá:</span>
@@ -750,6 +764,7 @@
                     <th class="px-4 py-3.5">Mức Cân (kg)</th>
                     <th class="px-4 py-3.5">Cước Net Gốc (VND)</th>
                     <th class="px-4 py-3.5">Phụ Phí Xăng FSC</th>
+                    <th class="px-4 py-3.5 bg-purple-950/80 text-purple-200 font-black">📦 PHỤ PHÍ LOẠI HÀNG (HQ)</th>
                     <th class="px-4 py-3.5 bg-rose-950/80 text-rose-300 font-black">🏷️ GIÁ CODE (COST HÃNG)</th>
                     <th class="px-4 py-3.5 bg-indigo-950/80 text-indigo-300 font-black">📈 GUP GIÁ (MARKUP)</th>
                     <th class="px-4 py-3.5 bg-emerald-950/80 text-emerald-300 font-black">💵 GIÁ BÁN CHO KHÁCH</th>
@@ -758,7 +773,7 @@
                 </thead>
                 <tbody id="tblCodeVsSellBody" class="divide-y divide-slate-100 font-medium">
                   <tr>
-                    <td colspan="7" class="text-center py-10 text-slate-400">Đang nạp bảng giá Code vs Bán...</td>
+                    <td colspan="8" class="text-center py-10 text-slate-400">Đang nạp bảng giá Code vs Bán...</td>
                   </tr>
                 </tbody>
               </table>
@@ -1858,13 +1873,13 @@
                 <div>
                   <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Loại Hàng Mặc Định</label>
                   <select id="toolDefCargoType" class="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-bold text-slate-800">
-                    <option value="GENERAL" selected>Hàng thông thường</option>
-                    <option value="COSMETICS_FOOD">Thực phẩm, mỹ phẩm</option>
-                    <option value="BRANDED">Hàng thương hiệu</option>
-                    <option value="EYELASHES">Hàng mi giả</option>
-                    <option value="AGARWOOD">Hàng trầm hương</option>
-                    <option value="HAIR">Tóc</option>
-                    <option value="DOCUMENT">Tài liệu</option>
+                    <option value="GENERAL" selected>Hàng thông thường (+8k/kg)</option>
+                    <option value="COSMETICS_FOOD">Thực phẩm, mỹ phẩm (+40k/kg)</option>
+                    <option value="BRANDED">Hàng thương hiệu (+45k/kg)</option>
+                    <option value="EYELASHES">Hàng mi giả (+35k/kg)</option>
+                    <option value="AGARWOOD">Hàng trầm hương (+50k/kg)</option>
+                    <option value="HAIR">Tóc (+42k/kg)</option>
+                    <option value="DOCUMENT">Tài liệu (0đ/kg)</option>
                   </select>
                 </div>
                 <div>
@@ -1896,10 +1911,10 @@
             <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-2 text-[11px] text-slate-600">
               <div class="flex items-center space-x-1.5">
                 <i class="fa-solid fa-calculator text-indigo-500"></i>
-                <span>Công thức chuẩn: <b>(Cước Net + Biến Động [-50%] + Phát Hàng Mỹ) × (1 + FSC%) × (1 + VAT%) + Phí Hải Quan + Phí An Ninh</b></span>
+                <span>Công thức chuẩn: <b>(Cước Net + Biến Động [-50%] + Phát Hàng Mỹ) × (1 + FSC%) × (1 + VAT%) + Phí Hải Quan (Theo Loại Hàng) + Phí An Ninh</b></span>
               </div>
-              <span class="text-slate-400 text-[10px]">
-                Quy tắc: Hải quan dưới 1kg tính tròn 1kg • 1 loại hàng / AWB
+              <span class="text-purple-700 font-bold text-[10px]">
+                💡 Hàng thường: 8k/kg • Mỹ phẩm/TP: 40k/kg • Thương hiệu: 45k/kg • Mi giả: 35k/kg • Trầm: 50k/kg • Tóc: 42k/kg
               </span>
             </div>
           </div>
@@ -1996,6 +2011,19 @@
                       <option value="SG">SG - Singapore</option>
                     </select>
                   </div>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase">Loại Hàng Hóa</label>
+                  <select id="inpToolQuickCargoType" class="w-full px-2 py-1.5 rounded-lg border border-purple-300 bg-purple-50/50 text-xs font-bold text-purple-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <option value="">Theo mặc định (Bước 1)</option>
+                    <option value="GENERAL">📦 Hàng thông thường (+8k/kg)</option>
+                    <option value="COSMETICS_FOOD">💄 Thực phẩm, mỹ phẩm (+40k/kg)</option>
+                    <option value="BRANDED">👜 Hàng thương hiệu (+45k/kg)</option>
+                    <option value="EYELASHES">👁️ Hàng mi giả (+35k/kg)</option>
+                    <option value="AGARWOOD">🪵 Hàng trầm hương (+50k/kg)</option>
+                    <option value="HAIR">💇‍♀️ Tóc (+42k/kg)</option>
+                    <option value="DOCUMENT">📄 Tài liệu (0đ/kg)</option>
+                  </select>
                 </div>
               </div>
               <button type="button" onclick="addSingleRowToExcelPricingTool()" class="mt-2.5 w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs shadow flex items-center justify-center space-x-1.5 transition">
@@ -7938,15 +7966,16 @@
     async function loadCodeVsSellData() {
       const carrier = document.getElementById('cvsCarrier').value;
       const country = document.getElementById('cvsCountry').value;
+      const cargoType = document.getElementById('cvsCargoType')?.value || 'GENERAL';
       const custSelect = document.getElementById('cvsCustomer');
       const custCode = custSelect ? custSelect.value : '';
       const dim = document.getElementById('cvsDimDivisor').value;
 
       const tbody = document.getElementById('tblCodeVsSellBody');
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400">Đang tính toán biểu giá Code vs Giá Bán...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">Đang tính toán biểu giá Code vs Giá Bán theo loại hàng...</td></tr>';
 
       try {
-        const url = `/api/rates/matrix-compare?carrier=${carrier}&country=${country}&customerId=${custCode}`;
+        const url = `/api/rates/matrix-compare?carrier=${carrier}&country=${country}&customerId=${custCode}&cargoType=${cargoType}`;
         const res = await fetch(url);
         const json = await res.json();
 
@@ -7958,9 +7987,16 @@
           document.getElementById('cvsFuelDisplay').textContent = `${d.fuelPercent}%`;
           document.getElementById('cvsPolicyBadge').textContent = `+${d.policyApplied.marginPercent}% & +${d.policyApplied.marginFixedAmount.toLocaleString('vi-VN')} đ (${d.policyApplied.name})`;
 
+          const cargoBadge = document.getElementById('cvsCargoBadge');
+          if (cargoBadge) {
+            cargoBadge.textContent = `📦 ${d.cargoTypeDisplayName || 'Hàng thông thường'}: Thu khách ${(d.customerCargoFeePerKg || 0).toLocaleString('vi-VN')} đ/kg • Trả HQ ${(d.supplierCargoFeePerKg || 0).toLocaleString('vi-VN')} đ/kg`;
+          }
+
           tbody.innerHTML = d.tiers.map((t, idx) => {
             const isPerKg = t.isPerKg;
             const bgClass = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+            const custCargoFee = Number(t.customerCustomsFee || 0);
+            const supCargoFee = Number(t.supplierCustomsFee || 0);
             return `
               <tr class="${bgClass} hover:bg-amber-50/40 transition">
                 <td class="px-4 py-3 font-bold text-slate-800">
@@ -7969,6 +8005,10 @@
                 </td>
                 <td class="px-4 py-3 text-slate-600 font-medium">${t.baseNet.toLocaleString('vi-VN')} đ</td>
                 <td class="px-4 py-3 text-rose-600 font-semibold">+${t.fuelFee.toLocaleString('vi-VN')} đ</td>
+                <td class="px-4 py-3 bg-purple-50/60 font-bold text-purple-800">
+                  <div>Thu KH: +${custCargoFee.toLocaleString('vi-VN')} đ</div>
+                  <div class="text-[10px] text-slate-500 font-normal">Trả HQ: +${supCargoFee.toLocaleString('vi-VN')} đ (${(d.customerCargoFeePerKg || 0).toLocaleString('vi-VN')}đ/kg)</div>
+                </td>
                 <td class="px-4 py-3 bg-rose-50/60 font-black text-rose-700 text-sm">
                   ${t.codePrice.toLocaleString('vi-VN')} đ
                 </td>
@@ -7985,10 +8025,10 @@
             `;
           }).join('');
         } else {
-          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-rose-500 font-bold">${json.message || 'Không có dữ liệu cước cho tuyến này'}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-rose-500 font-bold">${json.message || 'Không có dữ liệu cước cho tuyến này'}</td></tr>`;
         }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-rose-500">Lỗi kết nối: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-rose-500">Lỗi kết nối: ${err.message}</td></tr>`;
       }
     }
 
@@ -15019,13 +15059,13 @@ curl -X POST http://localhost:4000/api/shipments/create \\
     }
 
     function getToolPricingDefaultOptions() {
-      const cargoType = document.getElementById('toolDefCargoType')?.value || 'COSMETICS';
+      const cargoType = document.getElementById('toolDefCargoType')?.value || 'GENERAL';
       return {
         defaultCountry: document.getElementById('toolDefCountry')?.value || 'US',
         defaultCarrier: document.getElementById('toolDefCarrier')?.value || 'UPS',
         defaultCustomerCode: document.getElementById('toolDefCustomer')?.value || 'PDL-GUEST',
         defaultCargoType: cargoType,
-        isCosmetics: cargoType === 'COSMETICS',
+        isCosmetics: cargoType === 'COSMETICS_FOOD' || cargoType === 'COSMETICS',
         isDocument: cargoType === 'DOCUMENT',
         vatPercent: parseFloat(document.getElementById('toolDefVatPercent')?.value || '8'),
         surgeDiscountPercent: parseFloat(document.getElementById('toolDefSurgeDiscount')?.value || '50'),
@@ -15133,11 +15173,11 @@ curl -X POST http://localhost:4000/api/shipments/create \\
       const el = document.getElementById('txtToolPasteArea');
       if (el) {
         el.value = [
-          '1Z84Y8200492184710\t2.5\tUS\tUPS\tPDL-GUEST',
-          '771234567890\t3.5\tUS\tFEDEX\tVIP-105',
-          '1Z84Y8200433819204\t6.0\tDE\tUPS\tAG-002',
-          '779876543210\t4.0\tAU\tFEDEX\tPDL-GUEST',
-          '1Z777CC30112233445\t12.5\tCA\tUPS\tVIP-105'
+          '1Z84Y8200492184710\t2.5\tUS\tUPS\tPDL-GUEST\tGENERAL',
+          '771234567890\t3.5\tUS\tFEDEX\tVIP-105\tCOSMETICS_FOOD',
+          '1Z84Y8200433819204\t6.0\tDE\tUPS\tAG-002\tBRANDED',
+          '779876543210\t4.0\tAU\tFEDEX\tPDL-GUEST\tEYELASHES',
+          '1Z777CC30112233445\t12.5\tCA\tUPS\tVIP-105\tAGARWOOD'
         ].join('\n');
       }
     }
@@ -15184,6 +15224,7 @@ curl -X POST http://localhost:4000/api/shipments/create \\
       const awb = (document.getElementById('inpToolQuickAwb')?.value || '').trim().toUpperCase();
       const weightKg = parseFloat(document.getElementById('inpToolQuickKg')?.value || '0');
       const quickCountry = document.getElementById('inpToolQuickCountry')?.value || '';
+      const quickCargoType = document.getElementById('inpToolQuickCargoType')?.value || '';
       const opts = getToolPricingDefaultOptions();
 
       if (!awb) {
@@ -15197,6 +15238,7 @@ curl -X POST http://localhost:4000/api/shipments/create \\
         return;
       }
 
+      const selectedCargoType = quickCargoType || opts.defaultCargoType || 'GENERAL';
       const effectiveCarrier = (opts.defaultCarrier === 'AUTO' ? (awb.startsWith('1Z') ? 'UPS' : 'FEDEX') : opts.defaultCarrier);
       const targetFuel = effectiveCarrier === 'FEDEX' ? opts.fedexFuelPercent : opts.upsFuelPercent;
 
@@ -15210,15 +15252,15 @@ curl -X POST http://localhost:4000/api/shipments/create \\
             countryCode: quickCountry || opts.defaultCountry,
             carrier: opts.defaultCarrier === 'AUTO' ? undefined : opts.defaultCarrier,
             customerCode: opts.defaultCustomerCode,
-            cargoType: opts.defaultCargoType,
-            isCosmetics: opts.isCosmetics,
-            customsFeePerKg: opts.isCosmetics ? 40000 : 0,
+            cargoType: selectedCargoType,
+            isCosmetics: selectedCargoType === 'COSMETICS_FOOD' || selectedCargoType === 'COSMETICS',
             securityFeePerAwb: opts.securityFeePerAwb,
             vatPercent: opts.vatPercent,
             surgeDiscountPercent: opts.surgeDiscountPercent,
-            isDocument: opts.isDocument,
+            isDocument: selectedCargoType === 'DOCUMENT',
             fuelPercentOverride: targetFuel,
-            fuelSurchargePercent: targetFuel
+            fuelSurchargePercent: targetFuel,
+            marketMarkupPercent: opts.marketMarkupPercent
           })
         });
         const d = await res.json();
@@ -15684,14 +15726,14 @@ curl -X POST http://localhost:4000/api/shipments/create \\
 
           <!-- 5. Loại Hàng Hóa -->
           <td class="p-2 border-r border-slate-100">
-            <select onchange="updateSingleRowInExcelPricingTool(${idx}, 'cargoType', this.value)" class="w-full min-w-[130px] px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:border-slate-300 font-semibold text-slate-700 text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition cursor-pointer shadow-sm">
-              <option value="GENERAL" ${r.cargoType === 'GENERAL' || (!r.cargoType && !r.isCosmetics) ? 'selected' : ''}>Hàng thông thường</option>
-              <option value="COSMETICS_FOOD" ${(r.cargoType === 'COSMETICS_FOOD' || r.cargoType === 'COSMETICS' || r.isCosmetics) ? 'selected' : ''}>Thực phẩm, mỹ phẩm</option>
-              <option value="BRANDED" ${r.cargoType === 'BRANDED' ? 'selected' : ''}>Hàng thương hiệu</option>
-              <option value="EYELASHES" ${r.cargoType === 'EYELASHES' ? 'selected' : ''}>Hàng mi giả</option>
-              <option value="AGARWOOD" ${r.cargoType === 'AGARWOOD' ? 'selected' : ''}>Hàng trầm hương</option>
-              <option value="HAIR" ${r.cargoType === 'HAIR' ? 'selected' : ''}>Tóc</option>
-              <option value="DOCUMENT" ${r.cargoType === 'DOCUMENT' ? 'selected' : ''}>Tài liệu</option>
+            <select onchange="updateSingleRowInExcelPricingTool(${idx}, 'cargoType', this.value)" class="w-full min-w-[165px] px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:border-slate-300 font-semibold text-slate-700 text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition cursor-pointer shadow-sm">
+              <option value="GENERAL" ${r.cargoType === 'GENERAL' || (!r.cargoType && !r.isCosmetics) ? 'selected' : ''}>📦 Hàng thông thường (+8k/kg)</option>
+              <option value="COSMETICS_FOOD" ${(r.cargoType === 'COSMETICS_FOOD' || r.cargoType === 'COSMETICS' || r.isCosmetics) ? 'selected' : ''}>💄 Thực phẩm, mỹ phẩm (+40k/kg)</option>
+              <option value="BRANDED" ${r.cargoType === 'BRANDED' ? 'selected' : ''}>👜 Hàng thương hiệu (+45k/kg)</option>
+              <option value="EYELASHES" ${r.cargoType === 'EYELASHES' ? 'selected' : ''}>👁️ Hàng mi giả (+35k/kg)</option>
+              <option value="AGARWOOD" ${r.cargoType === 'AGARWOOD' ? 'selected' : ''}>🪵 Hàng trầm hương (+50k/kg)</option>
+              <option value="HAIR" ${r.cargoType === 'HAIR' ? 'selected' : ''}>💇‍♀️ Tóc (+42k/kg)</option>
+              <option value="DOCUMENT" ${r.cargoType === 'DOCUMENT' ? 'selected' : ''}>📄 Tài liệu (0đ/kg)</option>
             </select>
           </td>
 
@@ -15772,7 +15814,7 @@ curl -X POST http://localhost:4000/api/shipments/create \\
           <!-- 7. Phí HQ Thu Khách -->
           <td class="p-2.5 text-right font-mono font-bold ${customsFeeKhach > 0 ? 'text-purple-700 bg-purple-50/30' : 'text-slate-400'} border-r border-emerald-50">
             ${customsFeeKhach > 0 ? `+${customsFeeKhach.toLocaleString('vi-VN')} đ` : '<span class="text-slate-400">0 đ</span>'}
-            ${customsFeeKhach > 0 ? '<div class="text-[9px] text-purple-600 font-sans">Thu khách</div>' : ''}
+            <div class="text-[9px] text-purple-600 font-sans">${Number(r.customerCustomsFeePerKg || r.customsFeePerKg || 0).toLocaleString('vi-VN')} đ/kg • ${r.cargoTypeDisplayName || 'Hàng thường'}</div>
           </td>
 
           <!-- 8. Phí An Ninh (150k) -->
@@ -15797,7 +15839,7 @@ curl -X POST http://localhost:4000/api/shipments/create \\
           <!-- Phí Trả Hải Quan (UPS/FedEx) -->
           <td class="p-2.5 text-right font-mono font-bold ${customsFeeViettel > 0 ? 'text-rose-700 bg-rose-50/40' : 'text-slate-400'} border-r border-rose-50">
             ${customsFeeViettel > 0 ? `+${customsFeeViettel.toLocaleString('vi-VN')} đ` : '<span class="text-slate-400">0 đ</span>'}
-            <div class="text-[9px] text-slate-500 font-sans mt-0.5">${customsBeneficiary}</div>
+            <div class="text-[9px] text-slate-500 font-sans mt-0.5">${Number(r.supplierCustomsFeePerKg || 0).toLocaleString('vi-VN')} đ/kg • ${customsBeneficiary}</div>
           </td>
 
           <!-- Phí An Ninh Trả NCC (Mặc định 0 đ, chỉnh sửa trực tiếp trên từng đơn) -->

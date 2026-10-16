@@ -223,7 +223,8 @@ export class UniversalPricingEngine {
 
     // Phí Hải quan / 1 kg: Áp dụng duy nhất 1 loại hàng / 1 AWB (phân biệt Hải quan UPS vs Hải quan FedEx)
     // Quy tắc: Nếu trọng lượng dưới 1 kg thì làm tròn thành 1 kg để tính phí hải quan
-    const cargoRate = CustomsCargoConfigService.getCargoRate(req.cargoType || (req.isCosmetics ? 'COSMETICS_FOOD' : undefined), carrier);
+    const resolvedCargoCode = req.cargoType || (req.isCosmetics ? 'COSMETICS_FOOD' : (isDoc ? 'DOCUMENT' : 'GENERAL'));
+    const cargoRate = CustomsCargoConfigService.getCargoRate(resolvedCargoCode, carrier);
     const isSupplier = Boolean(req.customerId && req.customerId.toUpperCase().includes('SUPPLIER'));
     const defaultFeePerKg = isSupplier ? cargoRate.supplierFeePerKg : cargoRate.customerFeePerKg;
     const customsFeePerKg = req.customsFeePerKg !== undefined 
@@ -231,15 +232,21 @@ export class UniversalPricingEngine {
       : defaultFeePerKg;
     const customsWeightKg = chargeableWeight > 0 ? Math.max(1, chargeableWeight) : 0;
     const customsFeeAmount = Math.round(customsWeightKg * customsFeePerKg);
+    const supplierCustomsFeePerKg = cargoRate.supplierFeePerKg;
+    const supplierCustomsFeeAmount = Math.round(customsWeightKg * supplierCustomsFeePerKg);
+    const customerCustomsFeePerKg = req.customsFeePerKg !== undefined ? req.customsFeePerKg : cargoRate.customerFeePerKg;
+    const customerCustomsFeeAmount = Math.round(customsWeightKg * customerCustomsFeePerKg);
     const isCosmetics = cargoRate.cargoType.code === 'COSMETICS_FOOD' || Boolean(req.isCosmetics);
 
     // Phí An ninh trên AWB: Mặc định 150.000 đ / 1 đơn hàng thu từ khách hàng
     const securityFeeAmount = req.securityFeePerAwb !== undefined 
       ? Math.round(req.securityFeePerAwb) 
-      : 150000;
+      : (isDoc ? 0 : 150000);
 
-    // TỔNG GIÁ VỐN NỘI BỘ (CARRIER COST)
-    const totalCostPrice = totalAfterVat + customsFeeAmount + securityFeeAmount;
+    // TỔNG GIÁ VỐN NỘI BỘ (CARRIER COST = Cước Hãng sau VAT + Phí Hải quan trả HQ)
+    const totalCostPrice = isSupplier
+      ? (totalAfterVat + customsFeeAmount + securityFeeAmount)
+      : (totalAfterVat + supplierCustomsFeeAmount);
 
     // 6. Áp dụng chính sách Lợi nhuận để tính GIÁ BÁN CHO KHÁCH (SELLING PRICE)
     const policy = req.customerId
@@ -249,9 +256,10 @@ export class UniversalPricingEngine {
     const marginPercent = req.customMarginPercent !== undefined ? req.customMarginPercent : policy.marginPercent;
     const marginFixedAmount = req.customMarginFixedAmount !== undefined ? req.customMarginFixedAmount : policy.marginFixedAmount;
 
-    const percentProfit = Math.round((totalCostPrice * marginPercent) / 100);
-    const totalMarginAmount = percentProfit + marginFixedAmount;
-    const totalSellPrice = totalCostPrice + totalMarginAmount; // GIÁ BÁN CHO KHÁCH
+    const percentProfit = Math.round((totalAfterVat * marginPercent) / 100);
+    const carrierSellFreight = totalAfterVat + percentProfit + marginFixedAmount;
+    const totalSellPrice = carrierSellFreight + customerCustomsFeeAmount + securityFeeAmount; // GIÁ BÁN CHO KHÁCH (gồm Cước + Phí loại hàng + An ninh)
+    const totalMarginAmount = totalSellPrice - totalCostPrice;
 
     // Thời gian giao hàng dự kiến
     const deliveryDays = carrier === 'UPS' ? '3 - 5 ngày' : '2 - 4 ngày';
@@ -278,10 +286,15 @@ export class UniversalPricingEngine {
       vatPercent,
       vatAmount,
       totalAfterVat,
-      cargoType: req.cargoType || (isCosmetics ? 'COSMETICS' : (isDoc ? 'DOCUMENT' : 'GENERAL')),
+      cargoType: cargoRate.cargoType.code,
+      cargoTypeDisplayName: cargoRate.cargoType.displayName,
       isCosmetics,
       customsFeePerKg,
       customsFeeAmount,
+      supplierCustomsFeePerKg,
+      supplierCustomsFeeAmount,
+      customerCustomsFeePerKg,
+      customerCustomsFeeAmount,
       securityFeeAmount,
       totalCostPrice,
       customerPolicyApplied: {
@@ -323,12 +336,13 @@ export class UniversalPricingEngine {
   }
 
   /**
-   * Xuất ma trận so sánh song song GIÁ CODE vs GIÁ BÁN cho 1 tuyến quốc gia
+   * Xuất ma trận so sánh song song GIÁ CODE vs GIÁ BÁN cho 1 tuyến quốc gia (hỗ trợ phân biệt Loại Hàng Hóa)
    */
   getComparisonMatrix(params: {
     carrier: CarrierCode;
     destinationCountry: string;
     customerId?: string;
+    cargoType?: string;
     customMarginPercent?: number;
     customMarginFixedAmount?: number;
     fuelPercentOverride?: number;
@@ -361,6 +375,11 @@ export class UniversalPricingEngine {
     const marginFixedAmount = params.customMarginFixedAmount !== undefined ? params.customMarginFixedAmount : policy.marginFixedAmount;
     const vatPercent = params.vatPercent || 0;
 
+    // Đơn giá Hải quan / Loại hàng (Cost trả HQ vs Thu Khách)
+    const cargoRate = CustomsCargoConfigService.getCargoRate(params.cargoType || 'GENERAL', params.carrier);
+    const supplierCargoFeePerKg = cargoRate.supplierFeePerKg;
+    const customerCargoFeePerKg = cargoRate.customerFeePerKg;
+
     const tiers = table.nonDocumentRates.map(tier => {
       const rawRate = tier.ratesByZone[zone] || 0;
       const weightDisplay = tier.isPerKg
@@ -369,17 +388,20 @@ export class UniversalPricingEngine {
 
       // Cước net (lấy tại mốc weightTo)
       const testWeight = tier.isPerKg ? tier.weightFrom : tier.weightTo;
+      const customsWeight = Math.max(1, testWeight);
       const baseNet = tier.isPerKg ? Math.round(rawRate * testWeight) : Math.round(rawRate);
       const fuelFee = Math.round((baseNet * fuelPercent) / 100);
       const subtotal = baseNet + fuelFee;
       const vatFee = Math.round((subtotal * vatPercent) / 100);
-      const codePrice = subtotal + vatFee; // GIÁ CODE (COST HÃNG)
+      const supplierCustomsFee = Math.round(customsWeight * supplierCargoFeePerKg);
+      const customerCustomsFee = Math.round(customsWeight * customerCargoFeePerKg);
+      const codePrice = subtotal + vatFee + supplierCustomsFee; // GIÁ CODE (COST HÃNG + HẢI QUAN)
 
-      // GUP GIÁ (MARKUP)
-      const markupFromPercent = Math.round((codePrice * marginPercent) / 100);
-      const markupAmount = markupFromPercent + marginFixedAmount;
-      const sellPrice = codePrice + markupAmount; // GIÁ BÁN CHO KHÁCH
-      const profit = markupAmount;
+      // GUP GIÁ (MARKUP) + CHÊNH LỆCH LOẠI HÀNG KHÁCH HÀNG
+      const markupFromPercent = Math.round(((subtotal + vatFee) * marginPercent) / 100);
+      const markupAmount = markupFromPercent + marginFixedAmount + customerCustomsFee;
+      const sellPrice = (subtotal + vatFee) + markupFromPercent + marginFixedAmount + customerCustomsFee; // GIÁ BÁN CHO KHÁCH THEO LOẠI HÀNG
+      const profit = sellPrice - codePrice;
 
       return {
         weightFrom: tier.weightFrom,
@@ -390,6 +412,10 @@ export class UniversalPricingEngine {
         baseNet,
         fuelPercent,
         fuelFee,
+        supplierCargoFeePerKg,
+        supplierCustomsFee,
+        customerCargoFeePerKg,
+        customerCustomsFee,
         codePrice,
         marginPercent,
         marginFixedAmount,
@@ -407,6 +433,10 @@ export class UniversalPricingEngine {
       zone,
       fuelPercent,
       vatPercent,
+      cargoType: cargoRate.cargoType.code,
+      cargoTypeDisplayName: cargoRate.cargoType.displayName,
+      supplierCargoFeePerKg,
+      customerCargoFeePerKg,
       policyApplied: {
         id: policy.id,
         name: policy.name,

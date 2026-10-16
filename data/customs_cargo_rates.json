@@ -1,30 +1,30 @@
 {
   "GENERAL": {
-    "UPS": { "supplierFeePerKg": 8000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Hàng thông thường: Trả Hải quan UPS 8.000 đ/kg / Thu khách 40.000 đ/kg" },
-    "FEDEX": { "supplierFeePerKg": 8000, "customerFeePerKg": 8000, "hasPrice": true, "note": "8.000 đ/kg" }
+    "UPS": { "supplierFeePerKg": 8000, "customerFeePerKg": 8000, "hasPrice": true, "note": "Hàng thông thường: Trả Hải quan UPS 8.000 đ/kg / Thu khách 8.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 8000, "customerFeePerKg": 8000, "hasPrice": true, "note": "Hàng thông thường: Trả Hải quan FedEx 8.000 đ/kg / Thu khách 8.000 đ/kg" }
   },
   "COSMETICS_FOOD": {
-    "UPS": { "supplierFeePerKg": 32000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Mỹ phẩm/thực phẩm: Trả Hải quan UPS 32k / Thu khách 40k" },
-    "FEDEX": { "supplierFeePerKg": 32000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Mỹ phẩm/thực phẩm: Trả Hải quan FedEx 32k / Thu khách 40k" }
+    "UPS": { "supplierFeePerKg": 32000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thực phẩm, mỹ phẩm: Trả Hải quan UPS 32.000 đ/kg / Thu khách 40.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 32000, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thực phẩm, mỹ phẩm: Trả Hải quan FedEx 32.000 đ/kg / Thu khách 40.000 đ/kg" }
   },
   "BRANDED": {
-    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
-    "FEDEX": { "supplierFeePerKg": 35000, "customerFeePerKg": 45000, "hasPrice": true, "note": "Hàng thương hiệu FedEx: 35.000 đ/kg (Thu khách 45k)" }
+    "UPS": { "supplierFeePerKg": 35000, "customerFeePerKg": 45000, "hasPrice": true, "note": "Hàng thương hiệu: Trả Hải quan UPS 35.000 đ/kg / Thu khách 45.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 35000, "customerFeePerKg": 45000, "hasPrice": true, "note": "Hàng thương hiệu: Trả Hải quan FedEx 35.000 đ/kg / Thu khách 45.000 đ/kg" }
   },
   "EYELASHES": {
-    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
-    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": false, "note": "Chưa có giá" }
+    "UPS": { "supplierFeePerKg": 25000, "customerFeePerKg": 35000, "hasPrice": true, "note": "Hàng mi giả: Trả Hải quan UPS 25.000 đ/kg / Thu khách 35.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 25000, "customerFeePerKg": 35000, "hasPrice": true, "note": "Hàng mi giả: Trả Hải quan FedEx 25.000 đ/kg / Thu khách 35.000 đ/kg" }
   },
   "AGARWOOD": {
-    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
-    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": false, "note": "Chưa có giá" }
+    "UPS": { "supplierFeePerKg": 40000, "customerFeePerKg": 50000, "hasPrice": true, "note": "Hàng trầm hương: Trả Hải quan UPS 40.000 đ/kg / Thu khách 50.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 40000, "customerFeePerKg": 50000, "hasPrice": true, "note": "Hàng trầm hương: Trả Hải quan FedEx 40.000 đ/kg / Thu khách 50.000 đ/kg" }
   },
   "HAIR": {
-    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 40000, "hasPrice": true, "note": "Thu khách 40.000 đ/kg" },
-    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": false, "note": "Chưa có giá" }
+    "UPS": { "supplierFeePerKg": 30000, "customerFeePerKg": 42000, "hasPrice": true, "note": "Hàng tóc: Trả Hải quan UPS 30.000 đ/kg / Thu khách 42.000 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 30000, "customerFeePerKg": 42000, "hasPrice": true, "note": "Hàng tóc: Trả Hải quan FedEx 30.000 đ/kg / Thu khách 42.000 đ/kg" }
   },
   "DOCUMENT": {
-    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": true, "note": "0 đ/kg" },
-    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": true, "note": "0 đ/kg" }
+    "UPS": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": true, "note": "Tài liệu / Chứng từ: 0 đ/kg" },
+    "FEDEX": { "supplierFeePerKg": 0, "customerFeePerKg": 0, "hasPrice": true, "note": "Tài liệu / Chứng từ: 0 đ/kg" }
   }
 }

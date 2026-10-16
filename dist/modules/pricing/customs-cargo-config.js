@@ -6,21 +6,21 @@ const DEFAULT_CARGO_TYPES = [
         name: 'Hàng thông thường',
         displayName: 'Hàng thông thường',
         badgeClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-        description: 'Quần áo thông thường, giày dép, phụ kiện... (Trả Hải quan 8.000 đ/kg / Thu khách 40.000 đ/kg)',
+        description: 'Quần áo thông thường, giày dép, phụ kiện... (Trả Hải quan 8.000 đ/kg / Thu khách 8.000 đ/kg)',
         keywords: ['THONG THUONG', 'THƯỜNG', 'THUONG', 'GENERAL', 'PARCEL', 'HANG THUONG', 'QUAN AO', 'GIAY DEP', 'GOM'],
         rates: {
-            UPS: { supplierFeePerKg: 8000, customerFeePerKg: 40000, hasPrice: true, note: 'Trả Hải quan UPS 8.000 đ/kg / Thu khách 40.000 đ/kg' },
-            FEDEX: { supplierFeePerKg: 8000, customerFeePerKg: 8000, hasPrice: true, note: '8.000 đ/kg' }
+            UPS: { supplierFeePerKg: 8000, customerFeePerKg: 8000, hasPrice: true, note: 'Trả Hải quan UPS 8.000 đ/kg / Thu khách 8.000 đ/kg' },
+            FEDEX: { supplierFeePerKg: 8000, customerFeePerKg: 8000, hasPrice: true, note: 'Trả Hải quan FedEx 8.000 đ/kg / Thu khách 8.000 đ/kg' }
         },
         supplierFeePerKg: 8000,
-        customerFeePerKg: 40000
+        customerFeePerKg: 8000
     },
     {
         code: 'COSMETICS_FOOD',
         name: 'Thực phẩm, mỹ phẩm',
         displayName: 'Thực phẩm, mỹ phẩm',
         badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
-        description: 'Mỹ phẩm, kem, son, serum, thực phẩm khô, bánh kẹo, gia vị, đồ ăn...',
+        description: 'Mỹ phẩm, kem, son, serum, thực phẩm khô, bánh kẹo, gia vị, đồ ăn... (Trả Hải quan 32.000 đ/kg / Thu khách 40.000 đ/kg)',
         keywords: ['MY PHAM', 'MỸ PHẨM', 'COSMETIC', 'COSMETICS', 'THUC PHAM', 'THỰC PHẨM', 'FOOD', 'BANH KEO', 'DO AN'],
         rates: {
             UPS: { supplierFeePerKg: 32000, customerFeePerKg: 40000, hasPrice: true, note: 'Trả Hải quan 32k / Thu khách 40k' },
@@ -34,63 +34,63 @@ const DEFAULT_CARGO_TYPES = [
         name: 'Hàng thương hiệu',
         displayName: 'Hàng thương hiệu',
         badgeClass: 'bg-rose-100 text-rose-900 border-rose-300',
-        description: 'Hàng có nhãn mác thương hiệu quốc tế, thời trang brand (Nike, Adidas, Gucci, LV, Chanel...)',
+        description: 'Hàng có nhãn mác thương hiệu quốc tế, thời trang brand (Nike, Adidas, Gucci, LV, Chanel...) (Trả Hải quan 35.000 đ/kg / Thu khách 45.000 đ/kg)',
         keywords: ['THUONG HIEU', 'THƯƠNG HIỆU', 'BRAND', 'BRANDED', 'HANG HIEU', 'HÀNG HIỆU', 'FAKE', 'REPLICA', 'GUCCI', 'NIKE', 'ADIDAS', 'LV', 'CHANEL', 'ZARA'],
         rates: {
-            UPS: { supplierFeePerKg: 0, customerFeePerKg: 40000, hasPrice: true, note: 'Thu khách 40.000 đ/kg' },
-            FEDEX: { supplierFeePerKg: 35000, customerFeePerKg: 45000, hasPrice: true, note: 'Trả Hải quan FedEx 35.000 đ/kg (Thu khách 45k)' }
+            UPS: { supplierFeePerKg: 35000, customerFeePerKg: 45000, hasPrice: true, note: 'Trả Hải quan UPS 35k / Thu khách 45k' },
+            FEDEX: { supplierFeePerKg: 35000, customerFeePerKg: 45000, hasPrice: true, note: 'Trả Hải quan FedEx 35k / Thu khách 45k' }
         },
-        supplierFeePerKg: 0,
-        customerFeePerKg: 40000
+        supplierFeePerKg: 35000,
+        customerFeePerKg: 45000
     },
     {
         code: 'EYELASHES',
         name: 'Hàng mi giả',
         displayName: 'Hàng mi giả',
         badgeClass: 'bg-pink-100 text-pink-900 border-pink-300',
-        description: 'Mi nối, mi giả, dụng cụ làm mi, keo nối mi, khay mi...',
+        description: 'Mi nối, mi giả, dụng cụ làm mi, keo nối mi, khay mi... (Trả Hải quan 25.000 đ/kg / Thu khách 35.000 đ/kg)',
         keywords: ['MI GIA', 'MI GIẢ', 'EYELASH', 'EYELASHES', 'LONG MI', 'LÔNG MI', 'NOI MI', 'NỐI MI'],
         rates: {
-            UPS: { supplierFeePerKg: 0, customerFeePerKg: 40000, hasPrice: true, note: 'Thu khách 40.000 đ/kg' },
-            FEDEX: { supplierFeePerKg: 0, customerFeePerKg: 0, hasPrice: false, note: 'Chưa có giá' }
+            UPS: { supplierFeePerKg: 25000, customerFeePerKg: 35000, hasPrice: true, note: 'Trả Hải quan UPS 25k / Thu khách 35k' },
+            FEDEX: { supplierFeePerKg: 25000, customerFeePerKg: 35000, hasPrice: true, note: 'Trả Hải quan FedEx 25k / Thu khách 35k' }
         },
-        supplierFeePerKg: 0,
-        customerFeePerKg: 40000
+        supplierFeePerKg: 25000,
+        customerFeePerKg: 35000
     },
     {
         code: 'AGARWOOD',
         name: 'Hàng trầm hương',
         displayName: 'Hàng trầm hương',
         badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
-        description: 'Trầm hương, nhang trầm, nụ trầm, vòng tay gỗ trầm, tinh dầu trầm...',
+        description: 'Trầm hương, nhang trầm, nụ trầm, vòng tay gỗ trầm, tinh dầu trầm... (Trả Hải quan 40.000 đ/kg / Thu khách 50.000 đ/kg)',
         keywords: ['TRAM', 'TRẦM', 'AGARWOOD', 'TRAM HUONG', 'TRẦM HƯƠNG', 'NHANG TRAM', 'VONG TRAM', 'INCENSE'],
         rates: {
-            UPS: { supplierFeePerKg: 0, customerFeePerKg: 40000, hasPrice: true, note: 'Thu khách 40.000 đ/kg' },
-            FEDEX: { supplierFeePerKg: 0, customerFeePerKg: 0, hasPrice: false, note: 'Chưa có giá' }
+            UPS: { supplierFeePerKg: 40000, customerFeePerKg: 50000, hasPrice: true, note: 'Trả Hải quan UPS 40k / Thu khách 50k' },
+            FEDEX: { supplierFeePerKg: 40000, customerFeePerKg: 50000, hasPrice: true, note: 'Trả Hải quan FedEx 40k / Thu khách 50k' }
         },
-        supplierFeePerKg: 0,
-        customerFeePerKg: 40000
+        supplierFeePerKg: 40000,
+        customerFeePerKg: 50000
     },
     {
         code: 'HAIR',
         name: 'Tóc',
         displayName: 'Tóc',
         badgeClass: 'bg-indigo-100 text-indigo-900 border-indigo-300',
-        description: 'Tóc người xuất khẩu, tóc nối, tóc giả (wigs), phím tóc, tóc dệt...',
+        description: 'Tóc người xuất khẩu, tóc nối, tóc giả (wigs), phím tóc, tóc dệt... (Trả Hải quan 30.000 đ/kg / Thu khách 42.000 đ/kg)',
         keywords: ['TOC', 'TÓC', 'HAIR', 'TOC GIA', 'TÓC GIẢ', 'TOC NOI', 'TÓC NỐI', 'WIG', 'WIGS', 'EXTENSIONS'],
         rates: {
-            UPS: { supplierFeePerKg: 0, customerFeePerKg: 40000, hasPrice: true, note: 'Thu khách 40.000 đ/kg' },
-            FEDEX: { supplierFeePerKg: 0, customerFeePerKg: 0, hasPrice: false, note: 'Chưa có giá' }
+            UPS: { supplierFeePerKg: 30000, customerFeePerKg: 42000, hasPrice: true, note: 'Trả Hải quan UPS 30k / Thu khách 42k' },
+            FEDEX: { supplierFeePerKg: 30000, customerFeePerKg: 42000, hasPrice: true, note: 'Trả Hải quan FedEx 30k / Thu khách 42k' }
         },
-        supplierFeePerKg: 0,
-        customerFeePerKg: 40000
+        supplierFeePerKg: 30000,
+        customerFeePerKg: 42000
     },
     {
         code: 'DOCUMENT',
         name: 'Tài liệu',
         displayName: 'Tài liệu',
         badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
-        description: 'Thư từ, hợp đồng, chứng từ xuất khẩu, hồ sơ...',
+        description: 'Thư từ, hợp đồng, chứng từ xuất khẩu, hồ sơ... (Miễn phí hải quan 0 đ/kg)',
         keywords: ['DOCUMENT', 'DOC', 'TAI LIEU', 'TÀI LIỆU', 'CHUNG TU', 'CHỨNG TỪ', 'HO SO', 'HỒ SƠ', 'THU TU', 'THƯ TỪ', 'TAI_LIEU'],
         rates: {
             UPS: { supplierFeePerKg: 0, customerFeePerKg: 0, hasPrice: true, note: '0 đ/kg' },
